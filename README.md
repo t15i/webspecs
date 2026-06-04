@@ -6,7 +6,7 @@ it implements, so navigating the source feels like navigating the spec.
 
 > **Coverage is intentionally narrow** — this is a knowledge base, not a polyfill.
 > Only the algorithms that have been ported so far are listed below; everything
-> else is marked with `…`.
+> else is marked with `...`.
 
 ## Install
 
@@ -29,28 +29,28 @@ import { ... } from "@t15i/webspecs/webidl";
 
 ## What's implemented
 
-Expand a spec to see what is currently ported. `…` marks sections with un-ported content.
+Expand a spec to see what is currently ported. `...` marks sections with un-ported content.
 
 <details>
-<summary><strong>DOM</strong> — <a href="https://dom.spec.whatwg.org/">spec</a></summary>
+<summary><strong>DOM</strong> (<a href="https://dom.spec.whatwg.org/">spec</a>)</summary>
 
 - **§1 Infrastructure**
   - **§1.4 Namespaces**
     - [x] `validAttributeLocalName`
-  - …
-- …
+  - ...
+- ...
 
 </details>
 
 <details>
-<summary><strong>ECMAScript</strong> — <a href="https://tc39.es/ecma262/">spec</a></summary>
+<summary><strong>ECMAScript</strong> (<a href="https://tc39.es/ecma262/">spec</a>)</summary>
 
 - **§5 Notational Conventions**
   - **§5.2.6 Mathematical Operations**
     - [x] `sign`
     - [x] `modulo`
-    - …
-  - …
+    - ...
+  - ...
 - **§6 ECMAScript Data Types and Values**
   - **§6.1 ECMAScript Language Types**
     - **§6.1.4 The String Type**
@@ -58,15 +58,15 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
     - **§6.1.7 The Object Type**
       - [x] `PropertyKey`
       - [x] `PropertyName`
-    - …
+    - ...
   - **§6.2 ECMAScript Specification Types**
     - **§6.2.6 The Property Descriptor Specification Type**
       - **§6.2.6.1 IsAccessorDescriptor**
         - [x] `isAccessorDescriptor`
       - **§6.2.6.2 IsDataDescriptor**
         - [x] `isDataDescriptor`
-      - …
-    - …
+      - ...
+    - ...
 - **§7 Abstract Operations**
   - **§7.1 Type Conversion**
     - **§7.1.4 ToNumber**
@@ -81,11 +81,11 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - [x] `toString`
     - **§7.1.22 CanonicalNumericIndexString**
       - [x] `canonicalNumericIndexString`
-    - …
+    - ...
   - **§7.3 Operations on Objects**
     - **§7.3.5 CreateDataProperty**
       - [x] `createDataProperty`
-    - …
+    - ...
 - **§10 Ordinary and Exotic Objects Behaviours**
   - **§10.1 Ordinary Object Internal Methods and Internal Slots**
     - **§10.1.5.1 OrdinaryGetOwnProperty**
@@ -94,14 +94,14 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - [x] `ordinaryDefineOwnProperty`
     - **§10.1.9.2 OrdinarySetWithOwnDescriptor**
       - [x] `ordinarySetWithOwnDescriptor`
-    - …
-  - …
-- …
+    - ...
+  - ...
+- ...
 
 </details>
 
 <details>
-<summary><strong>HTML</strong> — <a href="https://html.spec.whatwg.org/multipage/">spec</a></summary>
+<summary><strong>HTML</strong> (<a href="https://html.spec.whatwg.org/multipage/">spec</a>)</summary>
 
 - **§2 Infrastructure**
   - **§2.3 Common microsyntaxes**
@@ -118,13 +118,13 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - **§2.3.4.3 Floating-point numbers**
         - [x] `bestRepresentationAsFloatingPointNumber`
         - [x] `floatingPointNumberParsing`
-      - …
-    - …
+      - ...
+    - ...
   - **§2.4 URLs and fetching**
     - **§2.4.2 Resolving URLs**
       - [x] `encodingParseURL`
       - [x] `encodingParseAndSerializeURL`
-    - …
+    - ...
   - **§2.6 Common DOM interfaces**
     - **§2.6.1 Reflecting content attributes in IDL attributes**
       - [x] `ReflectedBoolean`
@@ -137,14 +137,14 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - [x] `ReflectedUnsignedLong`
       - [x] `ReflectedUSVString`
       - [x] `ReflectedContentAttribute` / `ReflectedIDLAttribute` / `ReflectedTarget`
-    - …
-  - …
-- …
+    - ...
+  - ...
+- ...
 
 </details>
 
 <details>
-<summary><strong>Infra</strong> — <a href="https://infra.spec.whatwg.org/">spec</a></summary>
+<summary><strong>Infra</strong> (<a href="https://infra.spec.whatwg.org/">spec</a>)</summary>
 
 - **§4 Primitive data types**
   - **§4.6 Code points**
@@ -153,27 +153,27 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
     - [x] `trailingSurrogate` / `trailingSurrogates`
   - **§4.7 Strings**
     - [x] `convertStringIntoScalarValueString`
-    - …
-  - …
-- …
+    - ...
+  - ...
+- ...
 
 </details>
 
 <details>
-<summary><strong>URL</strong> — <a href="https://url.spec.whatwg.org/">spec</a></summary>
+<summary><strong>URL</strong> (<a href="https://url.spec.whatwg.org/">spec</a>)</summary>
 
 - **§4 URLs**
   - **§4.4 URL parsing**
     - [x] `urlParser`
   - **§4.5 URL serializing**
     - [x] `urlSerializer`
-  - …
-- …
+  - ...
+- ...
 
 </details>
 
 <details>
-<summary><strong>WebIDL</strong> — <a href="https://webidl.spec.whatwg.org/">spec</a></summary>
+<summary><strong>WebIDL</strong> (<a href="https://webidl.spec.whatwg.org/">spec</a>)</summary>
 
 - **§2 Interface definition language**
   - **§2.1 Names**
@@ -203,15 +203,15 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
         - [x] `setValueOfExistingNamedProperty` / `ExistingNamedPropertySetter`
         - [x] `supportsNamedProperties` / `SupportNamedProperties`
         - [x] `isSupportedPropertyName` / `SupportedPropertyNames`
-      - …
-    - …
+      - ...
+    - ...
   - **§2.12 Objects implementing interfaces**
     - [x] `PlatformObject`
     - [x] `LegacyPlatformObject` / `LegacyPlatformObjectInterfaceBase`
     - [x] `isLegacyPlatformObject`
   - **§2.13 Types**
     - [x] `Type`
-  - …
+  - ...
 - **§3 ECMAScript binding**
   - **§3.2 ECMAScript type mapping**
     - **§3.2.3 boolean**
@@ -224,7 +224,7 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - **§3.2.4.9 Abstract operations**
         - [x] `integerPart`
         - [x] `convertToInt`
-      - …
+      - ...
     - **§3.2.7 double**
       - [x] `Double`
     - **§3.2.10 DOMString**
@@ -238,11 +238,11 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - [x] `createSequenceFromIterable`
     - **§3.2.27 Frozen array types**
       - [x] `FrozenArray`
-    - …
+    - ...
   - **§3.3 Extended attributes**
     - **§3.3.8 [Global]**
       - [x] `Global`
-    - …
+    - ...
   - **§3.4 Legacy extended attributes**
     - **§3.4.7 [LegacyOverrideBuiltIns]**
       - [x] `LegacyOverrideBuiltIns`
@@ -251,11 +251,11 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
     - **§3.4.10 [LegacyUnforgeable]**
       - [x] `LegacyUnforgeable`
       - [x] `isUnforgeableOnInterface`
-    - …
+    - ...
   - **§3.7 Interfaces**
     - **§3.7.4 Named properties object**
       - [x] `isNamedPropertyObject`
-    - …
+    - ...
   - **§3.8 Platform objects**
     - [x] `isPlatformObject`
     - [x] `PrimaryInterface`
@@ -279,8 +279,8 @@ Expand a spec to see what is currently ported. `…` marks sections with un-port
       - [x] `invokeIndexedPropertySetter`
       - [x] `invokeNamedPropertySetter`
       - [x] `isArrayIndex`
-  - …
-- …
+  - ...
+- ...
 
 </details>
 
