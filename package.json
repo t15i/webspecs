@@ -1,25 +1,58 @@
 {
-  "name": "@gmvrpw/lib-typescript-template",
+  "name": "@t15i/webspecs",
   "type": "module",
   "version": "0.0.0",
-  "description": "",
-  "keywords": [],
+  "description": "TypeScript implementations of web platform specifications",
+  "keywords": [
+    "ecma",
+    "dom",
+    "html",
+    "infra",
+    "url",
+    "webidl",
+    "whatwg",
+    "w3c",
+    "specifications"
+  ],
   "author": "Aleksandr Boiarnikov <dev@gmvr.pw> (https://gmvr.pw)",
   "license": "MIT",
-  "homepage": "https://github.com/t15i/lib-typescript-template#README",
+  "homepage": "https://github.com/t15i/webspecs#README",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/t15i/lib-typescript-template.git"
+    "url": "git+https://github.com/t15i/webspecs.git"
   },
   "bugs": {
-    "url": "https://github.com/t15i/lib-typescript-template/issues"
+    "url": "https://github.com/t15i/webspecs/issues"
   },
-  "unpkg": "./dist/cdn/index.min.js",
-  "jsdelivr": "./dist/cdn/index.min.js",
   "exports": {
-    "types": "./dist/types/index.d.ts",
-    "import": "./dist/lib/index.js",
-    "default": "./dist/lib/index.js"
+    "./dom": {
+      "types": "./dist/types/dom/index.d.ts",
+      "import": "./dist/lib/dom/index.js"
+    },
+    "./ecma": {
+      "types": "./dist/types/ecma/index.d.ts",
+      "import": "./dist/lib/ecma/index.js"
+    },
+    "./html": {
+      "types": "./dist/types/html/index.d.ts",
+      "import": "./dist/lib/html/index.js"
+    },
+    "./infra": {
+      "types": "./dist/types/infra/index.d.ts",
+      "import": "./dist/lib/infra/index.js"
+    },
+    "./share": {
+      "types": "./dist/types/share/index.d.ts",
+      "import": "./dist/lib/share/index.js"
+    },
+    "./url": {
+      "types": "./dist/types/url/index.d.ts",
+      "import": "./dist/lib/url/index.js"
+    },
+    "./webidl": {
+      "types": "./dist/types/webidl/index.d.ts",
+      "import": "./dist/lib/webidl/index.js"
+    }
   },
   "files": [
     "dist"
@@ -28,7 +61,7 @@
     "lint": "eslint lib test",
     "format": "prettier --check --write lib test",
     "typecheck": "tsc -p lib/tsconfig.json && tsc -p test/tsconfig.json",
-    "test": "vitest watch --coverage",
+    "test": "vitest watch",
     "build": "vite build",
     "ci:lint": "eslint --max-warnings 1 lib test",
     "ci:lint:lib": "eslint --max-warnings 1 lib",
@@ -39,7 +72,7 @@
     "ci:typecheck": "npm run ci:typecheck:lib && npm run ci:typecheck:tests",
     "ci:typecheck:lib": "tsc -p lib/tsconfig.json",
     "ci:typecheck:tests": "tsc -p test/tsconfig.json",
-    "ci:test": "npx playwright install && vitest run --coverage --browser.headless",
+    "ci:test": "npx playwright install && vitest run --browser.headless",
     "ci:build": "vite build"
   },
   "devDependencies": {

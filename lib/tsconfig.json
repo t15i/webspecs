@@ -3,6 +3,16 @@
   "include": ["./**/*"],
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "../build/lib"
+    "outDir": "../build/lib",
+    "baseUrl": ".",
+    "paths": {
+      "@dom": ["./dom"],
+      "@ecma": ["./ecma"],
+      "@html": ["./html"],
+      "@infra": ["./infra"],
+      "@share": ["./share"],
+      "@url": ["./url"],
+      "@webidl": ["./webidl"]
+    }
   }
 }

@@ -29,7 +29,7 @@ export default {
       instances: [{ browser: "chromium" }, { browser: "firefox" }],
     },
     coverage: {
-      enabled: true,
+      enabled: false,
       provider: "istanbul",
       include: ["lib/**/*.ts"],
       thresholds: {
@@ -41,25 +41,25 @@ export default {
   build: {
     outDir: "dist",
     lib: {
-      entry: "./lib/index.ts",
+      entry: [
+        "./lib/dom/index.ts",
+        "./lib/ecma/index.ts",
+        "./lib/html/index.ts",
+        "./lib/infra/index.ts",
+        "./lib/share/index.ts",
+        "./lib/url/index.ts",
+        "./lib/webidl/index.ts",
+      ],
     },
     rolldownOptions: {
       output: [
         {
-          name: "lib-typescript-template",
           format: "es",
           dir: "dist/lib",
           entryFileNames: "[name].js",
           preserveModules: true,
+          preserveModulesRoot: "lib",
           minify: false,
-        },
-        {
-          name: "lib-typescript-template",
-          dir: "dist/cdn",
-          format: "iife",
-          entryFileNames: "index.min.js",
-          minify: true,
-          extend: true,
         },
       ],
     },
