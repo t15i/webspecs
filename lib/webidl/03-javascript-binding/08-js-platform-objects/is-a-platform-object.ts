@@ -1,10 +1,10 @@
-import type { PlatformObject } from "@webidl";
+import type { Interface, PlatformObject } from "@webidl";
 
 export const PrimaryInterface: unique symbol = Symbol.for(
   "@t15i/web-spec/webidl/PrimaryInterface",
 );
 
-declare module "webidl" {
+declare module "@webidl" {
   interface PlatformObject {
     [PrimaryInterface]: Interface;
   }
