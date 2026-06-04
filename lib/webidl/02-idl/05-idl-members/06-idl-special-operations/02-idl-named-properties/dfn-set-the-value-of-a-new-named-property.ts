@@ -2,7 +2,7 @@ import { type PropertyKey } from "@ecma";
 import { type PlatformObject, PrimaryInterface } from "@webidl";
 
 export const NewNamedPropertySetter: unique symbol = Symbol.for(
-  "@t15i/web-spec/webidl/NewNamedPropertySetter",
+  "@t15i/webspecs/webidl/NewNamedPropertySetter",
 );
 
 declare module "@webidl" {

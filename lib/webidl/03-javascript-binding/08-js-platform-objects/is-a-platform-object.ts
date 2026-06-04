@@ -1,7 +1,7 @@
 import type { Interface, PlatformObject } from "@webidl";
 
 export const PrimaryInterface: unique symbol = Symbol.for(
-  "@t15i/web-spec/webidl/PrimaryInterface",
+  "@t15i/webspecs/webidl/PrimaryInterface",
 );
 
 declare module "@webidl" {

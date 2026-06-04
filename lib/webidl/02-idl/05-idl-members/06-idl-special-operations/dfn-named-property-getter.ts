@@ -3,7 +3,7 @@ import { type Operation } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-named-property-getter */
 export const NamedPropertyGetter: unique symbol = Symbol.for(
-  "@t15i/web-spec/webidl/NamedPropertyGetter",
+  "@t15i/webspecs/webidl/NamedPropertyGetter",
 );
 
 export type NamedPropertyGetter = Operation<[PropertyKey], unknown>;
