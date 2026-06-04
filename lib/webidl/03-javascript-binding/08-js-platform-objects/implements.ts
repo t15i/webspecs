@@ -1,4 +1,4 @@
-import type { Interface, PlatformObject } from "webidl";
+import type { Interface, PlatformObject } from "@webidl";
 
 import { PrimaryInterface, isPlatformObject } from "./is-a-platform-object";
 
