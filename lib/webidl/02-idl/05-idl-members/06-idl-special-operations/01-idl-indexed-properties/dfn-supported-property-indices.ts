@@ -2,7 +2,7 @@ import { type PlatformObject, PrimaryInterface } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices */
 export const SupportedPropertyIndices: unique symbol = Symbol.for(
-  "@t15i/web-spec/webidl/SupportedPropertyIndices",
+  "@t15i/webspecs/webidl/SupportedPropertyIndices",
 );
 
 export interface SupportedPropertyIndices extends Iterable<number> {
