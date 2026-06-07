@@ -21,7 +21,7 @@ export function invokeNamedPropertySetter(
   const T = operation.arguments[1].type;
   const value = T(v);
 
-  if (operation.identifier === null) {
+  if (operation.identifier === undefined) {
     if (creating === true) {
       setValueOfNewNamedProperty(o, p, value);
     } else {

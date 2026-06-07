@@ -22,7 +22,7 @@ export function invokeIndexedPropertySetter(
   const T = operation.arguments[1].type;
   const value = T(v);
 
-  if (operation.identifier === null) {
+  if (operation.identifier === undefined) {
     if (creating === true) {
       setValueOfNewIndexedProperty(o, index, value);
     } else {

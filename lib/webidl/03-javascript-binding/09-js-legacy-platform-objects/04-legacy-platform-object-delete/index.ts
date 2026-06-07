@@ -36,7 +36,7 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
 
     const operation = o[PrimaryInterface][NamedPropertyDeleter]!;
 
-    if (operation.identifier !== null) {
+    if (operation.identifier !== undefined) {
       const result = deleteExistingNamedProperty(o, p);
 
       if (result === false) {
