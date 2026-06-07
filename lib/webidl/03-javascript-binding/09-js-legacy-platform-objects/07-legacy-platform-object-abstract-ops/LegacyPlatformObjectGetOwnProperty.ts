@@ -31,7 +31,7 @@ export function legacyPlatformObjectGetOwnProperty(
       const operation = o[PrimaryInterface][IndexedPropertyGetter];
 
       let value;
-      if (operation.identifier === null) {
+      if (operation.identifier === undefined) {
         value = determineValueOfIndexedProperty(o, index);
       } else {
         value = operation.methodSteps.call(o, index);
@@ -61,7 +61,7 @@ export function legacyPlatformObjectGetOwnProperty(
       const operation = o[PrimaryInterface][NamedPropertyGetter];
 
       let value;
-      if (operation.identifier === null) {
+      if (operation.identifier === undefined) {
         value = determineValueOfNamedProperty(o, p);
       } else {
         value = operation.methodSteps.call(o, p);
