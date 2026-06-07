@@ -1,4 +1,5 @@
 import { type PropertyName, toUint32 } from "@ecma";
+import { failure } from "@share";
 
 import {
   type PlatformObject,
@@ -12,6 +13,7 @@ import {
   implementsInterfaceWith,
   isArrayIndex,
   isNamedPropertyVisible,
+  Boolean,
 } from "@webidl";
 
 export function del(o: PlatformObject, p: PropertyName): boolean {
@@ -39,13 +41,13 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
     if (operation.identifier !== undefined) {
       const result = deleteExistingNamedProperty(o, p);
 
-      if (result === false) {
+      if (result === failure) {
         return false;
       }
     } else {
       const result = operation.methodSteps.call(o, p);
 
-      if (result === false) {
+      if (operation.returnType === Boolean && result === false) {
         return false;
       }
     }

@@ -7,6 +7,6 @@ export const IndexedPropertySetter: unique symbol = Symbol.for(
 
 declare module "@webidl" {
   interface Interface {
-    [IndexedPropertySetter]?: Operation<[number, unknown], boolean>;
+    [IndexedPropertySetter]?: Operation<[number, unknown], unknown>;
   }
 }

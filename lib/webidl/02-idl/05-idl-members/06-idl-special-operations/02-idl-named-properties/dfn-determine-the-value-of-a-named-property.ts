@@ -1,14 +1,20 @@
-import { type PropertyKey } from "@ecma";
-import {
-  type PlatformObject,
-  PrimaryInterface,
-  NamedPropertyGetter,
-} from "@webidl";
+import { type PropertyName } from "@ecma";
+import { type PlatformObject, PrimaryInterface } from "@webidl";
+
+export const NamedPropertyDeterminator: unique symbol = Symbol.for(
+  "@t15i/webspecs/webidl/NamedPropertyDeterminator",
+);
+
+declare module "@webidl" {
+  interface Interface {
+    [NamedPropertyDeterminator]?(name: string): unknown;
+  }
+}
 
 /** @see https://webidl.spec.whatwg.org/#dfn-determine-the-value-of-a-named-property */
 export function determineValueOfNamedProperty(
   o: PlatformObject,
-  property: PropertyKey,
+  property: PropertyName,
 ): unknown {
-  return o[PrimaryInterface][NamedPropertyGetter]!.methodSteps(property);
+  return o[PrimaryInterface][NamedPropertyDeterminator]!.call(o, property);
 }
