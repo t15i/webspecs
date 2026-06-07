@@ -6,7 +6,7 @@ export const NewIndexedPropertySetter: unique symbol = Symbol.for(
 
 declare module "@webidl" {
   interface Interface {
-    [NewIndexedPropertySetter]?(index: number, value: unknown): boolean;
+    [NewIndexedPropertySetter]?(index: number, value: unknown): void;
   }
 }
 
@@ -15,6 +15,6 @@ export function setValueOfNewIndexedProperty(
   o: PlatformObject,
   index: number,
   value: unknown,
-): boolean {
-  return o[PrimaryInterface][NewIndexedPropertySetter]!.call(o, index, value);
+): void {
+  o[PrimaryInterface][NewIndexedPropertySetter]!.call(o, index, value);
 }

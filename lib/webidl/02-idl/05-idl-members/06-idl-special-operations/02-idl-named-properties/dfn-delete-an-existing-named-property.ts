@@ -1,14 +1,21 @@
-import { type PropertyKey } from "@ecma";
-import {
-  type PlatformObject,
-  PrimaryInterface,
-  NamedPropertyDeleter,
-} from "@webidl";
+import { type PropertyName } from "@ecma";
+import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { failure } from "@share";
+
+export const ExistingNamedPropertyDeleter: unique symbol = Symbol.for(
+  "@t15i/webspecs/webidl/ExistingNamedPropertyDeleter",
+);
+
+declare module "@webidl" {
+  interface Interface {
+    [ExistingNamedPropertyDeleter]?(index: PropertyName): void | typeof failure;
+  }
+}
 
 /** @see https://webidl.spec.whatwg.org/#dfn-delete-an-existing-named-property */
 export function deleteExistingNamedProperty(
   o: PlatformObject,
-  property: PropertyKey,
-): boolean {
-  return o[PrimaryInterface][NamedPropertyDeleter]!.methodSteps(property);
+  property: PropertyName,
+): void | typeof failure {
+  return o[PrimaryInterface][ExistingNamedPropertyDeleter]!.call(o, property);
 }

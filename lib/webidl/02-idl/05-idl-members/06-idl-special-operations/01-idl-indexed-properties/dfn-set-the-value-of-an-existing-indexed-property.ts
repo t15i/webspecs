@@ -6,7 +6,7 @@ export const ExistingIndexedPropertySetter: unique symbol = Symbol.for(
 
 declare module "@webidl" {
   interface Interface {
-    [ExistingIndexedPropertySetter]?(index: number, value: unknown): boolean;
+    [ExistingIndexedPropertySetter]?(index: number, value: unknown): void;
   }
 }
 
@@ -15,10 +15,6 @@ export function setValueOfExistingIndexedProperty(
   o: PlatformObject,
   index: number,
   value: unknown,
-): boolean {
-  return o[PrimaryInterface][ExistingIndexedPropertySetter]!.call(
-    o,
-    index,
-    value,
-  );
+): void {
+  o[PrimaryInterface][ExistingIndexedPropertySetter]!.call(o, index, value);
 }
