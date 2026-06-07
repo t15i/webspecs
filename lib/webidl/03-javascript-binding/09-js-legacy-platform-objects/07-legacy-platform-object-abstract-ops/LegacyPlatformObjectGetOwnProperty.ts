@@ -84,6 +84,8 @@ export function legacyPlatformObjectGetOwnProperty(
       }
 
       desc.configurable = true;
+
+      return desc;
     }
   }
 
