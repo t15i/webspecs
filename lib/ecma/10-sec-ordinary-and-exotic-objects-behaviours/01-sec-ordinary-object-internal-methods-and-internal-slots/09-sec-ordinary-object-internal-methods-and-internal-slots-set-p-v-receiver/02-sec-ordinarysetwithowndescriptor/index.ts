@@ -12,7 +12,7 @@ export function ordinarySetWithOwnDescriptor<T>(
   ownDesc: PropertyDescriptor | undefined,
 ): boolean {
   if (ownDesc === undefined) {
-    const parent = Object.getPrototypeOf(ownDesc);
+    const parent = Object.getPrototypeOf(obj);
 
     if (parent !== null) {
       return Reflect.set(obj, propertyKey, value, receiver);
