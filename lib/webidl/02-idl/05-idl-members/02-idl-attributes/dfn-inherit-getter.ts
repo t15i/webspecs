@@ -4,5 +4,5 @@ import type { Attribute } from "./dfn-attribute";
 export function isDeclaredToInheritItsGetterAttribute(
   attribute: Attribute<unknown>,
 ): boolean {
-  return !attribute.keywords.has("inherit");
+  return attribute.keywords.has("inherit");
 }
