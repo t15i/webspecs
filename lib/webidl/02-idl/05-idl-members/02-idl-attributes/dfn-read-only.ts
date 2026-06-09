@@ -2,5 +2,5 @@ import type { Attribute } from "./dfn-attribute";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-read-only*/
 export function isReadonlyAttribute(attribute: Attribute<unknown>): boolean {
-  return !attribute.keywords.has("readonly");
+  return attribute.keywords.has("readonly");
 }
