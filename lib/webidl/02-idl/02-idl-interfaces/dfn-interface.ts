@@ -1,6 +1,8 @@
 import type { Member, Identifier } from "@webidl";
 
-const staticMembers: unique symbol = Symbol.for("@t15i/webidl/staticMembers");
+export const staticMembers: unique symbol = Symbol.for(
+  "@t15i/webidl/staticMembers",
+);
 
 /** @see https://webidl.spec.whatwg.org/#dfn-interface */
 export interface Interface {
