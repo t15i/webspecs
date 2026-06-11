@@ -1,9 +1,10 @@
-import type { Member, Type } from "@webidl";
+import type { Identifier, Member, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-attribute */
 export interface Attribute<T> {
   memberType: "attribute";
   keywords: Set<string>;
+  identifier: Identifier;
   type: Type<T>;
   getterSteps(): T;
   setterSteps(value: T): void;
