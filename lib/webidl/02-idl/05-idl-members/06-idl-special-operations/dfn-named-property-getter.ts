@@ -9,7 +9,7 @@ export const NamedPropertyGetter: unique symbol = Symbol.for(
 export type NamedPropertyGetter = Operation<[PropertyName], unknown>;
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [NamedPropertyGetter]?: NamedPropertyGetter;
   }
 }

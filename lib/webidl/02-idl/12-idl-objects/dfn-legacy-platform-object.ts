@@ -1,6 +1,6 @@
 import {
   type ImplementsInterfaceWith,
-  type ImplementsInterfaceWithout,
+  type ImplementsInterfaceWithoutExtAttribute,
   Global,
   supportsIndexedProperties,
   supportsNamedProperties,
@@ -10,10 +10,8 @@ import {
 
 import type { PlatformObject } from "./dfn-platform-object";
 
-export type LegacyPlatformObjectInterfaceBase = ImplementsInterfaceWithout<
-  PlatformObject,
-  typeof Global
->;
+export type LegacyPlatformObjectInterfaceBase =
+  ImplementsInterfaceWithoutExtAttribute<PlatformObject, typeof Global>;
 
 /** @see https://webidl.spec.whatwg.org/#dfn-legacy-platform-object */
 export type LegacyPlatformObject =

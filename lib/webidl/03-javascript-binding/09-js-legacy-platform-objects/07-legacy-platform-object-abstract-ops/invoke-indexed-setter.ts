@@ -18,7 +18,7 @@ export function invokeIndexedPropertySetter(
 ): void {
   const index = toUint32(p);
   const creating = !isSupportedPropertyIndex(o, index);
-  const operation = o[PrimaryInterface][IndexedPropertySetter];
+  const operation = o[PrimaryInterface].members[IndexedPropertySetter];
   const T = operation.arguments[1].type;
   const value = T(v);
 

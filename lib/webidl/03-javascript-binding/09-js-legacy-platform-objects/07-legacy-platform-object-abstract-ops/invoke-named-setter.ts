@@ -17,7 +17,7 @@ export function invokeNamedPropertySetter(
   v: unknown,
 ): void {
   const creating = !isSupportedPropertyName(o, p);
-  const operation = o[PrimaryInterface][NamedPropertySetter];
+  const operation = o[PrimaryInterface].members[NamedPropertySetter];
   const T = operation.arguments[1].type;
   const value = T(v);
 

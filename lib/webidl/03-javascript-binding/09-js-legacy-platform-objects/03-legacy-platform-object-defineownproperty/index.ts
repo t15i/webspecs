@@ -15,6 +15,7 @@ import {
   supportsIndexedProperties,
   supportsNamedProperties,
   implementsInterfaceWith,
+  implementsInterfaceWithExtAttribute,
   isUnforgeablePropertyName,
   invokeIndexedPropertySetter,
   invokeNamedPropertySetter,
@@ -43,14 +44,14 @@ export function defineOwnProperty(
 
   if (
     supportsNamedProperties(o) &&
-    !implementsInterfaceWith(o, Global) &&
+    !implementsInterfaceWithExtAttribute(o, Global) &&
     isString(p) &&
     !isUnforgeablePropertyName(o, p)
   ) {
     const creating = !isSupportedPropertyName(o, p);
 
     if (
-      implementsInterfaceWith(o, LegacyOverrideBuiltIns) ||
+      implementsInterfaceWithExtAttribute(o, LegacyOverrideBuiltIns) ||
       Object.hasOwn(o, p)
     ) {
       if (

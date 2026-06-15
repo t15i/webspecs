@@ -7,7 +7,7 @@ export const ExistingNamedPropertyDeleter: unique symbol = Symbol.for(
 );
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [ExistingNamedPropertyDeleter]?(index: PropertyName): void | typeof failure;
   }
 }
@@ -17,5 +17,5 @@ export function deleteExistingNamedProperty(
   o: PlatformObject,
   property: PropertyName,
 ): void | typeof failure {
-  return o[PrimaryInterface][ExistingNamedPropertyDeleter]!.call(o, property);
+  return o[PrimaryInterface].members[ExistingNamedPropertyDeleter]!.call(o, property);
 }

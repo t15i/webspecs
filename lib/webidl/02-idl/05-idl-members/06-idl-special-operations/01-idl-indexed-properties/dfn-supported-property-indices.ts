@@ -10,7 +10,7 @@ export interface SupportedPropertyIndices extends Iterable<number> {
 }
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [SupportedPropertyIndices]?(): SupportedPropertyIndices;
   }
 }
@@ -19,5 +19,5 @@ export function isSupportedPropertyIndex(
   o: PlatformObject,
   index: number,
 ): boolean {
-  return o[PrimaryInterface][SupportedPropertyIndices]!.call(o).has(index);
+  return o[PrimaryInterface].members[SupportedPropertyIndices]!.call(o).has(index);
 }

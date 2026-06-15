@@ -8,7 +8,7 @@ export const IndexedPropertyGetter: unique symbol = Symbol.for(
 export type IndexedPropertyGetter = Operation<[number], unknown>;
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [IndexedPropertyGetter]?: IndexedPropertyGetter;
   }
 }

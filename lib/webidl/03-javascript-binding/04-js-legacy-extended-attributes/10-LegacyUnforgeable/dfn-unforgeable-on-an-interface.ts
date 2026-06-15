@@ -11,11 +11,11 @@ export function isUnforgeableOnInterface(
   a: Interface,
   identifier: Identifier,
 ): boolean {
-  if (!Object.hasOwn(a, identifier)) {
+  if (!Object.hasOwn(a.members, identifier)) {
     return false;
   }
 
-  const member = a[identifier]!;
+  const member = a.members[identifier]!;
 
   if (!isOperation(member) && !isAttribute(member)) {
     return false;

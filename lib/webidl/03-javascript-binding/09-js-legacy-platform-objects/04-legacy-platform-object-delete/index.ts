@@ -11,6 +11,7 @@ import {
   supportsIndexedProperties,
   supportsNamedProperties,
   implementsInterfaceWith,
+  implementsInterfaceWithExtAttribute,
   isArrayIndex,
   isNamedPropertyVisible,
   Boolean,
@@ -29,14 +30,14 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
 
   if (
     supportsNamedProperties(o) &&
-    !implementsInterfaceWith(o, Global) &&
+    !implementsInterfaceWithExtAttribute(o, Global) &&
     isNamedPropertyVisible(p, o)
   ) {
     if (!implementsInterfaceWith(o, NamedPropertyDeleter)) {
       return false;
     }
 
-    const operation = o[PrimaryInterface][NamedPropertyDeleter]!;
+    const operation = o[PrimaryInterface].members[NamedPropertyDeleter]!;
 
     if (operation.identifier === undefined) {
       const result = deleteExistingNamedProperty(o, p);

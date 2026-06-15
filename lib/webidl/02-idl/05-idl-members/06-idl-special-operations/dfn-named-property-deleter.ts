@@ -9,7 +9,7 @@ export const NamedPropertyDeleter: unique symbol = Symbol.for(
 export type NamedPropertyDeleter = Operation<[PropertyName], unknown>;
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [NamedPropertyDeleter]?: NamedPropertyDeleter;
   }
 }

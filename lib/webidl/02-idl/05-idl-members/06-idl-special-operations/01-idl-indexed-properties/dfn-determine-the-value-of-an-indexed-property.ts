@@ -5,7 +5,7 @@ export const IndexedPropertyDeterminator: unique symbol = Symbol.for(
 );
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [IndexedPropertyDeterminator]?(index: number): unknown;
   }
 }
@@ -15,5 +15,5 @@ export function determineValueOfIndexedProperty(
   o: PlatformObject,
   index: number,
 ): unknown {
-  return o[PrimaryInterface][IndexedPropertyDeterminator]!.call(o, index);
+  return o[PrimaryInterface].members[IndexedPropertyDeterminator]!.call(o, index);
 }
