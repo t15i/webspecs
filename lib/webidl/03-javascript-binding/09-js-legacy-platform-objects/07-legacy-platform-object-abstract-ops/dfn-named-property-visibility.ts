@@ -4,7 +4,7 @@ import {
   LegacyOverrideBuiltIns,
   isSupportedPropertyName,
   isNamedPropertyObject,
-  implementsInterfaceWith,
+  implementsInterfaceWithExtAttribute,
 } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-named-property-visibility */
@@ -20,7 +20,7 @@ export function isNamedPropertyVisible(
     return false;
   }
 
-  if (implementsInterfaceWith(o, LegacyOverrideBuiltIns)) {
+  if (implementsInterfaceWithExtAttribute(o, LegacyOverrideBuiltIns)) {
     return true;
   }
 

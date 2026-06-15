@@ -5,7 +5,7 @@ export const ExistingIndexedPropertySetter: unique symbol = Symbol.for(
 );
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [ExistingIndexedPropertySetter]?(index: number, value: unknown): void;
   }
 }
@@ -16,5 +16,9 @@ export function setValueOfExistingIndexedProperty(
   index: number,
   value: unknown,
 ): void {
-  o[PrimaryInterface][ExistingIndexedPropertySetter]!.call(o, index, value);
+  o[PrimaryInterface].members[ExistingIndexedPropertySetter]!.call(
+    o,
+    index,
+    value,
+  );
 }

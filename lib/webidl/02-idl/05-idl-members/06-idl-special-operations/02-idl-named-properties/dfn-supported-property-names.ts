@@ -11,7 +11,7 @@ export interface SupportedPropertyNames extends Iterable<PropertyName> {
 }
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [SupportedPropertyNames]?(): SupportedPropertyNames;
   }
 }
@@ -20,5 +20,5 @@ export function isSupportedPropertyName(
   o: PlatformObject,
   p: PropertyName,
 ): boolean {
-  return o[PrimaryInterface][SupportedPropertyNames]!.call(o).has(p);
+  return o[PrimaryInterface].members[SupportedPropertyNames]!.call(o).has(p);
 }

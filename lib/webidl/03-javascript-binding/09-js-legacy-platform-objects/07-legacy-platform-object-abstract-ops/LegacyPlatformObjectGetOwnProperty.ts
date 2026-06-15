@@ -14,6 +14,7 @@ import {
   determineValueOfIndexedProperty,
   determineValueOfNamedProperty,
   implementsInterfaceWith,
+  implementsInterfaceWithExtAttribute,
 } from "@webidl";
 
 import { isNamedPropertyVisible } from "./dfn-named-property-visibility";
@@ -28,7 +29,7 @@ export function legacyPlatformObjectGetOwnProperty(
     const index = toUint32(p);
 
     if (isSupportedPropertyIndex(o, index)) {
-      const operation = o[PrimaryInterface][IndexedPropertyGetter];
+      const operation = o[PrimaryInterface].members[IndexedPropertyGetter];
 
       let value;
       if (operation.identifier === undefined) {
@@ -58,7 +59,7 @@ export function legacyPlatformObjectGetOwnProperty(
 
   if (supportsNamedProperties(o) && ignoreNamedProps === false) {
     if (isNamedPropertyVisible(p, o)) {
-      const operation = o[PrimaryInterface][NamedPropertyGetter];
+      const operation = o[PrimaryInterface].members[NamedPropertyGetter];
 
       let value;
       if (operation.identifier === undefined) {
@@ -77,7 +78,12 @@ export function legacyPlatformObjectGetOwnProperty(
         desc.writable = false;
       }
 
-      if (implementsInterfaceWith(o, LegacyUnenumerableNamedProperties)) {
+      if (
+        implementsInterfaceWithExtAttribute(
+          o,
+          LegacyUnenumerableNamedProperties,
+        )
+      ) {
         desc.enumerable = false;
       } else {
         desc.enumerable = true;

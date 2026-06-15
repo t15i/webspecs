@@ -6,7 +6,7 @@ export const NamedPropertyDeterminator: unique symbol = Symbol.for(
 );
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceMembers {
     [NamedPropertyDeterminator]?(name: string): unknown;
   }
 }
@@ -16,5 +16,8 @@ export function determineValueOfNamedProperty(
   o: PlatformObject,
   property: PropertyName,
 ): unknown {
-  return o[PrimaryInterface][NamedPropertyDeterminator]!.call(o, property);
+  return o[PrimaryInterface].members[NamedPropertyDeterminator]!.call(
+    o,
+    property,
+  );
 }

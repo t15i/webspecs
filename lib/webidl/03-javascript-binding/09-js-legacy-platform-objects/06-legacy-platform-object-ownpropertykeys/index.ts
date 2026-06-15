@@ -16,7 +16,7 @@ export function ownPropertyKeys(o: PlatformObject): PropertyKey[] {
 
   if (supportsIndexedProperties(o)) {
     const supportedPropertyIndices =
-      o[PrimaryInterface][SupportedPropertyIndices]!.call(o);
+      o[PrimaryInterface].members[SupportedPropertyIndices]!.call(o);
 
     for (const index of supportedPropertyIndices) {
       keys.push(toString(index));
@@ -25,7 +25,7 @@ export function ownPropertyKeys(o: PlatformObject): PropertyKey[] {
 
   if (supportsNamedProperties(o)) {
     const supportedPropertyNames =
-      o[PrimaryInterface][SupportedPropertyNames]!.call(o);
+      o[PrimaryInterface].members[SupportedPropertyNames]!.call(o);
 
     for (const p of supportedPropertyNames) {
       if (isNamedPropertyVisible(p, o)) {
