@@ -180,25 +180,34 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - [x] `Identifier`
     - [x] `isIdentifier`
   - **§2.2 Interfaces**
-    - [x] `Interface`
+    - [x] `Interface` / `InterfaceMembers` / `InterfaceStaticMembers`
   - **§2.5 Members**
+    - [x] `Member`
     - **§2.5.2 Attributes**
       - [x] `Attribute`
       - [x] `isAttribute`
+      - [x] `isRegularAttribute` / `isStaticAttribute`
+      - [x] `isReadonlyAttribute`
+      - [x] `isDeclaredToInheritItsGetterAttribute`
     - **§2.5.3 Operations**
       - [x] `Operation`
       - [x] `Argument` / `ArgumentList`
       - [x] `isOperation`
     - **§2.5.6 Special operations**
+      - [x] `IndexedPropertyGetter`
+      - [x] `IndexedPropertySetter`
+      - [x] `NamedPropertyGetter`
+      - [x] `NamedPropertySetter`
+      - [x] `NamedPropertyDeleter`
       - **§2.5.6.1 Indexed properties**
-        - [x] `determineValueOfIndexedProperty`
+        - [x] `determineValueOfIndexedProperty` / `IndexedPropertyDeterminator`
         - [x] `setValueOfNewIndexedProperty` / `NewIndexedPropertySetter`
         - [x] `setValueOfExistingIndexedProperty` / `ExistingIndexedPropertySetter`
         - [x] `supportsIndexedProperties` / `SupportIndexedProperties`
         - [x] `isSupportedPropertyIndex` / `SupportedPropertyIndices`
       - **§2.5.6.2 Named properties**
-        - [x] `determineValueOfNamedProperty`
-        - [x] `deleteExistingNamedProperty`
+        - [x] `determineValueOfNamedProperty` / `NamedPropertyDeterminator`
+        - [x] `deleteExistingNamedProperty` / `ExistingNamedPropertyDeleter`
         - [x] `setValueOfNewNamedProperty` / `NewNamedPropertySetter`
         - [x] `setValueOfExistingNamedProperty` / `ExistingNamedPropertySetter`
         - [x] `supportsNamedProperties` / `SupportNamedProperties`
@@ -214,6 +223,8 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
   - ...
 - **§3 ECMAScript binding**
   - **§3.2 ECMAScript type mapping**
+    - **§3.2.2 undefined**
+      - [x] `Undefined`
     - **§3.2.3 boolean**
       - [x] `Boolean`
     - **§3.2.4 Integer types**
@@ -260,7 +271,10 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - [x] `isPlatformObject`
     - [x] `PrimaryInterface`
     - [x] `ImplementsInterfaceWith` / `ImplementsInterfaceWithout` / `implementsInterfaceWith`
+    - [x] `ImplementsInterfaceWithExtAttribute` / `ImplementsInterfaceWithoutExtAttribute` / `implementsInterfaceWithExtAttribute`
   - **§3.9 Legacy platform objects**
+    - [x] `LegacyPlatformObjectInternalMethods`
+    - [x] `isUnforgeablePropertyName`
     - **§3.9.1 `[[GetOwnProperty]]`**
       - [x] `getOwnProperty`
     - **§3.9.2 `[[Set]]`**
