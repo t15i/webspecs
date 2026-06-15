@@ -17,5 +17,8 @@ export function deleteExistingNamedProperty(
   o: PlatformObject,
   property: PropertyName,
 ): void | typeof failure {
-  return o[PrimaryInterface].members[ExistingNamedPropertyDeleter]!.call(o, property);
+  return o[PrimaryInterface].members[ExistingNamedPropertyDeleter]!.call(
+    o,
+    property,
+  );
 }

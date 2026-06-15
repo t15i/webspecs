@@ -16,5 +16,8 @@ export function determineValueOfNamedProperty(
   o: PlatformObject,
   property: PropertyName,
 ): unknown {
-  return o[PrimaryInterface].members[NamedPropertyDeterminator]!.call(o, property);
+  return o[PrimaryInterface].members[NamedPropertyDeterminator]!.call(
+    o,
+    property,
+  );
 }

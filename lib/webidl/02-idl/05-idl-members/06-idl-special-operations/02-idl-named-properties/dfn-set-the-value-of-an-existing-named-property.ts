@@ -17,5 +17,9 @@ export function setValueOfExistingNamedProperty(
   property: PropertyName,
   value: unknown,
 ): void {
-  o[PrimaryInterface].members[ExistingNamedPropertySetter]!.call(o, property, value);
+  o[PrimaryInterface].members[ExistingNamedPropertySetter]!.call(
+    o,
+    property,
+    value,
+  );
 }

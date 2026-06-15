@@ -16,5 +16,9 @@ export function setValueOfExistingIndexedProperty(
   index: number,
   value: unknown,
 ): void {
-  o[PrimaryInterface].members[ExistingIndexedPropertySetter]!.call(o, index, value);
+  o[PrimaryInterface].members[ExistingIndexedPropertySetter]!.call(
+    o,
+    index,
+    value,
+  );
 }

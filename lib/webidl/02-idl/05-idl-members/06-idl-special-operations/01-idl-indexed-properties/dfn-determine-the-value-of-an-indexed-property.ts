@@ -15,5 +15,8 @@ export function determineValueOfIndexedProperty(
   o: PlatformObject,
   index: number,
 ): unknown {
-  return o[PrimaryInterface].members[IndexedPropertyDeterminator]!.call(o, index);
+  return o[PrimaryInterface].members[IndexedPropertyDeterminator]!.call(
+    o,
+    index,
+  );
 }

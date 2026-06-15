@@ -19,5 +19,7 @@ export function isSupportedPropertyIndex(
   o: PlatformObject,
   index: number,
 ): boolean {
-  return o[PrimaryInterface].members[SupportedPropertyIndices]!.call(o).has(index);
+  return o[PrimaryInterface].members[SupportedPropertyIndices]!.call(o).has(
+    index,
+  );
 }
