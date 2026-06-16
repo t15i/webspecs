@@ -1,7 +1,7 @@
 {
   "name": "@t15i/webspecs",
   "type": "module",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "TypeScript implementations of web platform specifications",
   "keywords": [
     "ecma",
