@@ -155,6 +155,13 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - [x] `convertStringIntoScalarValueString`
     - ...
   - ...
+- **§8 Namespaces**
+  - [x] `HTMLNamespace`
+  - [x] `MathMLNamespace`
+  - [x] `SVGNamespace`
+  - [x] `XLinkNamespace`
+  - [x] `XMLNamespace`
+  - [x] `XMLNSNamespace`
 - ...
 
 </details>
