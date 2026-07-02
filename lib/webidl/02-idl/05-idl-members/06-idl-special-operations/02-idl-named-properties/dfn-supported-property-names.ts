@@ -2,8 +2,8 @@ import { type PropertyName } from "@ecma";
 import { type PlatformObject, PrimaryInterface } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices */
-export const SupportedPropertyNames: unique symbol = Symbol.for(
-  "@t15i/webspecs/webidl/SupportedPropertyNames",
+export const SupportedPropertyNames: unique symbol = Symbol(
+  "SupportedPropertyNames",
 );
 
 export interface SupportedPropertyNames extends Iterable<PropertyName> {

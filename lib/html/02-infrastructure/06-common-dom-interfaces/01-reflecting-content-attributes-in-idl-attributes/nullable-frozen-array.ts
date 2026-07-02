@@ -1,4 +1,8 @@
-import { FrozenArray, Type } from "@webidl";
+import {
+  type FrozenArrayType,
+  type InterfaceType,
+  type NullableType,
+} from "@webidl";
 
 import type { ReflectedContentAttribute } from "./reflected-content-attribute";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
@@ -12,7 +16,7 @@ export interface ReflectedTarget<
   explicitlySetElements: WeakRef<T>[] | null;
 
   /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#cached-attr-associated-elements-object */
-  cachedAssociatedElements: T[] | null;
+  cachedAssociatedElements: readonly T[] | null;
 
   /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-elements */
   getAssociatedElements(): T[] | null;
@@ -21,7 +25,7 @@ export interface ReflectedTarget<
 export interface ReflectedIDLAttribute<
   T extends Element,
 > extends BaseReflectedIDLAttribute {
-  readonly T: new () => T;
+  readonly T: NullableType<FrozenArrayType<InterfaceType<T>>>;
 }
 
 export type { ReflectedContentAttribute };
@@ -54,7 +58,7 @@ export function getAssociatedElements<T extends Element>(
       const candidate = firstElementInTreeOrderThatMeetsCriteria({
         root: element.getRootNode(),
         id,
-        T: reflectedIDLAttribute.T,
+        T: reflectedIDLAttribute.T.innerType.T.T,
       });
 
       if (candidate === null) {
@@ -71,7 +75,7 @@ export function getAssociatedElements<T extends Element>(
 export function getter<T extends Element>(
   this: ReflectedTarget<T>,
   reflectedIDLAttribute: ReflectedIDLAttribute<T>,
-): T[] | null {
+): readonly T[] | null {
   const elements = this.getAssociatedElements();
 
   if (elements === null && this.cachedAssociatedElements === null) {
@@ -89,10 +93,7 @@ export function getter<T extends Element>(
     return this.cachedAssociatedElements;
   }
 
-  const elementsAsFrozenArray = FrozenArray(
-    Type(reflectedIDLAttribute.T),
-    elements,
-  );
+  const elementsAsFrozenArray = reflectedIDLAttribute.T(elements);
 
   this.cachedAssociatedElements = elementsAsFrozenArray;
   return elementsAsFrozenArray;

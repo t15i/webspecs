@@ -1,4 +1,4 @@
-import { Long } from "@webidl";
+import { LONG_MAX, LONG_MIN } from "@webidl";
 
 import {
   integerParsing,
@@ -33,8 +33,8 @@ export function getter(
 
     if (
       parsedValue !== "error" &&
-      parsedValue >= Long.MIN &&
-      parsedValue <= Long.MAX
+      parsedValue >= LONG_MIN &&
+      parsedValue <= LONG_MAX
     ) {
       return parsedValue;
     }

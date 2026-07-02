@@ -1,10 +1,16 @@
+import {
+  type DOMStringType,
+  isAnnotatedWithExtAttribute,
+  LegacyNullToEmptyString,
+} from "@webidl";
+
 /** @see https://webidl.spec.whatwg.org/#js-DOMString */
-export function DOMString(
-  raw: unknown,
-  extendedAttributes?: { legacyNullToEmptyString?: boolean | undefined },
-): string {
-  if (raw === null && extendedAttributes?.legacyNullToEmptyString) {
+export function asDOMString(this: DOMStringType, v: unknown): string {
+  if (
+    v === null &&
+    isAnnotatedWithExtAttribute(this, LegacyNullToEmptyString)
+  ) {
     return "";
   }
-  return String(raw);
+  return `${v}`;
 }

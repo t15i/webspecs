@@ -1,8 +1,8 @@
 import { type PropertyName } from "@ecma";
 import { type PlatformObject, PrimaryInterface } from "@webidl";
 
-export const NamedPropertyDeterminator: unique symbol = Symbol.for(
-  "@t15i/webspecs/webidl/NamedPropertyDeterminator",
+export const NamedPropertyDeterminator: unique symbol = Symbol(
+  "NamedPropertyDeterminator",
 );
 
 declare module "@webidl" {

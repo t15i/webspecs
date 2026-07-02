@@ -1,7 +1,7 @@
 import { type PlatformObject, PrimaryInterface } from "@webidl";
 
-export const IndexedPropertyDeterminator: unique symbol = Symbol.for(
-  "@t15i/webspecs/webidl/IndexedPropertyDeterminator",
+export const IndexedPropertyDeterminator: unique symbol = Symbol(
+  "IndexedPropertyDeterminator",
 );
 
 declare module "@webidl" {

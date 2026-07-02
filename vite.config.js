@@ -27,6 +27,7 @@ export default {
       enabled: true,
       provider: playwright(),
       instances: [{ browser: "chromium" }, { browser: "firefox" }],
+      isolate: false,
     },
     coverage: {
       enabled: false,

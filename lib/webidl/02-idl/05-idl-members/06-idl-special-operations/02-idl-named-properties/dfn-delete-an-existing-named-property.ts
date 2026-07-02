@@ -2,8 +2,8 @@ import { type PropertyName } from "@ecma";
 import { type PlatformObject, PrimaryInterface } from "@webidl";
 import { failure } from "@share";
 
-export const ExistingNamedPropertyDeleter: unique symbol = Symbol.for(
-  "@t15i/webspecs/webidl/ExistingNamedPropertyDeleter",
+export const ExistingNamedPropertyDeleter: unique symbol = Symbol(
+  "ExistingNamedPropertyDeleter",
 );
 
 declare module "@webidl" {

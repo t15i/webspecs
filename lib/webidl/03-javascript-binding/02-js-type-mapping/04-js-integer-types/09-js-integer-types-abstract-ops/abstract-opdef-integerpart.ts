@@ -1,6 +1,7 @@
-import { sign } from "@ecma";
+import { R, sign } from "@ecma";
 
 /** @see https://webidl.spec.whatwg.org/#abstract-opdef-integerpart */
 export function integerPart(n: number): number {
-  return sign(n) * Math.floor(Math.abs(n));
+  const r = R(n);
+  return R(sign(r) * Math.floor(Math.abs(r)));
 }

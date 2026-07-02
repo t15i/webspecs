@@ -1,35 +1,33 @@
-export function Nullable<T>(
-  T: (raw: unknown) => NonNullable<T>,
-  includesUndefined?: false,
-): (raw: unknown) => NonNullable<T> | null;
-
-export function Nullable<T>(
-  T: (raw: unknown) => NonNullable<T> | undefined,
-  includesUndefined: true,
-): (raw: unknown) => NonNullable<T> | undefined | null;
+import { isObject } from "@ecma";
+import {
+  includesUndefined,
+  isAnnotatedWithExtAttribute,
+  isCallbackFunctionType,
+  LegacyTreatNonObjectAsNull,
+  type NullableType,
+  type Type,
+} from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#js-nullable-type */
-export function Nullable<T>(
-  T: (raw: unknown) => T,
-  includesUndefined: boolean = false,
-) {
-  return function (raw: unknown) {
-    return Nullable_<T>(T, raw, includesUndefined);
-  };
-}
-
-function Nullable_<T>(
-  T: (raw: unknown) => T,
-  raw: unknown,
-  includesUndefined?: boolean,
-) {
-  if (raw === undefined && includesUndefined) {
-    return undefined;
-  }
-
-  if (raw === null) {
+export function asNullable<T>(
+  this: NullableType<Type<T>>,
+  v: unknown,
+): T | null {
+  if (
+    !isObject(v) &&
+    isCallbackFunctionType(this.innerType) &&
+    isAnnotatedWithExtAttribute(this.innerType, LegacyTreatNonObjectAsNull)
+  ) {
     return null;
   }
 
-  return T(raw);
+  if (v === undefined && includesUndefined(this.innerType)) {
+    return undefined as T;
+  }
+
+  if (v === null || v === undefined) {
+    return null;
+  }
+
+  return this.innerType(v);
 }

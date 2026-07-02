@@ -13,8 +13,8 @@ import {
   implementsInterfaceWith,
   implementsInterfaceWithExtAttribute,
   isArrayIndex,
+  isBooleanType,
   isNamedPropertyVisible,
-  Boolean,
 } from "@webidl";
 
 export function del(o: PlatformObject, p: PropertyName): boolean {
@@ -48,7 +48,7 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
     } else {
       const result = operation.methodSteps.call(o, p);
 
-      if (operation.returnType === Boolean && result === false) {
+      if (isBooleanType(operation.returnType) && result === false) {
         return false;
       }
     }

@@ -22,10 +22,10 @@ export type ImplementsInterfaceWithout<
   };
 };
 
-export function implementsInterfaceWith(
+export function implementsInterfaceWith<K extends keyof InterfaceMembers>(
   o: object,
-  key: keyof InterfaceMembers,
-): o is ImplementsInterfaceWith<PlatformObject, typeof key> {
+  key: K,
+): o is ImplementsInterfaceWith<PlatformObject, K> {
   return isPlatformObject(o) && key in o[PrimaryInterface].members;
 }
 
@@ -45,9 +45,9 @@ export type ImplementsInterfaceWithoutExtAttribute<
   [PrimaryInterface]: Omit<T[typeof PrimaryInterface], K>;
 };
 
-export function implementsInterfaceWithExtAttribute(
+export function implementsInterfaceWithExtAttribute<K extends keyof Interface>(
   o: object,
-  key: keyof Interface,
-): o is ImplementsInterfaceWithExtAttribute<PlatformObject, typeof key> {
+  key: K,
+): o is ImplementsInterfaceWithExtAttribute<PlatformObject, K> {
   return isPlatformObject(o) && key in o[PrimaryInterface];
 }
