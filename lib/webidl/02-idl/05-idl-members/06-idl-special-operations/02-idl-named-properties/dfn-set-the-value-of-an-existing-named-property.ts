@@ -1,5 +1,5 @@
 import { type PropertyName } from "@ecma";
-import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { PlatformObject } from "@webidl";
 
 export const ExistingNamedPropertySetter: unique symbol = Symbol(
   "ExistingNamedPropertySetter",
@@ -17,9 +17,7 @@ export function setValueOfExistingNamedProperty(
   property: PropertyName,
   value: unknown,
 ): void {
-  o[PrimaryInterface].members[ExistingNamedPropertySetter]!.call(
-    o,
-    property,
-    value,
-  );
+  PlatformObject.getPrimaryInterfaceOf(o).members[
+    ExistingNamedPropertySetter
+  ]!.call(o, property, value);
 }

@@ -52,6 +52,8 @@ import {
   makeAsyncSequenceType,
   makeBigIntType,
   makeBooleanType,
+  makeCallbackFunctionType,
+  makeCallbackInterfaceType,
   makeDictionaryType,
   makeDOMStringType,
   makeDoubleType,
@@ -60,6 +62,7 @@ import {
   makeLongType,
   makeNullableType,
   makeObjectType,
+  makePlatformObject,
   makeRecordType,
   makeSequenceType,
   makeUndefinedType,
@@ -107,9 +110,9 @@ describe("asUnion - step 4: dictionary fallback for null/undefined", () => {
 });
 
 describe("asUnion - step 5: platform object / interface matching", () => {
-  // The current library identifies platform objects via the
-  // PrimaryInterface marker. Without that marker the implementation
-  // falls through to the IsCallable / Object branches, but the spec
+  // The current library identifies platform objects via
+  // PlatformObject.getPrimaryInterfaceOf. When it returns null the
+  // implementation falls through to the IsCallable / Object branches, but the spec
   // still requires interface matching to succeed when V is an
   // instance of one of the union's interface types. We test the
   // canonical instanceof case via the Object branch (step 11.7) since
@@ -271,5 +274,149 @@ describe("asUnion - step 20: nothing matches -> TypeError", () => {
     // Step 19 fires, ToBigInt(undefined) throws TypeError.
     const T = makeUnionType([makeBigIntType()]);
     expect(() => T(undefined)).toThrow(TypeError);
+  });
+});
+
+describe("asUnion - step 5.2: V is a platform object, types includes object -> V", () => {
+  test("(object), V is a platform object -> V", () => {
+    const v = makePlatformObject("test");
+    const T = makeUnionType([makeObjectType()]);
+    expect(T(v)).toBe(v);
+  });
+});
+
+describe("asUnion - step 5.1: V is a platform object, types includes an interface type V implements -> V", () => {
+  test("(Interface) only, V is an instance -> V (isolated from the object branch)", () => {
+    class HTMLElement {}
+    const T = makeUnionType([makeInterfaceType(HTMLElement)]);
+    const v = new HTMLElement();
+    expect(T(v)).toBe(v);
+  });
+
+  test("(Interface) only, V is NOT an instance -> TypeError", () => {
+    class HTMLElement {}
+    const T = makeUnionType([makeInterfaceType(HTMLElement)]);
+    expect(() => T({})).toThrow(TypeError);
+  });
+});
+
+describe("asUnion - step 9.1: IsCallable(V), types includes a callback function type", () => {
+  test("(CallbackFunction), V is a function -> converted callback (V)", () => {
+    const T = makeUnionType([makeCallbackFunctionType()]);
+    const fn = (): number => 1;
+    expect(T(fn)).toBe(fn);
+  });
+});
+
+describe("asUnion - step 10.1: async sequence via a sync iterator", () => {
+  test("(AsyncSequence), V has Symbol.iterator but not Symbol.asyncIterator -> V", () => {
+    const T = makeUnionType([makeAsyncSequenceType(makeLongType())]);
+    const v = {
+      *[Symbol.iterator](): Iterator<number> {
+        yield 1;
+      },
+    };
+    expect(T(v)).toBe(v);
+  });
+});
+
+describe("asUnion - step 10.6: types includes a callback interface type", () => {
+  test("(CallbackInterface), V is a plain object -> converted (V)", () => {
+    const T = makeUnionType([makeCallbackInterfaceType()]);
+    const v = { any: "object" };
+    expect(T(v)).toBe(v);
+  });
+});
+
+describe("asUnion - numeric type and bigint (converted to a numeric type or bigint)", () => {
+  // Spec: let x = ToNumeric(V); if x is a BigInt -> bigint, else -> numeric.
+  // The decision is made on ToNumeric(V), i.e. on the *coerced* value.
+
+  test("(long or bigint), V is a plain string '5' -> numeric 5", () => {
+    // ToNumeric("5") is the Number 5 -> numeric branch.
+    const T = makeUnionType([makeLongType(), makeBigIntType()]);
+    expect(T("5")).toBe(5);
+  });
+
+  test("(long or bigint), V is an object whose primitive is a Number -> numeric", () => {
+    // ToNumeric({valueOf:()=>7}) is the Number 7 -> numeric branch.
+    const T = makeUnionType([makeLongType(), makeBigIntType()]);
+    expect(T({ valueOf: () => 7 })).toBe(7);
+  });
+
+  test("(long or bigint), V is an object whose primitive is a BigInt -> bigint", () => {
+    // ToNumeric of an object whose [Symbol.toPrimitive] returns a BigInt is
+    // that BigInt, so the spec routes this to the bigint conversion.
+    const T = makeUnionType([makeLongType(), makeBigIntType()]);
+    const v = {
+      [Symbol.toPrimitive]: () => 10n,
+    };
+    expect(T(v)).toBe(10n);
+  });
+});
+
+describe("asUnion - final step: nothing matches -> TypeError", () => {
+  test("(sequence<long>), V is a non-iterable number -> TypeError", () => {
+    const T = makeUnionType([makeSequenceType(makeLongType())]);
+    expect(() => T(42)).toThrow(TypeError);
+  });
+});
+
+describe("asUnion - a member type does not match, falls through to the next rule", () => {
+  test("IsCallable(V), no callback function type nor object -> treated as Object (callback interface)", () => {
+    // Step 9 yields nothing (no callback function type, no object); a function
+    // is an Object, so step 10 applies and it converts to the callback interface.
+    const T = makeUnionType([makeCallbackInterfaceType()]);
+    const fn = (): void => {};
+    expect(T(fn)).toBe(fn);
+  });
+
+  test("(AsyncSequence or DOMString), V is a String object -> converted to string, not async sequence", () => {
+    // The async-sequence step is skipped when types includes a string type and
+    // V has a [[StringData]] internal slot; V is then converted to the string.
+    const T = makeUnionType([
+      makeAsyncSequenceType(makeLongType()),
+      makeDOMStringType(),
+    ]);
+    expect(T(new String("hi"))).toBe("hi");
+  });
+
+  test("(AsyncSequence or object), V is a non-iterable object -> object branch", () => {
+    const T = makeUnionType([
+      makeAsyncSequenceType(makeLongType()),
+      makeObjectType(),
+    ]);
+    const v = { plain: true };
+    expect(T(v)).toBe(v);
+  });
+
+  test("(sequence<long> or object), V is a non-iterable object -> object branch", () => {
+    const T = makeUnionType([
+      makeSequenceType(makeLongType()),
+      makeObjectType(),
+    ]);
+    const v = { plain: true };
+    expect(T(v)).toBe(v);
+  });
+
+  test("(FrozenArray<long> or object), V is a non-iterable object -> object branch", () => {
+    const T = makeUnionType([
+      makeFrozenArrayType(makeLongType()),
+      makeObjectType(),
+    ]);
+    const v = { plain: true };
+    expect(T(v)).toBe(v);
+  });
+
+  test("(long), V is a Boolean but no boolean type -> numeric conversion", () => {
+    // Step 11 (Boolean) yields nothing; the numeric fallback converts true -> 1.
+    const T = makeUnionType([makeLongType()]);
+    expect(T(true)).toBe(1);
+  });
+
+  test("(DOMString), V is a BigInt but no bigint type -> string conversion", () => {
+    // Step for BigInt yields nothing; the string type converts 5n -> "5".
+    const T = makeUnionType([makeDOMStringType()]);
+    expect(T(5n)).toBe("5");
   });
 });

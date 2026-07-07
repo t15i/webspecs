@@ -19,6 +19,8 @@ import {
   BIGINT_TYPE_NAME,
   BOOLEAN_TYPE_NAME,
   BYTE_STRING_TYPE_NAME,
+  CALLBACK_FUNCTION_TYPE_NAME,
+  CALLBACK_INTERFACE_TYPE_NAME,
   DICTIONARY_TYPE_NAME,
   DOM_STRING_TYPE_NAME,
   DOUBLE_TYPE_NAME,
@@ -69,6 +71,8 @@ import {
   type BigIntType,
   type BooleanType,
   type ByteStringType,
+  type CallbackFunctionType,
+  type CallbackInterfaceType,
   type DictionaryType,
   type DOMStringType,
   type DoubleType,
@@ -88,6 +92,8 @@ import {
   type UnsignedLongType,
   type USVStringType,
   type RecordKeyType,
+  PlatformObject,
+  type Interface,
 } from "lib/webidl";
 
 type ExtAttrs = {
@@ -209,6 +215,25 @@ export function makeObjectType(): ObjectType {
     return v as object;
   } as ObjectType;
   defineName(fn, OBJECT_TYPE_NAME);
+  return fn;
+}
+
+export function makeCallbackFunctionType(
+  attrs?: ExtAttrs,
+): CallbackFunctionType {
+  const fn = function (v: unknown): CallableFunction {
+    return v as CallableFunction;
+  } as CallbackFunctionType;
+  defineName(fn, CALLBACK_FUNCTION_TYPE_NAME);
+  applyExtAttrs(fn, attrs);
+  return fn;
+}
+
+export function makeCallbackInterfaceType(): CallbackInterfaceType {
+  const fn = function (v: unknown): object {
+    return v as object;
+  } as CallbackInterfaceType;
+  defineName(fn, CALLBACK_INTERFACE_TYPE_NAME);
   return fn;
 }
 
@@ -380,4 +405,26 @@ export function makeUnionType<T extends Type>(memberTypes: T[]): UnionType<T> {
   fn.numberOfNullableMemberTypes = getNumberOfNullableMemberTypes(fn);
   fn.flattenedMemberTypes = buildFlattenedMemberTypes(fn);
   return fn;
+}
+
+const platformObjects: WeakMap<object, Interface> = new WeakMap();
+
+function getPrimaryInterfaceOf(obj: object): Interface | undefined;
+function getPrimaryInterfaceOf(obj: PlatformObject): Interface;
+function getPrimaryInterfaceOf(obj: object) {
+  return platformObjects.get(obj) as Interface;
+}
+
+PlatformObject.getPrimaryInterfaceOf = getPrimaryInterfaceOf;
+
+export function makePlatformObject(id: string = "Unnamed"): PlatformObject {
+  const obj = {};
+
+  platformObjects.set(obj, {
+    identifier: id,
+    members: {},
+    staticMembers: {},
+  });
+
+  return obj as PlatformObject;
 }

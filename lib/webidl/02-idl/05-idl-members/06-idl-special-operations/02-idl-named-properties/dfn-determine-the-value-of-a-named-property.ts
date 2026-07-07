@@ -1,5 +1,5 @@
 import { type PropertyName } from "@ecma";
-import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { PlatformObject } from "@webidl";
 
 export const NamedPropertyDeterminator: unique symbol = Symbol(
   "NamedPropertyDeterminator",
@@ -16,8 +16,7 @@ export function determineValueOfNamedProperty(
   o: PlatformObject,
   property: PropertyName,
 ): unknown {
-  return o[PrimaryInterface].members[NamedPropertyDeterminator]!.call(
-    o,
-    property,
-  );
+  return PlatformObject.getPrimaryInterfaceOf(o).members[
+    NamedPropertyDeterminator
+  ]!.call(o, property);
 }

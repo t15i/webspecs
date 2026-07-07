@@ -1,13 +1,12 @@
 import { ordinaryGetOwnProperty, toUint32, type PropertyName } from "@ecma";
 
 import {
-  type PlatformObject,
+  PlatformObject,
   NamedPropertyGetter,
   NamedPropertySetter,
   IndexedPropertyGetter,
   IndexedPropertySetter,
   LegacyUnenumerableNamedProperties,
-  PrimaryInterface,
   supportsIndexedProperties,
   supportsNamedProperties,
   isSupportedPropertyIndex,
@@ -29,7 +28,8 @@ export function legacyPlatformObjectGetOwnProperty(
     const index = toUint32(p);
 
     if (isSupportedPropertyIndex(o, index)) {
-      const operation = o[PrimaryInterface].members[IndexedPropertyGetter];
+      const operation =
+        PlatformObject.getPrimaryInterfaceOf(o).members[IndexedPropertyGetter]!;
 
       let value;
       if (operation.identifier === undefined) {
@@ -59,7 +59,8 @@ export function legacyPlatformObjectGetOwnProperty(
 
   if (supportsNamedProperties(o) && ignoreNamedProps === false) {
     if (isNamedPropertyVisible(p, o)) {
-      const operation = o[PrimaryInterface].members[NamedPropertyGetter];
+      const operation =
+        PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertyGetter]!;
 
       let value;
       if (operation.identifier === undefined) {

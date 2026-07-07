@@ -8,6 +8,7 @@ import {
   isObject,
 } from "@ecma";
 import {
+  asNumericOrBigint,
   ASYNC_SEQUENCE_TYPE_NAME,
   BIGINT_TYPE_NAME,
   BOOLEAN_TYPE_NAME,
@@ -31,15 +32,51 @@ import {
   type UnionType,
 } from "@webidl";
 
-function includesInterfaceTypeImplementedBy(
+/**
+ * Decides the "V is a platform object then ..." step of the union conversion.
+ *
+ * @see https://webidl.spec.whatwg.org/#js-union
+ *
+ * The spec phrases this step as:
+ *
+ *     If V is a platform object, then:
+ *       - If types includes an interface type that V implements, return V.
+ *       - If types includes object, return V.
+ *
+ * NOTE: Both spec branches are gated behind "V is a platform object", but that
+ * guard cannot be reproduced faithfully here. There is no reliable way to tell
+ * whether an arbitrary object is a *built-in* platform object without an
+ * exhaustive enumeration (or a lookup table) of every such type. This
+ * implementation therefore works backwards from the union's own members rather
+ * than classifying V up front:
+ *
+ *   - The `object` branch keeps the `isPlatformObject(v)` check, as that is the
+ *     only signal available to it.
+ *   - The interface branch is decided solely by `v instanceof type.T`: if the
+ *     union lists an interface type that V implements (is an instance of), V is
+ *     accepted.
+ *
+ * A consequence is that a type occupying an interface slot which is not in fact
+ * a platform object (semantically invalid, yet syntactically expressible) could
+ * cause V to be accepted where the spec would reject it. Because this library
+ * ships no implementations of the types themselves, whether such a guard is
+ * needed and whether enforcing it is worthwhile at all is left to the
+ * discretion of downstream implementers.
+ */
+function isPlatformObjectAndTypesIncludesObjectOrInterfaceTypeImplementedBy(
   types: FlattenedMemberTypes<Type>,
-  v: object,
+  v: unknown,
 ): boolean {
+  if (isPlatformObject(v) && types.has(OBJECT_TYPE_NAME)) {
+    return true;
+  }
+
   for (const type of types) {
     if (isInterfaceType(type) && v instanceof type.T) {
       return true;
     }
   }
+
   return false;
 }
 
@@ -60,13 +97,10 @@ export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
     }
   }
 
-  if (isPlatformObject(v)) {
-    if (includesInterfaceTypeImplementedBy(types, v)) {
-      return v as T;
-    }
-    if (types.has(OBJECT_TYPE_NAME)) {
-      return v as T;
-    }
+  if (
+    isPlatformObjectAndTypesIncludesObjectOrInterfaceTypeImplementedBy(types, v)
+  ) {
+    return v as T;
   }
 
   // Skipped per scope:
@@ -157,11 +191,7 @@ export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
   }
 
   if (types.has(NUMERIC_TYPE_NAME) && types.has(BIGINT_TYPE_NAME)) {
-    if (isBigInt(v)) {
-      return types.get(BIGINT_TYPE_NAME)(v) as T;
-    } else {
-      return types.get(NUMERIC_TYPE_NAME)(v) as T;
-    }
+    return asNumericOrBigint.call(types.get(NUMERIC_TYPE_NAME), v) as T;
   }
 
   if (types.has(NUMERIC_TYPE_NAME)) {

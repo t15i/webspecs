@@ -5,3 +5,5 @@ import { type BigIntType } from "@webidl";
 export function asBigInt(this: BigIntType, v: unknown): bigint {
   return toBigInt(v);
 }
+
+export * from "./converted-to-a-numeric-type-or-bigint";

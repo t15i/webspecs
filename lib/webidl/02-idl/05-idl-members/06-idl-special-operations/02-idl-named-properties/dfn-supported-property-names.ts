@@ -1,5 +1,5 @@
 import { type PropertyName } from "@ecma";
-import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { PlatformObject } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices */
 export const SupportedPropertyNames: unique symbol = Symbol(
@@ -20,5 +20,7 @@ export function isSupportedPropertyName(
   o: PlatformObject,
   p: PropertyName,
 ): boolean {
-  return o[PrimaryInterface].members[SupportedPropertyNames]!.call(o).has(p);
+  return PlatformObject.getPrimaryInterfaceOf(o)
+    .members[SupportedPropertyNames]!.call(o)
+    .has(p);
 }

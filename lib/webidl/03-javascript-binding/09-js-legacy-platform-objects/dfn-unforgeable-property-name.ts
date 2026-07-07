@@ -1,7 +1,6 @@
 import {
-  type PlatformObject,
+  PlatformObject,
   type Identifier,
-  PrimaryInterface,
   isUnforgeableOnInterface,
 } from "@webidl";
 
@@ -9,7 +8,7 @@ export function isUnforgeablePropertyName(
   o: PlatformObject,
   propertyName: Identifier,
 ): boolean {
-  let i = o[PrimaryInterface];
+  let i = PlatformObject.getPrimaryInterfaceOf(o);
 
   while (i !== null) {
     if (isUnforgeableOnInterface(i, propertyName)) {

@@ -1,4 +1,4 @@
-import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { PlatformObject } from "@webidl";
 
 export const IndexedPropertyDeterminator: unique symbol = Symbol(
   "IndexedPropertyDeterminator",
@@ -15,8 +15,7 @@ export function determineValueOfIndexedProperty(
   o: PlatformObject,
   index: number,
 ): unknown {
-  return o[PrimaryInterface].members[IndexedPropertyDeterminator]!.call(
-    o,
-    index,
-  );
+  return PlatformObject.getPrimaryInterfaceOf(o).members[
+    IndexedPropertyDeterminator
+  ]!.call(o, index);
 }

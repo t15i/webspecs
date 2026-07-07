@@ -18,6 +18,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   makeBooleanType,
+  makeCallbackFunctionType,
   makeDOMStringType,
   makeLongType,
   makeNullableType,
@@ -75,5 +76,27 @@ describe("asNullable - inner type conversion", () => {
     const T = makeNullableType(makeDOMStringType());
     expect(T(42)).toBe("42");
     expect(T("x")).toBe("x");
+  });
+});
+
+describe("asNullable - step 1: [LegacyTreatNonObjectAsNull] callback function", () => {
+  // Spec step 1: If V is not an Object, and the inner type is a nullable
+  // callback function annotated with [LegacyTreatNonObjectAsNull], return null.
+  test("inner is [LegacyTreatNonObjectAsNull] callback, V is a non-object -> null", () => {
+    const T = makeNullableType(
+      makeCallbackFunctionType({ legacyTreatNonObjectAsNull: true }),
+    );
+    expect(T(42)).toBe(null);
+  });
+
+  test("inner is [LegacyTreatNonObjectAsNull] callback, V is an Object -> step 1 skipped, converts via inner", () => {
+    // A function IS an Object, so step 1 does not apply; step 4 converts V
+    // using the inner callback function type.
+    const inner = makeCallbackFunctionType({
+      legacyTreatNonObjectAsNull: true,
+    });
+    const T = makeNullableType(inner);
+    const fn = (): void => {};
+    expect(T(fn)).toBe(fn);
   });
 });

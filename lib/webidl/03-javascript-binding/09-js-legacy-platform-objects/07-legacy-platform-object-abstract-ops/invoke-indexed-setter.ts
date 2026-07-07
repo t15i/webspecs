@@ -1,24 +1,23 @@
 import { toUint32 } from "@ecma";
 
 import {
-  type PlatformObject,
+  PlatformObject,
   IndexedPropertySetter,
-  PrimaryInterface,
   isSupportedPropertyIndex,
   setValueOfExistingIndexedProperty,
   setValueOfNewIndexedProperty,
-  type ImplementsInterfaceWith,
 } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#invoke-indexed-setter */
 export function invokeIndexedPropertySetter(
-  o: ImplementsInterfaceWith<PlatformObject, typeof IndexedPropertySetter>,
+  o: PlatformObject,
   p: PropertyKey,
   v: unknown,
 ): void {
   const index = toUint32(p);
   const creating = !isSupportedPropertyIndex(o, index);
-  const operation = o[PrimaryInterface].members[IndexedPropertySetter];
+  const operation =
+    PlatformObject.getPrimaryInterfaceOf(o).members[IndexedPropertySetter]!;
   const T = operation.arguments[1].type;
   const value = T(v);
 

@@ -2,9 +2,8 @@ import { type PropertyName, toUint32 } from "@ecma";
 import { failure } from "@share";
 
 import {
-  type PlatformObject,
+  PlatformObject,
   NamedPropertyDeleter,
-  PrimaryInterface,
   Global,
   deleteExistingNamedProperty,
   isSupportedPropertyIndex,
@@ -37,7 +36,8 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
       return false;
     }
 
-    const operation = o[PrimaryInterface].members[NamedPropertyDeleter]!;
+    const operation =
+      PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertyDeleter]!;
 
     if (operation.identifier === undefined) {
       const result = deleteExistingNamedProperty(o, p);

@@ -1,3 +1,5 @@
+export * from "./01-sec-toprimitive";
+export * from "./03-sec-tonumeric";
 export * from "./04-sec-tonumber";
 export * from "./05-sec-tointegerorinfinity";
 export * from "./06-sec-tofixedsizeinteger";

@@ -32,6 +32,19 @@ import {
   makeUnsignedLongType,
 } from "../../../../02-idl/13-idl-types/utils";
 
+describe("convertToInt - step 5: -0 is normalised to +0", () => {
+  test("V is -0 -> +0 (not -0)", () => {
+    const result = convertToInt(-0, 32, "signed");
+    expect(Object.is(result, 0)).toBe(true);
+    expect(Object.is(result, -0)).toBe(false);
+  });
+
+  test("V coerces to -0 (string '-0') -> +0", () => {
+    const result = convertToInt("-0", 32, "signed");
+    expect(Object.is(result, 0)).toBe(true);
+  });
+});
+
 describe("convertToInt - non-finite values", () => {
   test.each([
     ["NaN", NaN],

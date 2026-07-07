@@ -1,4 +1,4 @@
-import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { PlatformObject } from "@webidl";
 
 export const ExistingIndexedPropertySetter: unique symbol = Symbol(
   "ExistingIndexedPropertySetter",
@@ -16,9 +16,7 @@ export function setValueOfExistingIndexedProperty(
   index: number,
   value: unknown,
 ): void {
-  o[PrimaryInterface].members[ExistingIndexedPropertySetter]!.call(
-    o,
-    index,
-    value,
-  );
+  PlatformObject.getPrimaryInterfaceOf(o).members[
+    ExistingIndexedPropertySetter
+  ]!.call(o, index, value);
 }
