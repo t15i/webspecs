@@ -21,7 +21,7 @@ function roundHalfToEven(x: number): number {
     result = floor % 2 === 0 ? floor : floor + 1;
   }
 
-  return Object.is(result, -0) ? 0 : result;
+  return result;
 }
 
 /** @see https://webidl.spec.whatwg.org/#abstract-opdef-converttoint */
@@ -29,7 +29,7 @@ export function convertToInt(
   this: Type | void,
   v: unknown,
   bitLength: number,
-  signedness?: "signed" | "unsigned",
+  signedness: "signed" | "unsigned",
 ): number {
   let lowerBound: number;
   let upperBound: number;
@@ -61,7 +61,7 @@ export function convertToInt(
 
     if (x < lowerBound || x > upperBound) {
       throw TypeError(
-        `[EnforceRange] value ${x} is outside the [${lowerBound}, ${upperBound}] range for a ${bitLength}-bit ${signedness ?? "signed"} integer`,
+        `[EnforceRange] value ${x} is outside the [${lowerBound}, ${upperBound}] range for a ${bitLength}-bit ${signedness} integer`,
       );
     }
 
