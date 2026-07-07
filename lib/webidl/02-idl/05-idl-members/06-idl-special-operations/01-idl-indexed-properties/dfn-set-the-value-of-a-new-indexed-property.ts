@@ -1,7 +1,7 @@
-import { type PlatformObject, PrimaryInterface } from "@webidl";
+import { PlatformObject } from "@webidl";
 
-export const NewIndexedPropertySetter: unique symbol = Symbol.for(
-  "@t15i/webspecs/webidl/NewIndexedPropertySetter",
+export const NewIndexedPropertySetter: unique symbol = Symbol(
+  "NewIndexedPropertySetter",
 );
 
 declare module "@webidl" {
@@ -16,5 +16,7 @@ export function setValueOfNewIndexedProperty(
   index: number,
   value: unknown,
 ): void {
-  o[PrimaryInterface].members[NewIndexedPropertySetter]!.call(o, index, value);
+  PlatformObject.getPrimaryInterfaceOf(o).members[
+    NewIndexedPropertySetter
+  ]!.call(o, index, value);
 }

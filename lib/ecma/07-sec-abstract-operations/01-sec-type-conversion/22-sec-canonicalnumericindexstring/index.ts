@@ -1,3 +1,5 @@
+import { toNumber } from "../04-sec-tonumber";
+
 export function canonicalNumericIndexString(
   argument: string,
 ): number | undefined {
@@ -5,7 +7,7 @@ export function canonicalNumericIndexString(
     return -0;
   }
 
-  const n = Number(argument);
+  const n = toNumber(argument);
 
   if (String(n) === argument) {
     return n;

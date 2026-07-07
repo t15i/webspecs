@@ -1,6 +1,6 @@
 /** @see https://webidl.spec.whatwg.org/#LegacyOverrideBuiltIns */
-export const LegacyOverrideBuiltIns: unique symbol = Symbol.for(
-  "@t15i/webspecs/webidl/LegacyOverrideBuiltIns",
+export const LegacyOverrideBuiltIns: unique symbol = Symbol(
+  "LegacyOverrideBuiltIns",
 );
 
 declare module "@webidl" {

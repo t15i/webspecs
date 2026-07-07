@@ -1,4 +1,6 @@
-/** @see https://webidl.spec.whatwg.org/#js-boolean */
-const BooleanType: (value: unknown) => boolean = Boolean;
+import type { BooleanType } from "@webidl";
 
-export { BooleanType as Boolean };
+/** @see https://webidl.spec.whatwg.org/#js-boolean */
+export function asBoolean(this: BooleanType, v: unknown): boolean {
+  return Boolean(v);
+}

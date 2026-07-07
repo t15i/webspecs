@@ -1,10 +1,8 @@
 import type { PropertyName } from "@ecma";
 
 import {
-  type PlatformObject,
-  type ImplementsInterfaceWith,
+  PlatformObject,
   NamedPropertySetter,
-  PrimaryInterface,
   isSupportedPropertyName,
   setValueOfExistingNamedProperty,
   setValueOfNewNamedProperty,
@@ -12,12 +10,13 @@ import {
 
 /** @see https://webidl.spec.whatwg.org/#invoke-named-setter */
 export function invokeNamedPropertySetter(
-  o: ImplementsInterfaceWith<PlatformObject, typeof NamedPropertySetter>,
+  o: PlatformObject,
   p: PropertyName,
   v: unknown,
 ): void {
   const creating = !isSupportedPropertyName(o, p);
-  const operation = o[PrimaryInterface].members[NamedPropertySetter];
+  const operation =
+    PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertySetter]!;
   const T = operation.arguments[1].type;
   const value = T(v);
 

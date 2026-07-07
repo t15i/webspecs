@@ -1,6 +1,8 @@
+import type { Type } from "@webidl";
+
 /** @see https://webidl.spec.whatwg.org/#create-sequence-from-iterable */
 export function createSequenceFromIterable<T>(
-  T: (...args: unknown[]) => T,
+  T: Type<T>,
   iterable: Iterable<unknown>,
 ): T[] {
   const sequence: T[] = [];

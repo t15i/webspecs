@@ -1,10 +1,9 @@
 import { type PropertyKey, toString } from "@ecma";
 
 import {
-  type PlatformObject,
+  PlatformObject,
   SupportedPropertyIndices,
   SupportedPropertyNames,
-  PrimaryInterface,
   supportsIndexedProperties,
   supportsNamedProperties,
   isNamedPropertyVisible,
@@ -16,7 +15,9 @@ export function ownPropertyKeys(o: PlatformObject): PropertyKey[] {
 
   if (supportsIndexedProperties(o)) {
     const supportedPropertyIndices =
-      o[PrimaryInterface].members[SupportedPropertyIndices]!.call(o);
+      PlatformObject.getPrimaryInterfaceOf(o).members[
+        SupportedPropertyIndices
+      ]!.call(o);
 
     for (const index of supportedPropertyIndices) {
       keys.push(toString(index));
@@ -25,7 +26,9 @@ export function ownPropertyKeys(o: PlatformObject): PropertyKey[] {
 
   if (supportsNamedProperties(o)) {
     const supportedPropertyNames =
-      o[PrimaryInterface].members[SupportedPropertyNames]!.call(o);
+      PlatformObject.getPrimaryInterfaceOf(o).members[
+        SupportedPropertyNames
+      ]!.call(o);
 
     for (const p of supportedPropertyNames) {
       if (isNamedPropertyVisible(p, o)) {

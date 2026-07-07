@@ -1,24 +1,20 @@
-import { createSequenceFromIterable } from "@webidl";
+import { getMethod, isObject } from "@ecma";
+import {
+  createSequenceFromIterable,
+  type SequenceType,
+  type Type,
+} from "@webidl";
 
-export function Sequence<T>(
-  T: (...args: unknown[]) => T,
-): (raw: unknown) => T[];
-
-export function Sequence<T>(T: (...args: unknown[]) => T, raw: unknown): T[];
-
-export function Sequence<T>(T: (...args: unknown[]) => T, raw?: unknown) {
-  if (arguments.length < 2) {
-    return Sequence.bind(undefined, T);
-  }
-
-  if (!(typeof raw === "object") || raw === null) {
+/** @see https://webidl.spec.whatwg.org/#js-sequence */
+export function asSequence<T>(this: SequenceType<Type<T>>, v: unknown): T[] {
+  if (!isObject(v)) {
     throw TypeError("The provided value cannot be converted to a sequence");
   }
 
-  if (!(Symbol.iterator in raw) || typeof raw[Symbol.iterator] !== "function") {
+  const method = getMethod(v, Symbol.iterator);
+  if (method === undefined) {
     throw TypeError("The provided value cannot be converted to a sequence");
   }
-  const iterable = raw as { [Symbol.iterator](): Iterator<unknown> };
 
-  return createSequenceFromIterable(T, iterable);
+  return createSequenceFromIterable(this.T, v as Iterable<unknown>);
 }

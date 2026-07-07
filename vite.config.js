@@ -27,11 +27,12 @@ export default {
       enabled: true,
       provider: playwright(),
       instances: [{ browser: "chromium" }, { browser: "firefox" }],
+      isolate: false,
     },
     coverage: {
-      enabled: false,
+      enabled: true,
       provider: "istanbul",
-      include: ["lib/**/*.ts"],
+      include: ["lib/webidl/03-javascript-binding/02-js-type-mapping/**/*.ts"],
       thresholds: {
         100: true,
       },

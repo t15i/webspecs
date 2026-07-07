@@ -2,9 +2,8 @@ import { type PropertyName, toUint32 } from "@ecma";
 import { failure } from "@share";
 
 import {
-  type PlatformObject,
+  PlatformObject,
   NamedPropertyDeleter,
-  PrimaryInterface,
   Global,
   deleteExistingNamedProperty,
   isSupportedPropertyIndex,
@@ -13,8 +12,8 @@ import {
   implementsInterfaceWith,
   implementsInterfaceWithExtAttribute,
   isArrayIndex,
+  isBooleanType,
   isNamedPropertyVisible,
-  Boolean,
 } from "@webidl";
 
 export function del(o: PlatformObject, p: PropertyName): boolean {
@@ -37,7 +36,8 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
       return false;
     }
 
-    const operation = o[PrimaryInterface].members[NamedPropertyDeleter]!;
+    const operation =
+      PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertyDeleter]!;
 
     if (operation.identifier === undefined) {
       const result = deleteExistingNamedProperty(o, p);
@@ -48,7 +48,7 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
     } else {
       const result = operation.methodSteps.call(o, p);
 
-      if (operation.returnType === Boolean && result === false) {
+      if (isBooleanType(operation.returnType) && result === false) {
         return false;
       }
     }

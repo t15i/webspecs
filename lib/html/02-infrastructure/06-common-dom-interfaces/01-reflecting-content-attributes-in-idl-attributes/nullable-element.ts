@@ -1,3 +1,5 @@
+import { type InterfaceType, type NullableType } from "@webidl";
+
 import type { ReflectedContentAttribute } from "./reflected-content-attribute";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
 import type { ReflectedTarget as BaseReflectedTarget } from "./reflected-target";
@@ -16,7 +18,7 @@ export interface ReflectedTarget<
 export interface ReflectedIDLAttribute<
   T extends Element,
 > extends BaseReflectedIDLAttribute {
-  T: new () => T;
+  readonly T: NullableType<InterfaceType<T>>;
 }
 
 export type { ReflectedContentAttribute };
@@ -40,7 +42,7 @@ export function getAssociatedElement<T extends Element>(
     const candidate = firstElementInTreeOrderThatMeetsCriteria({
       root: element.getRootNode(),
       id: contentAttributeValue,
-      T: reflectedIDLAttribute.T,
+      T: reflectedIDLAttribute.T.innerType.T,
     });
 
     if (candidate !== null) {
