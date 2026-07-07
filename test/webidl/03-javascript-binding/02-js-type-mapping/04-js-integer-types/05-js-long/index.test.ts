@@ -39,4 +39,8 @@ describe("asLong (signed 32-bit)", () => {
   test("Symbol throws TypeError", () => {
     expect(() => T(Symbol("x"))).toThrow(TypeError);
   });
+
+  test("bigint throws TypeError", () => {
+    expect(() => T(10n)).toThrow(TypeError);
+  });
 });

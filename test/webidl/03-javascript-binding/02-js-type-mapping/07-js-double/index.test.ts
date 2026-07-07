@@ -55,6 +55,10 @@ describe("asDouble", () => {
     expect(() => T(Symbol("x"))).toThrow(TypeError);
   });
 
+  test("throws TypeError for bigint", () => {
+    expect(() => T(10n)).toThrow(TypeError);
+  });
+
   test("throws TypeError for an object that has no numeric coercion", () => {
     expect(() => T({})).toThrow(TypeError);
   });

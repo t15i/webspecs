@@ -1,8 +1,9 @@
+import { toNumber } from "@ecma";
 import type { DoubleType } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#js-double */
 export function asDouble(this: DoubleType, v: unknown): number {
-  const x = Number(v);
+  const x = toNumber(v);
 
   if (!isFinite(x)) {
     throw TypeError("The provided double value is non-finite");
