@@ -1,7 +1,11 @@
-import type { Type } from "@webidl";
+import type { Attribute, Type } from "@webidl";
 
-/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflected-idl-attribute */
-export interface ReflectedIDLAttribute {
-  readonly name: string;
-  readonly T: Type;
-}
+/**
+ * A reflected IDL attribute is an attribute interface member. Reflection
+ * metadata (e.g. `limitedToOnlyKnownValues`, `defaultValue`) is declaration-
+ * merged onto {@link Attribute} itself by the individual concept modules, so a
+ * reflected IDL attribute is simply an {@link Attribute} whose `type` is fixed.
+ *
+ * @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflected-idl-attribute
+ */
+export type ReflectedIDLAttribute<T extends Type> = Attribute<T>;

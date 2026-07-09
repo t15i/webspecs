@@ -1,28 +1,25 @@
+import type { DoubleType } from "@webidl";
+
 import {
   bestRepresentationAsFloatingPointNumber,
   floatingPointNumberParsing,
 } from "@html";
 
-import type { ReflectedContentAttribute } from "./reflected-content-attribute";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
 
-export type { ReflectedTarget, ReflectedContentAttribute };
+export type { ReflectedTargetAssociations };
 
-export interface ReflectedIDLAttribute extends BaseReflectedIDLAttribute {
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-non-negative-numbers-greater-than-zero */
-  readonly limitedToOnlyPositiveNumbers: boolean;
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<DoubleType>;
 
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#default-value */
-  readonly defaultValue: number | null;
-}
-
-/**/
 export function getter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
+  reflectedContentAttributeName: string,
 ): number {
-  const contentAttributeValue = this.getContentAttribute();
+  const contentAttributeValue = this.getContentAttribute(
+    reflectedContentAttributeName,
+  );
 
   if (contentAttributeValue !== null) {
     const parsedValue = floatingPointNumberParsing(contentAttributeValue);
@@ -33,29 +30,34 @@ export function getter(
 
     if (
       parsedValue !== "error" &&
-      !reflectedIDLAttribute.limitedToOnlyPositiveNumbers
+      reflectedIDLAttribute.limitedToOnlyPositiveNumbers !== true
     ) {
       return parsedValue;
     }
   }
 
-  if (reflectedIDLAttribute.defaultValue !== null) {
+  if (reflectedIDLAttribute.defaultValue !== undefined) {
     return reflectedIDLAttribute.defaultValue;
   }
 
   return 0;
 }
 
-/**/
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
-  _: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: number,
 ): void {
-  if (reflectedIDLAttribute.limitedToOnlyPositiveNumbers && value <= 0) {
+  if (
+    reflectedIDLAttribute.limitedToOnlyPositiveNumbers === true &&
+    value <= 0
+  ) {
     return;
   }
 
-  this.setContentAttribute(bestRepresentationAsFloatingPointNumber(value));
+  this.setContentAttribute(
+    reflectedContentAttributeName,
+    bestRepresentationAsFloatingPointNumber(value),
+  );
 }

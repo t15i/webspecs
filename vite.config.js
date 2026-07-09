@@ -32,7 +32,10 @@ export default {
     coverage: {
       enabled: true,
       provider: "istanbul",
-      include: ["lib/webidl/03-javascript-binding/02-js-type-mapping/**/*.ts"],
+      include: [
+        "lib/html/02-infrastructure/06-common-dom-interfaces/01-reflecting-content-attributes-in-idl-attributes",
+        "lib/webidl/03-javascript-binding/02-js-type-mapping/**/*.ts",
+      ],
       thresholds: {
         100: true,
       },

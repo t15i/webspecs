@@ -6,7 +6,7 @@ export function firstElementInTreeOrderThatMeetsCriteria<
     const document =
       criteria.root instanceof Document
         ? criteria.root
-        : criteria.root.ownerDocument!;
+        : criteria.root.ownerDocument;
 
     let element: Element | null;
     if (
@@ -26,7 +26,7 @@ export function firstElementInTreeOrderThatMeetsCriteria<
         return NodeFilter.FILTER_ACCEPT;
       }
 
-      return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_SKIP;
     },
   );
 

@@ -1,4 +1,4 @@
-import { LONG_MAX, LONG_MIN } from "@webidl";
+import { LONG_MAX, LONG_MIN, type LongType } from "@webidl";
 
 import {
   integerParsing,
@@ -6,30 +6,27 @@ import {
   shortestPossibleStringRepresentingAsValidInteger,
 } from "@html";
 
-import type { ReflectedContentAttribute } from "./reflected-content-attribute";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
 
-export type { ReflectedTarget, ReflectedContentAttribute };
+export type { ReflectedTargetAssociations };
 
-export interface ReflectedIDLAttribute extends BaseReflectedIDLAttribute {
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-non-negative-numbers */
-  readonly limitedToOnlyNonNegativeNumbers: boolean;
-
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#default-value */
-  readonly defaultValue: number | null;
-}
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<LongType>;
 
 export function getter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
+  reflectedContentAttributeName: string,
 ): number {
-  const contentAttributeValue = this.getContentAttribute();
+  const contentAttributeValue = this.getContentAttribute(
+    reflectedContentAttributeName,
+  );
 
   if (contentAttributeValue !== null) {
-    const parsedValue = reflectedIDLAttribute.limitedToOnlyNonNegativeNumbers
-      ? nonNegativeIntegerParsing(contentAttributeValue)
-      : integerParsing(contentAttributeValue);
+    const parsedValue =
+      reflectedIDLAttribute.limitedToOnlyNonNegativeNumbers === true
+        ? nonNegativeIntegerParsing(contentAttributeValue)
+        : integerParsing(contentAttributeValue);
 
     if (
       parsedValue !== "error" &&
@@ -40,11 +37,11 @@ export function getter(
     }
   }
 
-  if (reflectedIDLAttribute.defaultValue !== null) {
+  if (reflectedIDLAttribute.defaultValue !== undefined) {
     return reflectedIDLAttribute.defaultValue;
   }
 
-  if (reflectedIDLAttribute.limitedToOnlyNonNegativeNumbers) {
+  if (reflectedIDLAttribute.limitedToOnlyNonNegativeNumbers === true) {
     return -1;
   }
 
@@ -52,12 +49,15 @@ export function getter(
 }
 
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
-  _: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: number,
 ): void {
-  if (reflectedIDLAttribute.limitedToOnlyNonNegativeNumbers && value < 0) {
+  if (
+    reflectedIDLAttribute.limitedToOnlyNonNegativeNumbers === true &&
+    value < 0
+  ) {
     throw new DOMException(
       `The value provided (${value}) is not positive or 0.`,
       "IndexSizeError",
@@ -65,6 +65,7 @@ export function setter(
   }
 
   this.setContentAttribute(
+    reflectedContentAttributeName,
     shortestPossibleStringRepresentingAsValidInteger(value),
   );
 }
