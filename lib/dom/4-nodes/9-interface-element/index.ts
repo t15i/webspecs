@@ -10,8 +10,15 @@ const contentAttributeDescriptors: WeakMap<
 
 export interface ElementConstructor {
   /**
-   * Associates a content attribute descriptor with a class of elements,
-   * keyed by the constructor's prototype.
+   * Defines a content attribute by descriptor.
+   *
+   * @param constructor - the element constructor for which the content
+   * attribute to be defined
+   * @param name - the name of the content attribute to be defined
+   * @param descriptor - the content attribute descriptor to be applied
+   *
+   * @throws DOMException("InvalidCharacterError") if `name` is not valid
+   * attribute local name
    */
   defineContentAttribute(
     constructor: {
@@ -23,8 +30,14 @@ export interface ElementConstructor {
   ): void;
 
   /**
-   * Resolves the content attribute descriptor for an element, walking up the
-   * prototype chain until a descriptor is found or the chain is exhausted.
+   * Resolves the content attribute descriptor for an element.
+   *
+   * @param object - the object for which the content attribute descriptor to be
+   * resolved
+   * @param name - the name of the content attribute to be resolved
+   *
+   * @returns Content-attribute descriptor for the specified object and name if
+   * defined, `undefined` otherwise
    */
   getContentAttributeDescriptor(
     object: Element,
@@ -48,7 +61,7 @@ export const Element: ElementConstructor = {
       contentAttributeDescriptors.set(constructor.prototype, descriptors);
     }
 
-    descriptors.set(name, descriptor);
+    descriptors.set(name, { ...descriptor });
   },
 
   getContentAttributeDescriptor(object, name) {
@@ -58,7 +71,7 @@ export const Element: ElementConstructor = {
       const descriptor = contentAttributeDescriptors.get(current)?.get(name);
 
       if (descriptor !== undefined) {
-        return descriptor;
+        return { ...descriptor };
       }
 
       current = Object.getPrototypeOf(current) as object | null;
