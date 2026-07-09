@@ -3,12 +3,12 @@ import { isValidAttributeLocalName } from "@dom";
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ContentAttributeDescriptor {}
 
-const contentAttributeDescriptors: WeakMap<
-  object,
-  Map<string, ContentAttributeDescriptor>
-> = new WeakMap();
+class ElementConstructor {
+  static #descriptors = new WeakMap<
+    object,
+    Map<string, ContentAttributeDescriptor>
+  >();
 
-export interface ElementConstructor {
   /**
    * Defines a content attribute by descriptor.
    *
@@ -17,17 +17,34 @@ export interface ElementConstructor {
    * @param name - the name of the content attribute to be defined
    * @param descriptor - the content attribute descriptor to be applied
    *
+   * @returns The construcor passed to the function
+   *
    * @throws DOMException("InvalidCharacterError") if `name` is not valid
    * attribute local name
    */
-  defineContentAttribute(
-    constructor: {
-      new (...args: never[]): Element;
-      prototype: Element;
-    },
+  static defineContentAttribute<Ctor extends new (...args: never[]) => Element>(
+    constructor: Ctor,
     name: string,
     descriptor: ContentAttributeDescriptor,
-  ): void;
+  ): Ctor {
+    if (!isValidAttributeLocalName(name)) {
+      throw new DOMException(
+        `'${name}' is not a valid attribute local name`,
+        "InvalidCharacterError",
+      );
+    }
+
+    let descriptors = this.#descriptors.get(constructor.prototype);
+
+    if (descriptors === undefined) {
+      descriptors = new Map();
+      this.#descriptors.set(constructor.prototype, descriptors);
+    }
+
+    descriptors.set(name, { ...descriptor });
+
+    return constructor;
+  }
 
   /**
    * Resolves the content attribute descriptor for an element.
@@ -39,36 +56,14 @@ export interface ElementConstructor {
    * @returns Content-attribute descriptor for the specified object and name if
    * defined, `undefined` otherwise
    */
-  getContentAttributeDescriptor(
+  static getContentAttributeDescriptor(
     object: Element,
     name: string,
-  ): ContentAttributeDescriptor | undefined;
-}
-
-export const Element: ElementConstructor = {
-  defineContentAttribute(constructor, name, descriptor) {
-    if (!isValidAttributeLocalName(name)) {
-      throw new DOMException(
-        `'${name}' is not a valid attribute local name`,
-        "InvalidCharacterError",
-      );
-    }
-
-    let descriptors = contentAttributeDescriptors.get(constructor.prototype);
-
-    if (descriptors === undefined) {
-      descriptors = new Map();
-      contentAttributeDescriptors.set(constructor.prototype, descriptors);
-    }
-
-    descriptors.set(name, { ...descriptor });
-  },
-
-  getContentAttributeDescriptor(object, name) {
+  ): ContentAttributeDescriptor | undefined {
     let current: object | null = object;
 
     while (current !== null) {
-      const descriptor = contentAttributeDescriptors.get(current)?.get(name);
+      const descriptor = this.#descriptors.get(current)?.get(name);
 
       if (descriptor !== undefined) {
         return { ...descriptor };
@@ -78,5 +73,11 @@ export const Element: ElementConstructor = {
     }
 
     return undefined;
-  },
-};
+  }
+
+  constructor() {
+    throw TypeError("Illegal constructor");
+  }
+}
+
+export const Element: typeof ElementConstructor = ElementConstructor;
