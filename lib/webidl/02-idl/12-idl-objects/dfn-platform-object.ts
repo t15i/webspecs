@@ -6,7 +6,9 @@ export interface PlatformObject {
   [key: PropertyKey]: unknown;
 }
 
-export interface PlatformObjectConstructor {
+class PlatformObjectConstructor {
+  static #interfaces = new WeakMap<object, Interface>();
+
   /**
    * Returns the primary interface an object is associated with.
    *
@@ -14,16 +16,35 @@ export interface PlatformObjectConstructor {
    * object it may return `null`. The base implementation always returns
    * `null` — implementations are expected to extend it.
    */
-  getPrimaryInterfaceOf(o: PlatformObject): Interface;
-  getPrimaryInterfaceOf(o: object): Interface | undefined;
+  static getPrimaryInterfaceOf(o: PlatformObject): Interface;
+  static getPrimaryInterfaceOf(o: object): Interface | undefined;
+  static getPrimaryInterfaceOf(o: object): Interface | undefined {
+    let key: object | null = o;
+
+    while (key !== null) {
+      const iface = this.#interfaces.get(key);
+
+      if (iface !== undefined) {
+        return iface;
+      }
+
+      key = Object.getPrototypeOf(key) as object | null;
+    }
+
+    return undefined;
+  }
+
+  static setPrimaryInterfaceOf<T extends object>(o: T, iface: Interface): T {
+    this.#interfaces.set(o, iface);
+    return o;
+  }
+
+  constructor() {
+    throw TypeError("Illegan constructor");
+  }
 }
 
-function getPrimaryInterfaceOf(o: PlatformObject): Interface;
-function getPrimaryInterfaceOf(o: object): Interface | undefined;
-function getPrimaryInterfaceOf(): Interface | undefined {
-  return;
-}
+export const PlatformObject: typeof PlatformObjectConstructor =
+  PlatformObjectConstructor;
 
-export const PlatformObject: PlatformObjectConstructor = {
-  getPrimaryInterfaceOf,
-};
+export type { PlatformObjectConstructor };
