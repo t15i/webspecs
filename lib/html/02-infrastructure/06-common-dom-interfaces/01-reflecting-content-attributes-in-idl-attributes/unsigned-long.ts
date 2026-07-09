@@ -1,51 +1,43 @@
+import type { UnsignedLongType } from "@webidl";
+
 import {
   nonNegativeIntegerParsing,
   shortestPossibleRepresentingAsValidNonNegativeInteger,
 } from "@html";
 
-import type { ReflectedContentAttribute } from "./reflected-content-attribute";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export type { ReflectedTarget, ReflectedContentAttribute };
+export type { ReflectedTargetAssociations };
 
-export interface ReflectedIDLAttribute extends BaseReflectedIDLAttribute {
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-non-negative-numbers-greater-than-zero */
-  readonly limitedToOnlyPositiveNumbers: boolean;
-
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-non-negative-numbers-greater-than-zero-with-fallback */
-  readonly limitedToOnlyPositiveNumbersWithFallback: boolean;
-  readonly defaultValue: number | null;
-
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#clamped-to-the-range */
-  readonly clampedToRange: boolean;
-  readonly clampedMin: number;
-  readonly clampedMax: number;
-}
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<UnsignedLongType>;
 
 export function getter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
+  reflectedContentAttributeName: string,
 ): number {
-  const contentAttributeValue = this.getContentAttribute();
+  const contentAttributeValue = this.getContentAttribute(
+    reflectedContentAttributeName,
+  );
 
   let minimum = 0;
 
   if (
-    reflectedIDLAttribute.limitedToOnlyPositiveNumbers ||
-    reflectedIDLAttribute.limitedToOnlyPositiveNumbersWithFallback
+    reflectedIDLAttribute.limitedToOnlyPositiveNumbers === true ||
+    reflectedIDLAttribute.limitedToOnlyPositiveNumbersWithFallback === true
   ) {
     minimum = 1;
   }
 
-  if (reflectedIDLAttribute.clampedToRange) {
-    minimum = reflectedIDLAttribute.clampedMin;
+  if (reflectedIDLAttribute.clampedToRange !== undefined) {
+    minimum = reflectedIDLAttribute.clampedToRange[0];
   }
 
   let maximum = 2147483647;
 
-  if (reflectedIDLAttribute.clampedToRange) {
-    maximum = reflectedIDLAttribute.clampedMax;
+  if (reflectedIDLAttribute.clampedToRange !== undefined) {
+    maximum = reflectedIDLAttribute.clampedToRange[1];
   }
 
   if (contentAttributeValue !== null) {
@@ -59,7 +51,10 @@ export function getter(
       return parsedValue;
     }
 
-    if (parsedValue !== "error" && reflectedIDLAttribute.clampedToRange) {
+    if (
+      parsedValue !== "error" &&
+      reflectedIDLAttribute.clampedToRange !== undefined
+    ) {
       if (parsedValue < minimum) {
         return minimum;
       }
@@ -68,7 +63,7 @@ export function getter(
     }
   }
 
-  if (reflectedIDLAttribute.defaultValue !== null) {
+  if (reflectedIDLAttribute.defaultValue !== undefined) {
     return reflectedIDLAttribute.defaultValue;
   }
 
@@ -76,12 +71,15 @@ export function getter(
 }
 
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
-  _: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: number,
 ): void {
-  if (reflectedIDLAttribute.limitedToOnlyPositiveNumbers && value === 0) {
+  if (
+    reflectedIDLAttribute.limitedToOnlyPositiveNumbers === true &&
+    value === 0
+  ) {
     throw new DOMException(
       `The value provided is ${value}, which is an invalid index or size.`,
       "IndexSizeError",
@@ -91,15 +89,15 @@ export function setter(
   let minimum = 0;
 
   if (
-    reflectedIDLAttribute.limitedToOnlyPositiveNumbers ||
-    reflectedIDLAttribute.limitedToOnlyPositiveNumbersWithFallback
+    reflectedIDLAttribute.limitedToOnlyPositiveNumbers === true ||
+    reflectedIDLAttribute.limitedToOnlyPositiveNumbersWithFallback === true
   ) {
     minimum = 1;
   }
 
   let newValue = minimum;
 
-  if (reflectedIDLAttribute.defaultValue !== null) {
+  if (reflectedIDLAttribute.defaultValue !== undefined) {
     newValue = reflectedIDLAttribute.defaultValue;
   }
 
@@ -108,6 +106,7 @@ export function setter(
   }
 
   this.setContentAttribute(
+    reflectedContentAttributeName,
     shortestPossibleRepresentingAsValidNonNegativeInteger(newValue),
   );
 }

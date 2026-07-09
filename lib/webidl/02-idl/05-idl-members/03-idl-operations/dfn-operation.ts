@@ -1,28 +1,32 @@
 import type { Member, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
-export interface Argument<T> {
-  type: Type<T>;
+export interface Argument<T extends Type = Type> {
+  type: T;
 }
 
 /** @see https://webidl.spec.whatwg.org/#prod-ArgumentList */
-export type ArgumentList<Args extends readonly unknown[]> = {
+export type ArgumentList<Args extends readonly Type[]> = {
   [K in keyof Args]: Argument<Args[K]>;
 };
 
 /** @see https://webidl.spec.whatwg.org/#dfn-regular-operation */
-export interface Operation<Args extends unknown[], Return> {
+export interface Operation<
+  Args extends Type[] = Type[],
+  Return extends Type = Type,
+> {
   memberType: "operation";
   keywords: ReadonlySet<string>;
   identifier: string | undefined;
   arguments: ArgumentList<Args>;
-  returnType: Type<Return>;
-  methodSteps(...args: Args): Return;
+  returnType: Return;
+  methodSteps(
+    ...args: {
+      [K in keyof Args]: ReturnType<Args[K]>;
+    }
+  ): ReturnType<Return>;
 }
 
-export function isOperation<
-  Args extends unknown[] = unknown[],
-  Return = unknown,
->(member: Member): member is Operation<Args, Return> {
+export function isOperation(member: Member): member is Operation {
   return member.memberType === "operation";
 }

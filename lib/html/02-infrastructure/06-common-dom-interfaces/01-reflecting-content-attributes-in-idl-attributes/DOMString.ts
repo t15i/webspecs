@@ -1,36 +1,31 @@
-import { EnumeratedAttributeStates } from "@html";
+import { Element } from "@dom";
+import type { DOMStringType } from "@webidl";
 
-import type { ReflectedContentAttribute as BaseReflectedContentAttribute } from "./reflected-content-attribute";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export type { ReflectedTarget };
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<DOMStringType>;
 
-export interface ReflectedIDLAttribute extends BaseReflectedIDLAttribute {
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-known-values */
-  readonly limitedToOnlyKnownValue: boolean;
-}
-
-export interface ReflectedContentAttribute extends BaseReflectedContentAttribute {
-  states: EnumeratedAttributeStates | null;
-}
+export type { ReflectedTargetAssociations };
 
 export function getter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
-  reflectedContentAttribute: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
 ): string {
-  // const element = this.getElement();
-  const contentAttributeValue = this.getContentAttribute();
+  const element = this.getElement();
+  const contentAttributeValue = this.getContentAttribute(
+    reflectedContentAttributeName,
+  );
 
-  // > Let attributeDefinition be the attribute definition of *element*'s content attribute
-  // > whose namespace is null and local name is the reflected content attribute name.
-  const attributeDefinition = reflectedContentAttribute;
+  const attributeDefinition = Element.getContentAttributeDescriptor(
+    element,
+    reflectedContentAttributeName,
+  );
 
   if (
-    // > ... attributeDefinition indicates it is an enumerated attribute ...
-    attributeDefinition.states !== null &&
-    reflectedIDLAttribute.limitedToOnlyKnownValue
+    attributeDefinition?.states !== undefined &&
+    reflectedIDLAttribute.limitedToOnlyKnownValues === true
   ) {
     const state = attributeDefinition.states.get(contentAttributeValue);
 
@@ -49,10 +44,10 @@ export function getter(
 }
 
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   _: ReflectedIDLAttribute,
-  __: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: string,
 ): void {
-  this.setContentAttribute(value);
+  this.setContentAttribute(reflectedContentAttributeName, value);
 }

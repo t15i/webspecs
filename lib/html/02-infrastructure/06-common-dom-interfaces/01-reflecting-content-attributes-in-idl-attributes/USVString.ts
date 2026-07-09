@@ -1,31 +1,31 @@
+import type { USVStringType } from "@webidl";
 import { convertStringIntoScalarValueString } from "@infra";
 import { failure } from "@share";
 
 import { encodingParseAndSerializeURL } from "@html";
 
-import type { ReflectedContentAttribute } from "./reflected-content-attribute";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export type { ReflectedTarget, ReflectedContentAttribute };
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<USVStringType>;
 
-export interface ReflectedIDLAttribute extends BaseReflectedIDLAttribute {
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#treated-as-a-url */
-  readonly treatedAsURL: boolean;
-}
+export type { ReflectedTargetAssociations };
 
 export function getter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   reflectedIDLAttribute: ReflectedIDLAttribute,
+  reflectedContentAttributeName: string,
 ): string {
   const element = this.getElement();
-  const contentAttributeValue = this.getContentAttribute();
+  const contentAttributeValue = this.getContentAttribute(
+    reflectedContentAttributeName,
+  );
 
   if (contentAttributeValue === null) {
     return "";
   }
 
-  if (reflectedIDLAttribute.treatedAsURL) {
+  if (reflectedIDLAttribute.treatedAsURL === true) {
     const urlString = encodingParseAndSerializeURL(
       contentAttributeValue,
       element.ownerDocument,
@@ -40,10 +40,10 @@ export function getter(
 }
 
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   _: ReflectedIDLAttribute,
-  __: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: string,
 ): void {
-  this.setContentAttribute(value);
+  this.setContentAttribute(reflectedContentAttributeName, value);
 }

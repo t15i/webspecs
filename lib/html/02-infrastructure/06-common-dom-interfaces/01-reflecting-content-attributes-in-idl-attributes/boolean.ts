@@ -1,28 +1,31 @@
-import type { ReflectedContentAttribute } from "./reflected-content-attribute";
-import type { ReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
+import type { BooleanType } from "@webidl";
 
-export type {
-  ReflectedTarget,
-  ReflectedIDLAttribute,
-  ReflectedContentAttribute,
-};
+import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export function getter(this: ReflectedTarget): boolean {
-  return this.getContentAttribute() !== null;
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<BooleanType>;
+
+export type { ReflectedTargetAssociations };
+
+export function getter(
+  this: ReflectedTargetAssociations,
+  _: ReflectedIDLAttribute,
+  reflectedContentAttributeName: string,
+): boolean {
+  return this.getContentAttribute(reflectedContentAttributeName) !== null;
 }
 
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   _: ReflectedIDLAttribute,
-  __: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: boolean,
 ): void {
   if (value === false) {
-    this.deleteContentAttribute();
+    this.deleteContentAttribute(reflectedContentAttributeName);
   }
 
   if (value === true) {
-    this.setContentAttribute("");
+    this.setContentAttribute(reflectedContentAttributeName, "");
   }
 }

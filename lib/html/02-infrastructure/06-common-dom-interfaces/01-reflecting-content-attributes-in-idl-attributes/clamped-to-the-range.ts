@@ -1,0 +1,9 @@
+import type { Type } from "@webidl";
+
+declare module "@webidl" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface Attribute<T extends Type = Type> {
+    /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#clamped-to-the-range */
+    clampedToRange?: [number, number];
+  }
+}

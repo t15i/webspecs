@@ -1,4 +1,4 @@
-import { type Operation } from "@webidl";
+import { type Operation, type Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-indexed-property-setter */
 export const IndexedPropertySetter: unique symbol = Symbol(
@@ -7,6 +7,6 @@ export const IndexedPropertySetter: unique symbol = Symbol(
 
 declare module "@webidl" {
   interface InterfaceMembers {
-    [IndexedPropertySetter]?: Operation<[number, unknown], unknown>;
+    [IndexedPropertySetter]?: Operation<[Type<number>, Type], Type>;
   }
 }

@@ -104,3 +104,10 @@ export class EnumeratedAttributeStates {
 
   protected emptyValueDefault_: EnumeratedAttributeState | null;
 }
+
+declare module "@dom" {
+  interface ContentAttributeDescriptor {
+    /** @see https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#enumerated-attribute */
+    states?: EnumeratedAttributeStates;
+  }
+}

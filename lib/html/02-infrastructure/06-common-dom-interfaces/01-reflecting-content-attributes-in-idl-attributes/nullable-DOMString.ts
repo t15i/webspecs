@@ -1,34 +1,34 @@
-import { EnumeratedAttributeStates } from "@html";
+import { Element } from "@dom";
+import type { DOMStringType, NullableType } from "@webidl";
 
-import type { ReflectedContentAttribute as BaseReflectedContentAttribute } from "./reflected-content-attribute";
+import type { ReflectedTargetAssociations } from "./reflected-target";
 import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
-import type { ReflectedTarget } from "./reflected-target";
 
-export type { ReflectedTarget };
+export type { ReflectedTargetAssociations };
 
-export interface ReflectedIDLAttribute extends BaseReflectedIDLAttribute {
-  /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-known-values */
-  readonly limitedToOnlyKnownValue: boolean;
-}
-
-export interface ReflectedContentAttribute extends BaseReflectedContentAttribute {
-  readonly states: EnumeratedAttributeStates | null;
-}
+export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<
+  NullableType<DOMStringType>
+>;
 
 export function getter(
-  this: ReflectedTarget,
-  _: ReflectedIDLAttribute,
-  reflectedContentAttribute: ReflectedContentAttribute,
+  this: ReflectedTargetAssociations,
+  reflectedIDLAttribute: ReflectedIDLAttribute,
+  reflectedContentAttributeName: string,
 ): string | null {
-  // const element = this.getElement();
-  const contentAttributeValue = this.getContentAttribute();
+  const element = this.getElement();
+  const contentAttributeValue = this.getContentAttribute(
+    reflectedContentAttributeName,
+  );
 
-  // > Let attributeDefinition be the attribute definition of *element*'s content attribute
-  // > whose namespace is null and local name is the reflected content attribute name.
-  const attributeDefinition = reflectedContentAttribute;
+  const attributeDefinition = Element.getContentAttributeDescriptor(
+    element,
+    reflectedContentAttributeName,
+  );
 
-  // > ... attributeDefinition indicates it is an enumerated attribute ...
-  if (attributeDefinition.states !== null) {
+  if (
+    attributeDefinition?.states !== undefined &&
+    reflectedIDLAttribute.limitedToOnlyKnownValues === true
+  ) {
     const state = attributeDefinition.states.get(contentAttributeValue);
 
     if (state?.canonicalKeyword === undefined) {
@@ -41,16 +41,15 @@ export function getter(
   return contentAttributeValue;
 }
 
-/**/
 export function setter(
-  this: ReflectedTarget,
+  this: ReflectedTargetAssociations,
   _: ReflectedIDLAttribute,
-  __: ReflectedContentAttribute,
+  reflectedContentAttributeName: string,
   value: string | null,
 ): void {
   if (value === null) {
-    this.deleteContentAttribute();
+    this.deleteContentAttribute(reflectedContentAttributeName);
   } else {
-    this.setContentAttribute(value);
+    this.setContentAttribute(reflectedContentAttributeName, value);
   }
 }

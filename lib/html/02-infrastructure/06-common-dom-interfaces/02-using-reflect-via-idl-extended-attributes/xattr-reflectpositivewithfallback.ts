@@ -1,3 +1,5 @@
+import type { Type } from "@webidl";
+
 /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#xattr-reflectpositivewithfallback */
 export const ReflectPositiveWithFallback: unique symbol = Symbol(
   "ReflectPositiveWithFallback",
@@ -5,7 +7,7 @@ export const ReflectPositiveWithFallback: unique symbol = Symbol(
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface Attribute<T> {
+  interface Attribute<T extends Type = Type> {
     [ReflectPositiveWithFallback]?: string | null;
   }
 }
