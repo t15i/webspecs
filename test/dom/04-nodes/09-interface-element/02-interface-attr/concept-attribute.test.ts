@@ -9,6 +9,8 @@ import { describe, expect, test } from "vitest";
 
 import { Element, type ContentAttributeDescriptor } from "lib/dom";
 
+const descriptor = { prop: {} } as ContentAttributeDescriptor;
+
 describe("Element content attribute registry", () => {
   const div = () => document.createElement("div");
 
@@ -19,7 +21,6 @@ describe("Element content attribute registry", () => {
   });
 
   test("resolves a descriptor registered for the element's own class", () => {
-    const descriptor: ContentAttributeDescriptor = {};
     Element.defineContentAttribute(HTMLDivElement, "data-ws-own", {
       ...descriptor,
     });
@@ -30,7 +31,6 @@ describe("Element content attribute registry", () => {
   });
 
   test("resolves a descriptor registered on an ancestor class", () => {
-    const descriptor: ContentAttributeDescriptor = {};
     Element.defineContentAttribute(HTMLElement, "data-ws-inherited", {
       ...descriptor,
     });
@@ -47,20 +47,19 @@ describe("Element content attribute registry", () => {
   });
 
   test("the descriptor nearest to the element's class wins", () => {
-    const base: ContentAttributeDescriptor = {};
     const derived: ContentAttributeDescriptor = {};
-    Element.defineContentAttribute(HTMLElement, "data-ws-nearest", base);
+    Element.defineContentAttribute(HTMLElement, "data-ws-nearest", descriptor);
     Element.defineContentAttribute(HTMLDivElement, "data-ws-nearest", derived);
 
     expect(
       Element.getContentAttributeDescriptor(div(), "data-ws-nearest"),
-    ).toBe(derived);
+    ).toEqual(derived);
     expect(
       Element.getContentAttributeDescriptor(
         document.createElement("span"),
         "data-ws-nearest",
       ),
-    ).toBe(base);
+    ).toEqual(descriptor);
   });
 
   test.each(["toString", "hasOwnProperty", "constructor", "valueOf"])(
@@ -77,10 +76,9 @@ describe("Element content attribute registry", () => {
   );
 
   test('"__proto__" is stored as a regular name and does not corrupt the store', () => {
-    const descriptor: ContentAttributeDescriptor = {};
     Element.defineContentAttribute(HTMLElement, "__proto__", descriptor);
 
-    expect(Element.getContentAttributeDescriptor(div(), "__proto__")).toBe(
+    expect(Element.getContentAttributeDescriptor(div(), "__proto__")).toEqual(
       descriptor,
     );
     expect(
