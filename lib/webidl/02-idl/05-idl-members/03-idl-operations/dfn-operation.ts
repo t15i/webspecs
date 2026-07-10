@@ -1,4 +1,5 @@
-import type { Member, Type } from "@webidl";
+import { isIdentifier, isStaticOperation } from "@webidl";
+import type { Identifier, Member, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
 export interface Argument<T extends Type = Type> {
@@ -17,7 +18,7 @@ export interface Operation<
 > {
   memberType: "operation";
   keywords: ReadonlySet<string>;
-  identifier: string | undefined;
+  identifier: Identifier | undefined;
   arguments: ArgumentList<Args>;
   returnType: Return;
   methodSteps(
@@ -29,4 +30,16 @@ export interface Operation<
 
 export function isOperation(member: Member): member is Operation {
   return member.memberType === "operation";
+}
+
+export function validateOperation(op: Operation): void {
+  if (op.identifier !== undefined && !isIdentifier(op.identifier)) {
+    throw TypeError(
+      `"${op.identifier}" is not a valid Web IDL identifier for an operation.`,
+    );
+  }
+
+  if (isStaticOperation(op) && op.identifier === "prototype") {
+    throw TypeError(`A static operation must not be named "prototype".`);
+  }
 }
