@@ -6,6 +6,7 @@ import {
 } from "@webidl";
 import type { Operation, Type } from "@webidl";
 
+/** https://webidl.spec.whatwg.org/#dfn-special-operation */
 export function isSpecialOperation(op: Operation): boolean {
   return (
     op.keywords.has("getter") ||

@@ -11,7 +11,7 @@ export type ArgumentList<Args extends readonly Type[]> = {
   [K in keyof Args]: Argument<Args[K]>;
 };
 
-/** @see https://webidl.spec.whatwg.org/#dfn-regular-operation */
+/** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export interface Operation<
   Args extends Type[] = Type[],
   Return extends Type = Type,
@@ -28,6 +28,7 @@ export interface Operation<
   ): ReturnType<Return>;
 }
 
+/** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export function isOperation(member: Member): member is Operation {
   return member.memberType === "operation";
 }
