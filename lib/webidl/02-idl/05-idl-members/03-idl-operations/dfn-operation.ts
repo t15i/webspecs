@@ -17,7 +17,7 @@ export interface Operation<
   Return extends Type = Type,
 > {
   memberType: "operation";
-  keywords: ReadonlySet<string>;
+  keywords: Set<string>;
   identifier: Identifier | undefined;
   arguments: ArgumentList<Args>;
   returnType: Return;
