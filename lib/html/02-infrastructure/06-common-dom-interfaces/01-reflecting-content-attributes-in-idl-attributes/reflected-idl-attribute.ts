@@ -1,4 +1,4 @@
-import type { Attribute, Type } from "@webidl";
+import type { RegularAttribute, Type } from "@webidl";
 
 /**
  * A reflected IDL attribute is an attribute interface member. Reflection
@@ -8,4 +8,4 @@ import type { Attribute, Type } from "@webidl";
  *
  * @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflected-idl-attribute
  */
-export type ReflectedIDLAttribute<T extends Type> = Attribute<T>;
+export type ReflectedIDLAttributeOf<T extends Type> = RegularAttribute<T>;

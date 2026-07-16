@@ -1,10 +1,8 @@
 /**
- * @see https://webidl.spec.whatwg.org/#idl-annotated-types
+ * @see https://webidl.spec.whatwg.org/#idl-type-extended-attribute-associated-with
  *
- * Type-level extended attributes are encoded as own symbol-keyed
- * properties on a synthesized `Type` value. `isAnnotatedWithExtAttribute`
- * is the runtime test for "the type is associated with the given
- * extended attribute" - the spec's set-membership check.
+ * Returns the set of extended attributes applicable to types that the
+ * given IDL type T is annotated with.
  */
 import { describe, expect, test } from "vitest";
 import {
@@ -13,7 +11,6 @@ import {
   Clamp,
   EnforceRange,
   getExtAttributesAssociatedWith,
-  isAnnotatedWithExtAttribute,
   LegacyNullToEmptyString,
 } from "lib/webidl";
 
@@ -24,50 +21,6 @@ import {
   makeUSVStringType,
 } from "../utils";
 
-describe("isAnnotatedWithExtAttribute", () => {
-  test("returns true when the type carries the queried extended attribute", () => {
-    const T = makeDOMStringType({ legacyNullToEmptyString: true });
-    expect(isAnnotatedWithExtAttribute(T, LegacyNullToEmptyString)).toBe(true);
-  });
-
-  test("returns false when the type does not carry the extended attribute", () => {
-    const T = makeDOMStringType();
-    expect(isAnnotatedWithExtAttribute(T, LegacyNullToEmptyString)).toBe(false);
-  });
-
-  test("distinguishes different extended attributes on the same type", () => {
-    const T = makeLongType({ clamp: true });
-    expect(isAnnotatedWithExtAttribute(T, Clamp)).toBe(true);
-    expect(isAnnotatedWithExtAttribute(T, EnforceRange)).toBe(false);
-  });
-
-  test("works across multiple distinct string types", () => {
-    const dom = makeDOMStringType({ legacyNullToEmptyString: true });
-    const usv = makeUSVStringType({ legacyNullToEmptyString: true });
-    expect(isAnnotatedWithExtAttribute(dom, LegacyNullToEmptyString)).toBe(
-      true,
-    );
-    expect(isAnnotatedWithExtAttribute(usv, LegacyNullToEmptyString)).toBe(
-      true,
-    );
-  });
-
-  test("returns false for nullish or non-object inputs", () => {
-    expect(
-      isAnnotatedWithExtAttribute(undefined, LegacyNullToEmptyString),
-    ).toBe(false);
-    expect(
-      isAnnotatedWithExtAttribute(null as never, LegacyNullToEmptyString),
-    ).toBe(false);
-  });
-});
-
-/**
- * @see https://webidl.spec.whatwg.org/#idl-type-extended-attribute-associated-with
- *
- * Returns the set of extended attributes applicable to types that the
- * given IDL type T is annotated with.
- */
 describe("getExtAttributesAssociatedWith", () => {
   test("returns an empty object when the type is not annotated", () => {
     const T = makeBooleanType();

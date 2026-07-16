@@ -5,12 +5,12 @@ import {
   shortestPossibleRepresentingAsValidNonNegativeInteger,
 } from "@html";
 
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 import type { ReflectedTargetAssociations } from "./reflected-target";
 
 export type { ReflectedTargetAssociations };
 
-export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<UnsignedLongType>;
+export type ReflectedIDLAttribute = ReflectedIDLAttributeOf<UnsignedLongType>;
 
 export function getter(
   this: ReflectedTargetAssociations,

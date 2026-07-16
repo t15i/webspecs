@@ -1,12 +1,12 @@
 import { Element } from "@dom";
 import type { DOMStringType } from "@webidl";
 
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<DOMStringType>;
-
 export type { ReflectedTargetAssociations };
+
+export type ReflectedIDLAttribute = ReflectedIDLAttributeOf<DOMStringType>;
 
 export function getter(
   this: ReflectedTargetAssociations,

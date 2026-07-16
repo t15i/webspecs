@@ -422,6 +422,7 @@ export function makePlatformObject(id: string = "Unnamed"): PlatformObject {
 
   platformObjects.set(obj, {
     identifier: id,
+    extendedAttributes: {},
     members: {},
     staticMembers: {},
   });

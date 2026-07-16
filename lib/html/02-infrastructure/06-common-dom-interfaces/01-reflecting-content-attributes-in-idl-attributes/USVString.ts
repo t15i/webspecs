@@ -4,12 +4,12 @@ import { failure } from "@share";
 
 import { encodingParseAndSerializeURL } from "@html";
 
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<USVStringType>;
-
 export type { ReflectedTargetAssociations };
+
+export type ReflectedIDLAttribute = ReflectedIDLAttributeOf<USVStringType>;
 
 export function getter(
   this: ReflectedTargetAssociations,

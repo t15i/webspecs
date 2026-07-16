@@ -4,7 +4,7 @@ export const LegacyOverrideBuiltIns: unique symbol = Symbol(
 );
 
 declare module "@webidl" {
-  interface Interface {
-    [LegacyOverrideBuiltIns]?: boolean;
+  interface InterfaceExtendedAttributes {
+    [LegacyOverrideBuiltIns]?: void;
   }
 }

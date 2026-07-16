@@ -1,11 +1,11 @@
 import type { BooleanType } from "@webidl";
 
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 import type { ReflectedTargetAssociations } from "./reflected-target";
 
-export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<BooleanType>;
-
 export type { ReflectedTargetAssociations };
+
+export type ReflectedIDLAttribute = ReflectedIDLAttributeOf<BooleanType>;
 
 export function getter(
   this: ReflectedTargetAssociations,

@@ -32,15 +32,19 @@ import {
   makeUnsignedLongType,
 } from "../../../../02-idl/13-idl-types/utils";
 
+// The conversion-math sections below don't exercise extended attributes, so
+// an un-annotated long type serves as the `this` carrier for every bit width.
+const convert = convertToInt.bind(makeLongType());
+
 describe("convertToInt - step 5: -0 is normalised to +0", () => {
   test("V is -0 -> +0 (not -0)", () => {
-    const result = convertToInt(-0, 32, "signed");
+    const result = convert(-0, 32, "signed");
     expect(Object.is(result, 0)).toBe(true);
     expect(Object.is(result, -0)).toBe(false);
   });
 
   test("V coerces to -0 (string '-0') -> +0", () => {
-    const result = convertToInt("-0", 32, "signed");
+    const result = convert("-0", 32, "signed");
     expect(Object.is(result, 0)).toBe(true);
   });
 });
@@ -51,8 +55,8 @@ describe("convertToInt - non-finite values", () => {
     ["+Infinity", Infinity],
     ["-Infinity", -Infinity],
   ] as const)("%s -> +0", (_, v) => {
-    expect(convertToInt(v, 32, "signed")).toBe(0);
-    expect(convertToInt(v, 32, "unsigned")).toBe(0);
+    expect(convert(v, 32, "signed")).toBe(0);
+    expect(convert(v, 32, "unsigned")).toBe(0);
   });
 });
 
@@ -66,37 +70,37 @@ describe("convertToInt - within-range values", () => {
     [0, 32, "unsigned", 0],
     [4294967295, 32, "unsigned", 4294967295],
   ] as const)("convertToInt(%s, %s, %s) === %s", (v, bits, sign, expected) => {
-    expect(convertToInt(v, bits, sign)).toBe(expected);
+    expect(convert(v, bits, sign)).toBe(expected);
   });
 });
 
 describe("convertToInt - modulo wrap (signed 32-bit)", () => {
   test("2^31 wraps to -2^31", () => {
-    expect(convertToInt(2147483648, 32, "signed")).toBe(-2147483648);
+    expect(convert(2147483648, 32, "signed")).toBe(-2147483648);
   });
   test("2^31 + 1 wraps to -2^31 + 1", () => {
-    expect(convertToInt(2147483649, 32, "signed")).toBe(-2147483647);
+    expect(convert(2147483649, 32, "signed")).toBe(-2147483647);
   });
   test("2^32 wraps to 0", () => {
-    expect(convertToInt(4294967296, 32, "signed")).toBe(0);
+    expect(convert(4294967296, 32, "signed")).toBe(0);
   });
   test("-2^31 - 1 wraps to 2^31 - 1", () => {
-    expect(convertToInt(-2147483649, 32, "signed")).toBe(2147483647);
+    expect(convert(-2147483649, 32, "signed")).toBe(2147483647);
   });
 });
 
 describe("convertToInt - modulo wrap (unsigned 32-bit)", () => {
   test("-1 wraps to 2^32 - 1", () => {
-    expect(convertToInt(-1, 32, "unsigned")).toBe(4294967295);
+    expect(convert(-1, 32, "unsigned")).toBe(4294967295);
   });
   test("2^32 wraps to 0", () => {
-    expect(convertToInt(4294967296, 32, "unsigned")).toBe(0);
+    expect(convert(4294967296, 32, "unsigned")).toBe(0);
   });
   test("2^32 + 5 wraps to 5", () => {
-    expect(convertToInt(4294967301, 32, "unsigned")).toBe(5);
+    expect(convert(4294967301, 32, "unsigned")).toBe(5);
   });
   test("-2147483649 wraps to 2147483647", () => {
-    expect(convertToInt(-2147483649, 32, "unsigned")).toBe(2147483647);
+    expect(convert(-2147483649, 32, "unsigned")).toBe(2147483647);
   });
 });
 
@@ -109,43 +113,43 @@ describe("convertToInt - truncation (IntegerPart) before modulo", () => {
     [-0.9, 32, "signed", 0],
     [0.5, 32, "unsigned", 0],
   ] as const)("convertToInt(%s, %s, %s) === %s", (v, bits, sign, expected) => {
-    expect(convertToInt(v, bits, sign)).toBe(expected);
+    expect(convert(v, bits, sign)).toBe(expected);
   });
 });
 
 describe("convertToInt - ToNumber-style coercion of V", () => {
   test("string of a number coerces", () => {
-    expect(convertToInt("42", 32, "signed")).toBe(42);
+    expect(convert("42", 32, "signed")).toBe(42);
   });
   test("empty string coerces to +0", () => {
-    expect(convertToInt("", 32, "signed")).toBe(0);
+    expect(convert("", 32, "signed")).toBe(0);
   });
   test("whitespace coerces to +0", () => {
-    expect(convertToInt("   ", 32, "signed")).toBe(0);
+    expect(convert("   ", 32, "signed")).toBe(0);
   });
   test("null coerces to +0", () => {
-    expect(convertToInt(null, 32, "signed")).toBe(0);
+    expect(convert(null, 32, "signed")).toBe(0);
   });
   test("true coerces to 1, false to 0", () => {
-    expect(convertToInt(true, 32, "signed")).toBe(1);
-    expect(convertToInt(false, 32, "signed")).toBe(0);
+    expect(convert(true, 32, "signed")).toBe(1);
+    expect(convert(false, 32, "signed")).toBe(0);
   });
   test("undefined -> NaN -> +0", () => {
-    expect(convertToInt(undefined, 32, "signed")).toBe(0);
+    expect(convert(undefined, 32, "signed")).toBe(0);
   });
   test("Symbol throws TypeError (ToNumber(Symbol) throws)", () => {
-    expect(() => convertToInt(Symbol("x"), 32, "signed")).toThrow(TypeError);
+    expect(() => convert(Symbol("x"), 32, "signed")).toThrow(TypeError);
   });
 });
 
 describe("convertToInt - bitLength variants", () => {
   test("8-bit unsigned wraps modulo 256", () => {
-    expect(convertToInt(257, 8, "unsigned")).toBe(1);
-    expect(convertToInt(-1, 8, "unsigned")).toBe(255);
+    expect(convert(257, 8, "unsigned")).toBe(1);
+    expect(convert(-1, 8, "unsigned")).toBe(255);
   });
   test("16-bit signed wraps", () => {
-    expect(convertToInt(32768, 16, "signed")).toBe(-32768);
-    expect(convertToInt(-32769, 16, "signed")).toBe(32767);
+    expect(convert(32768, 16, "signed")).toBe(-32768);
+    expect(convert(-32769, 16, "signed")).toBe(32767);
   });
 });
 

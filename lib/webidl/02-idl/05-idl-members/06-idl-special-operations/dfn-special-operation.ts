@@ -3,8 +3,16 @@ import {
   isStaticOperation,
   isUnsignedLongType,
   validateOperation,
+  type Operation,
+  type Type,
 } from "@webidl";
-import type { Operation, Type } from "@webidl";
+
+/** https://webidl.spec.whatwg.org/#dfn-special-operation */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SpecialOperation<
+  Args extends Type[] = Type[],
+  Return extends Type = Type,
+> extends Operation<Args, Return> {}
 
 /** https://webidl.spec.whatwg.org/#dfn-special-operation */
 export function isSpecialOperation(op: Operation): boolean {

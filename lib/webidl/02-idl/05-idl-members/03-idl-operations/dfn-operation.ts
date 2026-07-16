@@ -11,12 +11,22 @@ export type ArgumentList<Args extends readonly Type[]> = {
   [K in keyof Args]: Argument<Args[K]>;
 };
 
+/**
+ * The single merge target for extended attributes applicable to operations
+ * of any kind.
+ *
+ * @see https://webidl.spec.whatwg.org/#idl-operations
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface OperationExtendedAttributes {}
+
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export interface Operation<
   Args extends Type[] = Type[],
   Return extends Type = Type,
 > {
-  memberType: "operation";
+  kind: "operation";
+  extendedAttributes: OperationExtendedAttributes;
   keywords: Set<string>;
   identifier: Identifier | undefined;
   arguments: ArgumentList<Args>;
@@ -30,7 +40,7 @@ export interface Operation<
 
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export function isOperation(member: Member): member is Operation {
-  return member.memberType === "operation";
+  return member.kind === "operation";
 }
 
 export function validateOperation(op: Operation): void {

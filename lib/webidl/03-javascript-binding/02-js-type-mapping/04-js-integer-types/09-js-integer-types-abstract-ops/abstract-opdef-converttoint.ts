@@ -26,7 +26,7 @@ function roundHalfToEven(x: number): number {
 
 /** @see https://webidl.spec.whatwg.org/#abstract-opdef-converttoint */
 export function convertToInt(
-  this: Type | void,
+  this: Type,
   v: unknown,
   bitLength: number,
   signedness: "signed" | "unsigned",

@@ -6,11 +6,11 @@ import {
 } from "@html";
 
 import type { ReflectedTargetAssociations } from "./reflected-target";
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 
 export type { ReflectedTargetAssociations };
 
-export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<DoubleType>;
+export type ReflectedIDLAttribute = ReflectedIDLAttributeOf<DoubleType>;
 
 export function getter(
   this: ReflectedTargetAssociations,
