@@ -16,7 +16,7 @@ export function makeAttribute<T extends Type>(options: {
   keywords?: string[];
 }): Attribute<T> {
   return {
-    memberType: "attribute",
+    kind: "attribute",
     keywords: new Set(options.keywords ?? []),
     identifier: options.identifier ?? "attr",
     type: options.type,
@@ -32,7 +32,7 @@ export function makeOperation(options: {
   returnType?: Type;
 }): Operation {
   return {
-    memberType: "operation",
+    kind: "operation",
     keywords: new Set(options.keywords ?? []),
     identifier: "identifier" in options ? options.identifier : "operate",
     arguments: (options.argumentTypes ?? []).map((type) => ({ type })),

@@ -1,4 +1,9 @@
-import { PlatformObject, type InterfaceMembers } from "@webidl";
+import {
+  isAnnotatedWithExtAttribute,
+  PlatformObject,
+  type InterfaceExtendedAttributes,
+  type InterfaceMembers,
+} from "@webidl";
 
 import { isPlatformObject } from "./is-a-platform-object";
 import type { PropertyKey } from "@ecma";
@@ -15,7 +20,10 @@ export function implementsInterfaceWith(
 
 export function implementsInterfaceWithExtAttribute(
   o: object,
-  key: PropertyKey,
-): key is keyof InterfaceMembers & PropertyKey {
-  return isPlatformObject(o) && key in PlatformObject.getPrimaryInterfaceOf(o);
+  key: keyof InterfaceExtendedAttributes,
+): boolean {
+  return (
+    isPlatformObject(o) &&
+    isAnnotatedWithExtAttribute(PlatformObject.getPrimaryInterfaceOf(o), key)
+  );
 }

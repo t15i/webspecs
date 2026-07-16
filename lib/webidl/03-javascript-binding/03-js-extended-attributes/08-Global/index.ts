@@ -2,7 +2,7 @@
 export const Global: unique symbol = Symbol("Global");
 
 declare module "@webidl" {
-  interface Interface {
+  interface InterfaceExtendedAttributes {
     [Global]?: object | object[];
   }
 }

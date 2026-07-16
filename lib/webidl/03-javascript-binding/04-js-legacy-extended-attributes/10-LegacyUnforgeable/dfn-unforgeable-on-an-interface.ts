@@ -4,6 +4,7 @@ import {
   LegacyUnforgeable,
   isAttribute,
   isOperation,
+  isAnnotatedWithExtAttribute,
 } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-unforgeable-on-an-interface */
@@ -21,5 +22,5 @@ export function isUnforgeableOnInterface(
     return false;
   }
 
-  return LegacyUnforgeable in member;
+  return isAnnotatedWithExtAttribute(member, LegacyUnforgeable);
 }

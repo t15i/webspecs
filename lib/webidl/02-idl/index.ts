@@ -4,3 +4,4 @@ export * from "./05-idl-members";
 export * from "./07-idl-static-attributes-and-operations";
 export * from "./12-idl-objects";
 export * from "./13-idl-types";
+export * from "./14-idl-extended-attributes";

@@ -1,5 +1,12 @@
 import { isIdentifier, isStaticOperation } from "@webidl";
-import type { Identifier, Member, Type } from "@webidl";
+import type {
+  Identifier,
+  Member,
+  RegularOperationExtendedAttributes,
+  SpecialOperationExtendedAttributes,
+  StaticOperationExtendedAttributes,
+  Type,
+} from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
 export interface Argument<T extends Type = Type> {
@@ -16,7 +23,11 @@ export interface Operation<
   Args extends Type[] = Type[],
   Return extends Type = Type,
 > {
-  memberType: "operation";
+  kind: "operation";
+  extendedAttributes:
+    | RegularOperationExtendedAttributes
+    | StaticOperationExtendedAttributes
+    | SpecialOperationExtendedAttributes;
   keywords: Set<string>;
   identifier: Identifier | undefined;
   arguments: ArgumentList<Args>;
@@ -30,7 +41,7 @@ export interface Operation<
 
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export function isOperation(member: Member): member is Operation {
-  return member.memberType === "operation";
+  return member.kind === "operation";
 }
 
 export function validateOperation(op: Operation): void {

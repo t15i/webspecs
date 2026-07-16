@@ -13,20 +13,30 @@ import {
   isStaticAttribute,
   isUnionType,
 } from "@webidl";
-import type { Identifier, Member, Type } from "@webidl";
+import type {
+  Identifier,
+  Member,
+  RegularAttributeExtendedAttributes,
+  StaticAttributeExtendedAttributes,
+  Type,
+} from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-attribute */
 export interface Attribute<T extends Type = Type> {
-  memberType: "attribute";
+  kind: "attribute";
+  extendedAttributes:
+    | RegularAttributeExtendedAttributes
+    | StaticAttributeExtendedAttributes;
   keywords: Set<string>;
   identifier: Identifier;
   type: T;
   getterSteps(): ReturnType<T>;
+  /** For a read-only attribute, must throw. */
   setterSteps(value: ReturnType<T>): void;
 }
 
 export function isAttribute(member: Member): member is Attribute {
-  return member.memberType === "attribute";
+  return member.kind === "attribute";
 }
 
 export function validateAttribute(attr: Attribute): void {

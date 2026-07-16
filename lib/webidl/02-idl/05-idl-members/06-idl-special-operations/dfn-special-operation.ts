@@ -3,8 +3,18 @@ import {
   isStaticOperation,
   isUnsignedLongType,
   validateOperation,
+  type Operation,
+  type SpecialOperationExtendedAttributes,
+  type Type,
 } from "@webidl";
-import type { Operation, Type } from "@webidl";
+
+/** https://webidl.spec.whatwg.org/#dfn-special-operation */
+export interface SpecialOperation<
+  Args extends Type[] = Type[],
+  Return extends Type = Type,
+> extends Operation<Args, Return> {
+  extendedAttributes: SpecialOperationExtendedAttributes;
+}
 
 /** https://webidl.spec.whatwg.org/#dfn-special-operation */
 export function isSpecialOperation(op: Operation): boolean {

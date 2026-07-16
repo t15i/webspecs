@@ -4,7 +4,7 @@ import {
   type NullableType,
 } from "@webidl";
 
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 import type { ReflectedTargetAssociations as BaseReflectedTargetAssociations } from "./reflected-target";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -13,8 +13,9 @@ export interface ReflectedTargetAssociations<
   E extends Element,
 > extends BaseReflectedTargetAssociations {}
 
-export type ReflectedIDLAttribute<E extends Element> =
-  BaseReflectedIDLAttribute<NullableType<FrozenArrayType<InterfaceType<E>>>>;
+export type ReflectedIDLAttribute<E extends Element> = ReflectedIDLAttributeOf<
+  NullableType<FrozenArrayType<InterfaceType<E>>>
+>;
 
 export function getter<E extends Element>(
   this: ReflectedTargetAssociations<E>,

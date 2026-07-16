@@ -4,7 +4,7 @@ export const LegacyUnenumerableNamedProperties: unique symbol = Symbol(
 );
 
 declare module "@webidl" {
-  interface Interface {
-    [LegacyUnenumerableNamedProperties]?: boolean;
+  interface InterfaceExtendedAttributes {
+    [LegacyUnenumerableNamedProperties]?: void;
   }
 }

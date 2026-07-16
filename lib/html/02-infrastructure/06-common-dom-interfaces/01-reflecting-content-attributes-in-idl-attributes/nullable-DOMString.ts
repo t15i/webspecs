@@ -2,11 +2,11 @@ import { Element } from "@dom";
 import type { DOMStringType, NullableType } from "@webidl";
 
 import type { ReflectedTargetAssociations } from "./reflected-target";
-import type { ReflectedIDLAttribute as BaseReflectedIDLAttribute } from "./reflected-idl-attribute";
+import type { ReflectedIDLAttributeOf } from "./reflected-idl-attribute";
 
 export type { ReflectedTargetAssociations };
 
-export type ReflectedIDLAttribute = BaseReflectedIDLAttribute<
+export type ReflectedIDLAttribute = ReflectedIDLAttributeOf<
   NullableType<DOMStringType>
 >;
 
