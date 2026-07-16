@@ -2,7 +2,7 @@
 export const Reflect: unique symbol = Symbol("Reflect");
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
+  interface AttributeExtendedAttributes {
     [Reflect]?: string | null;
   }
 }

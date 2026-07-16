@@ -13,20 +13,21 @@ import {
   isStaticAttribute,
   isUnionType,
 } from "@webidl";
-import type {
-  Identifier,
-  Member,
-  RegularAttributeExtendedAttributes,
-  StaticAttributeExtendedAttributes,
-  Type,
-} from "@webidl";
+import type { Identifier, Member, Type } from "@webidl";
+
+/**
+ * The single merge target for extended attributes applicable to attributes
+ * of any kind.
+ *
+ * @see https://webidl.spec.whatwg.org/#idl-attributes
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AttributeExtendedAttributes {}
 
 /** @see https://webidl.spec.whatwg.org/#dfn-attribute */
 export interface Attribute<T extends Type = Type> {
   kind: "attribute";
-  extendedAttributes:
-    | RegularAttributeExtendedAttributes
-    | StaticAttributeExtendedAttributes;
+  extendedAttributes: AttributeExtendedAttributes;
   keywords: Set<string>;
   identifier: Identifier;
   type: T;

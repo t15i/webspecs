@@ -1,14 +1,8 @@
-import {
-  isStaticAttribute,
-  type Attribute,
-  type RegularAttributeExtendedAttributes,
-  type Type,
-} from "@webidl";
+import { isStaticAttribute, type Attribute, type Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-regular-attribute */
-export interface RegularAttribute<T extends Type = Type> extends Attribute<T> {
-  extendedAttributes: RegularAttributeExtendedAttributes;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface RegularAttribute<T extends Type = Type> extends Attribute<T> {}
 
 /** @see https://webidl.spec.whatwg.org/#dfn-regular-attribute */
 export function isRegularAttribute(attribute: Attribute): boolean {

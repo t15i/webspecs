@@ -2,7 +2,7 @@
 export const ReflectPositive: unique symbol = Symbol("ReflectPositive");
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
+  interface AttributeExtendedAttributes {
     [ReflectPositive]?: string | null;
   }
 }

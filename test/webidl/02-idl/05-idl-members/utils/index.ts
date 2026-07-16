@@ -14,9 +14,11 @@ export function makeAttribute<T extends Type>(options: {
   type: T;
   identifier?: Identifier;
   keywords?: string[];
+  extendedAttributes?: Attribute["extendedAttributes"];
 }): Attribute<T> {
   return {
     kind: "attribute",
+    extendedAttributes: options.extendedAttributes ?? {},
     keywords: new Set(options.keywords ?? []),
     identifier: options.identifier ?? "attr",
     type: options.type,
@@ -30,9 +32,11 @@ export function makeOperation(options: {
   keywords?: string[];
   argumentTypes?: Type[];
   returnType?: Type;
+  extendedAttributes?: Operation["extendedAttributes"];
 }): Operation {
   return {
     kind: "operation",
+    extendedAttributes: options.extendedAttributes ?? {},
     keywords: new Set(options.keywords ?? []),
     identifier: "identifier" in options ? options.identifier : "operate",
     arguments: (options.argumentTypes ?? []).map((type) => ({ type })),

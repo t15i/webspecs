@@ -2,7 +2,7 @@
 export const ReflectNonNegative: unique symbol = Symbol("ReflectNonNegative");
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
+  interface AttributeExtendedAttributes {
     [ReflectNonNegative]?: string | null;
   }
 }

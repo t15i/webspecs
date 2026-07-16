@@ -1,12 +1,5 @@
 import { isIdentifier, isStaticOperation } from "@webidl";
-import type {
-  Identifier,
-  Member,
-  RegularOperationExtendedAttributes,
-  SpecialOperationExtendedAttributes,
-  StaticOperationExtendedAttributes,
-  Type,
-} from "@webidl";
+import type { Identifier, Member, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
 export interface Argument<T extends Type = Type> {
@@ -18,16 +11,22 @@ export type ArgumentList<Args extends readonly Type[]> = {
   [K in keyof Args]: Argument<Args[K]>;
 };
 
+/**
+ * The single merge target for extended attributes applicable to operations
+ * of any kind.
+ *
+ * @see https://webidl.spec.whatwg.org/#idl-operations
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface OperationExtendedAttributes {}
+
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export interface Operation<
   Args extends Type[] = Type[],
   Return extends Type = Type,
 > {
   kind: "operation";
-  extendedAttributes:
-    | RegularOperationExtendedAttributes
-    | StaticOperationExtendedAttributes
-    | SpecialOperationExtendedAttributes;
+  extendedAttributes: OperationExtendedAttributes;
   keywords: Set<string>;
   identifier: Identifier | undefined;
   arguments: ArgumentList<Args>;

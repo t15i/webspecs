@@ -2,13 +2,10 @@
 export const LegacyUnforgeable: unique symbol = Symbol("LegacyUnforgeable");
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
-    [LegacyUnforgeable]: void;
+  interface AttributeExtendedAttributes {
+    [LegacyUnforgeable]?: void;
   }
-  interface RegularOperationExtendedAttributes {
-    [LegacyUnforgeable]: void;
-  }
-  interface SpecialOperationExtendedAttributes {
-    [LegacyUnforgeable]: void;
+  interface OperationExtendedAttributes {
+    [LegacyUnforgeable]?: void;
   }
 }

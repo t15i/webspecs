@@ -1,13 +1,8 @@
-import type {
-  Attribute,
-  StaticAttributeExtendedAttributes,
-  Type,
-} from "@webidl";
+import type { Attribute, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-static-attribute */
-export interface StaticAttribute<T extends Type = Type> extends Attribute<T> {
-  extendedAttributes: StaticAttributeExtendedAttributes;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface StaticAttribute<T extends Type = Type> extends Attribute<T> {}
 
 /** @see https://webidl.spec.whatwg.org/#dfn-static-attribute */
 export function isStaticAttribute(attribute: Attribute): boolean {

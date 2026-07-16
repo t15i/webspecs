@@ -1,4 +1,4 @@
-import { isAnnotatedType } from "@webidl";
+import { getExtAttributesAssociatedWith } from "@webidl";
 import type {
   AnnotatedType,
   Interface,
@@ -21,41 +21,19 @@ export type ExtendedAttributesOf<V extends Interface | Member | Type> =
       ? V["extendedAttributes"]
       : never;
 
-/**
- * `keyof` over a union keeps only the keys common to every constituent, so a
- * member whose `extendedAttributes` is a union of per-kind interfaces would
- * admit no keys at all. Distributing first yields every key any constituent
- * may carry.
- */
-export type ExtendedAttributeKeysOf<V extends Interface | Member | Type> =
-  ExtendedAttributesOf<V> extends infer XA
-    ? XA extends object
-      ? keyof XA
-      : never
-    : never;
-
 export type AnnotatedWithExtendedAttribute<
-  V extends Interface | Member | Type,
-  K extends ExtendedAttributeKeysOf<V>,
-> = V & {
-  extendedAttributes: {
-    [P in K]-?: NonNullable<
-      Extract<ExtendedAttributesOf<V>, { [Q in P]?: unknown }>[P]
-    >;
-  };
-};
-
-export type AnnotatedWithoutExtendedAttribute<
   V extends Interface | Member | Type,
   K extends keyof ExtendedAttributesOf<V>,
 > = V & {
-  extendedAttributes: Omit<ExtendedAttributesOf<V>, K>;
+  extendedAttributes: {
+    [P in K]-?: NonNullable<ExtendedAttributesOf<V>[P]>;
+  };
 };
 
 /** @see https://webidl.spec.whatwg.org/#idl-extended-attributes */
 export function isAnnotatedWithExtAttribute<
   T extends Type,
-  K extends ExtendedAttributeKeysOf<T>,
+  K extends keyof ExtendedAttributesOf<T>,
 >(
   value: T,
   xattr: K,
@@ -63,7 +41,7 @@ export function isAnnotatedWithExtAttribute<
 
 export function isAnnotatedWithExtAttribute<
   V extends Interface | Member,
-  K extends ExtendedAttributeKeysOf<V>,
+  K extends keyof ExtendedAttributesOf<V>,
 >(value: V, xattr: K): value is AnnotatedWithExtendedAttribute<V, K>;
 
 export function isAnnotatedWithExtAttribute(
@@ -71,7 +49,7 @@ export function isAnnotatedWithExtAttribute(
   xattr: symbol,
 ): boolean {
   if (typeof value === "function") {
-    return isAnnotatedType(value) && xattr in value.extendedAttributes;
+    return xattr in getExtAttributesAssociatedWith(value);
   }
   return xattr in value.extendedAttributes;
 }

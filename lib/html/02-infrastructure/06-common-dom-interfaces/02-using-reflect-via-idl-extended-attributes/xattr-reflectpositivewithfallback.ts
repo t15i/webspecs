@@ -4,7 +4,7 @@ export const ReflectPositiveWithFallback: unique symbol = Symbol(
 );
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
+  interface AttributeExtendedAttributes {
     [ReflectPositiveWithFallback]?: string | null;
   }
 }

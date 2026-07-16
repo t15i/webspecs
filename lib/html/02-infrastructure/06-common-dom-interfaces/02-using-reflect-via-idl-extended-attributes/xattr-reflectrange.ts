@@ -2,7 +2,7 @@
 export const ReflectRange: unique symbol = Symbol("ReflectRange");
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
+  interface AttributeExtendedAttributes {
     [ReflectRange]?: [number, number];
   }
 }

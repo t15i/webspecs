@@ -1,12 +1,12 @@
 /** @see https://webidl.spec.whatwg.org/#Exposed */
-export const Exposed: unique symbol = Symbol("EnforceRange");
+export const Exposed: unique symbol = Symbol("Exposed");
 
 declare module "@webidl" {
-  interface RegularAttributeExtendedAttributes {
+  interface AttributeExtendedAttributes {
     [Exposed]?: object | object[] | string;
   }
 
-  interface StaticAttributeExtendedAttributes {
+  interface OperationExtendedAttributes {
     [Exposed]?: object | object[] | string;
   }
 }
