@@ -34,6 +34,7 @@ export default {
       provider: "istanbul",
       include: [
         "lib/html/02-infrastructure/06-common-dom-interfaces/01-reflecting-content-attributes-in-idl-attributes",
+        "lib/webidl/02-idl/02-idl-interfaces/**/*.ts",
         "lib/webidl/03-javascript-binding/02-js-type-mapping/**/*.ts",
       ],
       thresholds: {
