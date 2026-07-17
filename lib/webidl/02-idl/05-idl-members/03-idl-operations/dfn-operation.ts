@@ -1,4 +1,10 @@
-import { isIdentifier, isStaticOperation } from "@webidl";
+import {
+  isIdentifier,
+  isSpecialOperation,
+  isStaticOperation,
+  validateSpecialOperation,
+  validateStaticOperation,
+} from "@webidl";
 import type { Identifier, Member, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
@@ -43,6 +49,7 @@ export function isOperation(member: Member): member is Operation {
   return member.kind === "operation";
 }
 
+/** @see https://webidl.spec.whatwg.org/#dfn-operation */
 export function validateOperation(op: Operation): void {
   if (op.identifier !== undefined && !isIdentifier(op.identifier)) {
     throw TypeError(
@@ -50,7 +57,9 @@ export function validateOperation(op: Operation): void {
     );
   }
 
-  if (isStaticOperation(op) && op.identifier === "prototype") {
-    throw TypeError(`A static operation must not be named "prototype".`);
+  if (isSpecialOperation(op)) {
+    validateSpecialOperation(op);
+  } else if (isStaticOperation(op)) {
+    validateStaticOperation(op);
   }
 }

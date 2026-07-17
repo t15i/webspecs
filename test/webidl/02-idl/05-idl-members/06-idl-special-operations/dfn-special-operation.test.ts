@@ -12,7 +12,11 @@
  *     so a deleter must take a single "DOMString" argument.
  */
 import { describe, expect, test } from "vitest";
-import { isSpecialOperation, validateSpecialOperation } from "lib/webidl";
+import {
+  isSpecialOperation,
+  validateOperation,
+  validateSpecialOperation,
+} from "lib/webidl";
 
 import {
   makeDOMStringType,
@@ -63,14 +67,16 @@ describe("validateSpecialOperation - keywords", () => {
     expect(() => validateSpecialOperation(op)).toThrow(TypeError);
   });
 
-  test("propagates operation validation - invalid identifier throws", () => {
+  test("validateOperation rejects a named special operation with an invalid identifier", () => {
+    // The shared identifier check lives in `validateOperation`, which
+    // dispatches to `validateSpecialOperation` for the special-only rules.
     const op = makeOperation({
       identifier: "1foo",
       keywords: ["getter"],
       argumentTypes: [makeUnsignedLongType()],
     });
 
-    expect(() => validateSpecialOperation(op)).toThrow(TypeError);
+    expect(() => validateOperation(op)).toThrow(TypeError);
   });
 });
 

@@ -1,11 +1,4 @@
-import {
-  isAttribute,
-  isIdentifier,
-  isSpecialOperation,
-  validateAttribute,
-  validateOperation,
-  validateSpecialOperation,
-} from "@webidl";
+import { isIdentifier, validateMember } from "@webidl";
 import type { Member, Identifier } from "@webidl";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -48,15 +41,7 @@ export function validateInterface(iface: Interface): void {
 
   for (const members of [iface.staticMembers, iface.members]) {
     for (const key of Reflect.ownKeys(members)) {
-      const member = Reflect.get(members, key) as Member;
-
-      if (isAttribute(member)) {
-        validateAttribute(member);
-      } else if (isSpecialOperation(member)) {
-        validateSpecialOperation(member);
-      } else {
-        validateOperation(member);
-      }
+      validateMember(Reflect.get(members, key) as Member);
     }
   }
 
