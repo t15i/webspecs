@@ -22,6 +22,7 @@ export * from "./32-idl-union";
 export * from "./33-idl-annotated-types";
 export * from "./35-idl-frozen-array-type";
 export * from "./36-idl-observable-array-type";
+export * from "./dfn-integer-type";
 export * from "./dfn-numeric-type";
 export * from "./dfn-string-type";
 
