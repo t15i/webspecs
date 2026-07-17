@@ -33,7 +33,6 @@ export const interfaceExtraValidationRules: ((iface: Interface) => void)[] = [];
 // because `Interface` does not model the constructs they constrain. Implement
 // each as a rule pushed onto `interfaceExtraValidationRules` from that
 // section's `index.ts` once the model grows the missing piece:
-//   - § 2.2    inheritance hierarchy must not have a cycle (no inherited interface).
 //   - § 2.5.5  at most one stringifier (stringifiers not modelled).
 //   - § 2.5.9  iterable declaration: at most one, reserved member names, value/pair type rules (iterable declarations not modelled).
 //   - § 2.5.10 asynchronously iterable declaration: analogous constraints (not modelled).
