@@ -15,16 +15,29 @@ export function makeAttribute<T extends Type>(options: {
   identifier?: Identifier;
   keywords?: string[];
   extendedAttributes?: Attribute["extendedAttributes"];
+  setterSteps?: Attribute<T>["setterSteps"];
 }): Attribute<T> {
+  const keywords = new Set(options.keywords ?? []);
+
+  // A read-only attribute has no setter steps; a read-write one does. Tests
+  // may override either default by passing `setterSteps` explicitly (including
+  // `undefined` to force a read-write attribute without them).
+  const setterSteps =
+    "setterSteps" in options
+      ? options.setterSteps
+      : keywords.has("readonly")
+        ? undefined
+        : () => undefined;
+
   return {
     kind: "attribute",
     extendedAttributes: options.extendedAttributes ?? {},
-    keywords: new Set(options.keywords ?? []),
+    keywords,
     identifier: options.identifier ?? "attr",
     type: options.type,
     getterSteps: () => undefined,
-    setterSteps: () => undefined,
-  } as unknown as Attribute<T>;
+    ...(setterSteps === undefined ? {} : { setterSteps }),
+  } as Attribute<T>;
 }
 
 export function makeOperation(options: {
@@ -42,5 +55,5 @@ export function makeOperation(options: {
     arguments: (options.argumentTypes ?? []).map((type) => ({ type })),
     returnType: options.returnType,
     methodSteps: () => undefined,
-  } as unknown as Operation;
+  } as Operation;
 }

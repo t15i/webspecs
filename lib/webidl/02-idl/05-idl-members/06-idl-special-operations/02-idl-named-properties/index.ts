@@ -1,3 +1,8 @@
+import {
+  NamedPropertyGetter,
+  SupportedPropertyNames,
+  interfaceExtraValidationRules,
+} from "@webidl";
 import type { Type, SpecialOperation, DOMStringType } from "@webidl";
 
 export * from "./dfn-delete-an-existing-named-property";
@@ -20,3 +25,21 @@ export type NamedPropertySetterOperation<
   T extends Type = Type,
   Return extends Type = Type,
 > = SpecialOperation<[DOMStringType, T], Return>;
+
+/**
+ * § 2.5.6.2: an interface that supports named properties must define a way to
+ * determine its supported property names. An interface supports named
+ * properties when it defines a named property getter.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-supported-property-names
+ */
+interfaceExtraValidationRules.push((iface) => {
+  if (
+    NamedPropertyGetter in iface.members &&
+    !(SupportedPropertyNames in iface.members)
+  ) {
+    throw TypeError(
+      "An interface that supports named properties must define its supported property names.",
+    );
+  }
+});

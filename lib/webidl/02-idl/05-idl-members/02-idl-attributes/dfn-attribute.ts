@@ -12,6 +12,8 @@ import {
   isSequenceType,
   isStaticAttribute,
   isUnionType,
+  validateReadonlyAttribute,
+  validateStaticAttribute,
 } from "@webidl";
 import type { Identifier, Member, Type } from "@webidl";
 
@@ -32,14 +34,14 @@ export interface Attribute<T extends Type = Type> {
   identifier: Identifier;
   type: T;
   getterSteps(): ReturnType<T>;
-  /** For a read-only attribute, must throw. */
-  setterSteps(value: ReturnType<T>): void;
+  setterSteps?(value: ReturnType<T>): void;
 }
 
 export function isAttribute(member: Member): member is Attribute {
   return member.kind === "attribute";
 }
 
+/** @see https://webidl.spec.whatwg.org/#dfn-attribute */
 export function validateAttribute(attr: Attribute): void {
   if (!isIdentifier(attr.identifier)) {
     throw TypeError(
@@ -47,15 +49,10 @@ export function validateAttribute(attr: Attribute): void {
     );
   }
 
-  if (isStaticAttribute(attr) && attr.identifier === "prototype") {
-    throw TypeError(`A static attribute must not be named "prototype".`);
-  }
-
   let type = attr.type;
   while (isAnnotatedType(type) || isNullableType(type)) {
     type = type.innerType;
   }
-
   if (
     isSequenceType(type) ||
     isDictionaryType(type) ||
@@ -77,5 +74,15 @@ export function validateAttribute(attr: Attribute): void {
     throw TypeError(
       `An attribute declared with "inherit" must be a read-only regular attribute.`,
     );
+  }
+
+  if (isStaticAttribute(attr)) {
+    validateStaticAttribute(attr);
+  }
+
+  if (isReadonlyAttribute(attr)) {
+    validateReadonlyAttribute(attr);
+  } else if (attr.setterSteps === undefined) {
+    throw TypeError(`A read-write attribute must define setter steps.`);
   }
 }

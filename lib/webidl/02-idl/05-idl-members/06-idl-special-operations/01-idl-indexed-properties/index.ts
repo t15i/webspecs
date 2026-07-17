@@ -1,5 +1,6 @@
 import {
   IndexedPropertyGetter,
+  SupportedPropertyIndices,
   interfaceExtraValidationRules,
   isAttribute,
   isIntegerType,
@@ -43,6 +44,24 @@ interfaceExtraValidationRules.push((iface) => {
   ) {
     throw TypeError(
       'An interface that supports indexed properties must define an integer-typed attribute named "length".',
+    );
+  }
+});
+
+/**
+ * § 2.5.6.1: an interface that supports indexed properties must define a way to
+ * determine its supported property indices. An interface supports indexed
+ * properties when it defines an indexed property getter.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices
+ */
+interfaceExtraValidationRules.push((iface) => {
+  if (
+    IndexedPropertyGetter in iface.members &&
+    !(SupportedPropertyIndices in iface.members)
+  ) {
+    throw TypeError(
+      "An interface that supports indexed properties must define its supported property indices.",
     );
   }
 });

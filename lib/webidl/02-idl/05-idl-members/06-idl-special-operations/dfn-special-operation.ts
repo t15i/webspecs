@@ -2,7 +2,6 @@ import {
   isDOMStringType,
   isStaticOperation,
   isUnsignedLongType,
-  validateOperation,
   type Operation,
   type Type,
 } from "@webidl";
@@ -23,9 +22,8 @@ export function isSpecialOperation(op: Operation): boolean {
   );
 }
 
+/** @see https://webidl.spec.whatwg.org/#dfn-special-operation */
 export function validateSpecialOperation(op: Operation): void {
-  validateOperation(op);
-
   if (isStaticOperation(op)) {
     throw TypeError(`A special operation must not be static.`);
   }

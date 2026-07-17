@@ -191,3 +191,39 @@ describe('validateAttribute - "inherit" rule', () => {
     expect(() => validateAttribute(attr)).toThrow(TypeError);
   });
 });
+
+describe("validateAttribute - read-only / setter steps", () => {
+  test("does not throw for a read-only attribute without setter steps", () => {
+    const attr = makeAttribute({
+      type: makeLongType(),
+      keywords: ["readonly"],
+    });
+
+    expect(() => validateAttribute(attr)).not.toThrow();
+  });
+
+  test("does not throw for a read-write attribute with setter steps", () => {
+    const attr = makeAttribute({ type: makeLongType() });
+
+    expect(() => validateAttribute(attr)).not.toThrow();
+  });
+
+  test("throws TypeError for a read-only attribute that defines setter steps", () => {
+    const attr = makeAttribute({
+      type: makeLongType(),
+      keywords: ["readonly"],
+      setterSteps: () => undefined,
+    });
+
+    expect(() => validateAttribute(attr)).toThrow(TypeError);
+  });
+
+  test("throws TypeError for a read-write attribute without setter steps", () => {
+    const attr = makeAttribute({
+      type: makeLongType(),
+      setterSteps: undefined,
+    });
+
+    expect(() => validateAttribute(attr)).toThrow(TypeError);
+  });
+});
