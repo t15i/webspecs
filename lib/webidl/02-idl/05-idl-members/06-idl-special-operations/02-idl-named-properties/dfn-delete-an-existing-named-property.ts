@@ -1,6 +1,5 @@
 import { type PropertyName } from "@ecma";
 import { PlatformObject } from "@webidl";
-import { failure } from "@share";
 
 export const ExistingNamedPropertyDeleter: unique symbol = Symbol(
   "ExistingNamedPropertyDeleter",
@@ -8,7 +7,7 @@ export const ExistingNamedPropertyDeleter: unique symbol = Symbol(
 
 declare module "@webidl" {
   interface InterfaceMembers {
-    [ExistingNamedPropertyDeleter]?(index: PropertyName): void | typeof failure;
+    [ExistingNamedPropertyDeleter]?(index: PropertyName): void;
   }
 }
 
@@ -16,7 +15,7 @@ declare module "@webidl" {
 export function deleteExistingNamedProperty(
   o: PlatformObject,
   property: PropertyName,
-): void | typeof failure {
+): void {
   return PlatformObject.getPrimaryInterfaceOf(o).members[
     ExistingNamedPropertyDeleter
   ]!.call(o, property);

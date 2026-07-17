@@ -1,5 +1,4 @@
 import { type PropertyName, toUint32 } from "@ecma";
-import { failure } from "@share";
 
 import {
   PlatformObject,
@@ -42,7 +41,7 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
     if (operation.identifier === undefined) {
       const result = deleteExistingNamedProperty(o, p);
 
-      if (result === failure) {
+      if (typeof result === "boolean" && result === false) {
         return false;
       }
     } else {
