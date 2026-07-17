@@ -37,7 +37,7 @@ export function makeAttribute<T extends Type>(options: {
     type: options.type,
     getterSteps: () => undefined,
     ...(setterSteps === undefined ? {} : { setterSteps }),
-  } as unknown as Attribute<T>;
+  } as Attribute<T>;
 }
 
 export function makeOperation(options: {
@@ -55,5 +55,5 @@ export function makeOperation(options: {
     arguments: (options.argumentTypes ?? []).map((type) => ({ type })),
     returnType: options.returnType,
     methodSteps: () => undefined,
-  } as unknown as Operation;
+  } as Operation;
 }

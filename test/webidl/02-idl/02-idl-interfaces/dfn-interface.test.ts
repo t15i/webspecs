@@ -52,35 +52,35 @@ function makeNamedGetter(): NamedPropertyGetterOperation {
   return makeOperation({
     keywords: ["getter"],
     argumentTypes: [makeDOMStringType()],
-  }) as unknown as NamedPropertyGetterOperation;
+  }) as NamedPropertyGetterOperation;
 }
 
 function makeNamedSetter(): NamedPropertySetterOperation {
   return makeOperation({
     keywords: ["setter"],
     argumentTypes: [makeDOMStringType(), makeLongType()],
-  }) as unknown as NamedPropertySetterOperation;
+  }) as NamedPropertySetterOperation;
 }
 
 function makeNamedDeleter(): NamedPropertyDeleterOperation {
   return makeOperation({
     keywords: ["deleter"],
     argumentTypes: [makeDOMStringType()],
-  }) as unknown as NamedPropertyDeleterOperation;
+  }) as NamedPropertyDeleterOperation;
 }
 
 function makeIndexedGetter(): IndexedPropertyGetterOperation {
   return makeOperation({
     keywords: ["getter"],
     argumentTypes: [makeUnsignedLongType()],
-  }) as unknown as IndexedPropertyGetterOperation;
+  }) as IndexedPropertyGetterOperation;
 }
 
 function makeIndexedSetter(): IndexedPropertySetterOperation {
   return makeOperation({
     keywords: ["setter"],
     argumentTypes: [makeUnsignedLongType(), makeLongType()],
-  }) as unknown as IndexedPropertySetterOperation;
+  }) as IndexedPropertySetterOperation;
 }
 
 function makeLengthAttribute() {
@@ -96,7 +96,7 @@ function makeSupportedPropertyIndices(): () => SupportedPropertyIndices {
     ({
       has: () => false,
       *[Symbol.iterator]() {},
-    }) as unknown as SupportedPropertyIndices;
+    }) as SupportedPropertyIndices;
 }
 
 function makeSupportedPropertyNames(): () => SupportedPropertyNames {
@@ -104,7 +104,7 @@ function makeSupportedPropertyNames(): () => SupportedPropertyNames {
     ({
       has: () => false,
       *[Symbol.iterator]() {},
-    }) as unknown as SupportedPropertyNames;
+    }) as SupportedPropertyNames;
 }
 
 describe("validateInterface - identifier", () => {
@@ -156,7 +156,7 @@ describe("validateInterface - members", () => {
         [NamedPropertyGetter]: makeOperation({
           keywords: ["getter", "setter"],
           argumentTypes: [makeDOMStringType()],
-        }) as unknown as NamedPropertyGetterOperation,
+        }) as NamedPropertyGetterOperation,
       },
     });
 
