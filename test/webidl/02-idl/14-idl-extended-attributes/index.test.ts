@@ -11,6 +11,7 @@ import { describe, expect, test } from "vitest";
 import {
   Clamp,
   EnforceRange,
+  Exposed,
   Global,
   isAnnotatedWithExtAttribute,
   LegacyNullToEmptyString,
@@ -24,7 +25,7 @@ import {
 } from "../13-idl-types/utils";
 
 function makeInterface(
-  extendedAttributes: Interface["extendedAttributes"] = {},
+  extendedAttributes: Interface["extendedAttributes"] = { [Exposed]: "*" },
 ): Interface {
   return {
     identifier: "Unnamed",
@@ -63,7 +64,7 @@ describe("isAnnotatedWithExtAttribute", () => {
   });
 
   test("returns true when the interface carries the queried extended attribute", () => {
-    const iface = makeInterface({ [Global]: {} });
+    const iface = makeInterface({ [Exposed]: "*", [Global]: {} });
     expect(isAnnotatedWithExtAttribute(iface, Global)).toBe(true);
   });
 

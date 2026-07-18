@@ -15,6 +15,7 @@
  */
 import { describe, expect, test } from "vitest";
 import {
+  Exposed,
   IndexedPropertyGetter,
   IndexedPropertySetter,
   NamedPropertyDeleter,
@@ -41,7 +42,7 @@ import {
 function makeInterface(overrides: Partial<Interface> = {}): Interface {
   return {
     identifier: "Example",
-    extendedAttributes: {},
+    extendedAttributes: { [Exposed]: "*" },
     staticMembers: {},
     members: {},
     ...overrides,
