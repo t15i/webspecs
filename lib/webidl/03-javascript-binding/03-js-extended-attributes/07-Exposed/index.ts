@@ -2,14 +2,14 @@
 export const Exposed: unique symbol = Symbol("Exposed");
 
 declare module "@webidl" {
-  interface InterfaceExtenedeAttributes {
-    [Exposed]: object | object[] | string;
+  interface InterfaceExtendedAttributes {
+    [Exposed]: string;
   }
   interface AttributeExtendedAttributes {
-    [Exposed]?: object | object[] | string;
+    [Exposed]?: string;
   }
 
   interface OperationExtendedAttributes {
-    [Exposed]?: object | object[] | string;
+    [Exposed]?: string;
   }
 }
