@@ -6,6 +6,7 @@
  */
 import { describe, expect, test } from "vitest";
 import {
+  Exposed,
   isUnforgeableOnInterface,
   LegacyUnforgeable,
   type Interface,
@@ -20,7 +21,7 @@ import { makeDOMStringType } from "../../../02-idl/13-idl-types/utils";
 function makeInterface(members: Interface["members"] = {}): Interface {
   return {
     identifier: "Unnamed",
-    extendedAttributes: {},
+    extendedAttributes: { [Exposed]: "*" },
     members,
     staticMembers: {},
   };

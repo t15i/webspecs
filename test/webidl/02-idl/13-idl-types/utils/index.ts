@@ -94,6 +94,7 @@ import {
   type RecordKeyType,
   PlatformObject,
   type Interface,
+  Exposed,
 } from "lib/webidl";
 
 type ExtAttrs = {
@@ -422,7 +423,7 @@ export function makePlatformObject(id: string = "Unnamed"): PlatformObject {
 
   platformObjects.set(obj, {
     identifier: id,
-    extendedAttributes: {},
+    extendedAttributes: { [Exposed]: "*" },
     members: {},
     staticMembers: {},
   });
