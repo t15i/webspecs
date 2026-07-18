@@ -3,8 +3,8 @@ import {
   AllowShared,
   Clamp,
   EnforceRange,
-  LegacyNullToEmptyString,
-} from "webidl/03-javascript-binding";
+} from "../../../03-javascript-binding/03-js-extended-attributes";
+import { LegacyNullToEmptyString } from "../../../03-javascript-binding/04-js-legacy-extended-attributes";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface TypeExtendedAttributes {}
