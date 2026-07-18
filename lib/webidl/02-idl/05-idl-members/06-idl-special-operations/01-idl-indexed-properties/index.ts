@@ -4,9 +4,10 @@ import {
   interfaceExtraValidationRules,
   isAttribute,
   isIntegerType,
+  type Type,
+  type UnsignedLongType,
+  type SpecialOperation,
 } from "@webidl";
-import type { Type, UnsignedLongType } from "webidl/02-idl/13-idl-types";
-import type { SpecialOperation } from "../dfn-special-operation";
 
 export * from "./dfn-determine-the-value-of-an-indexed-property";
 export * from "./dfn-set-the-value-of-a-new-indexed-property";
