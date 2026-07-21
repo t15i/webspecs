@@ -52,7 +52,7 @@ export function setter<E extends Element>(
   this: ReflectedTargetAssociations<E>,
   _: ReflectedIDLAttribute<E>,
   reflectedContentAttributeName: string,
-  value: E[] | null,
+  value: readonly E[] | null,
 ): void {
   if (value === null) {
     this.explicitlySetElements = null;
@@ -74,7 +74,7 @@ export function attributeChangeSteps<E extends Element>(
   this: ReflectedTargetAssociations<E>,
   _: ReflectedIDLAttribute<E>,
   reflectedContentAttributeName: string,
-  __: E,
+  __: Element,
   localName: string,
   ___: string | null,
   ____: string | null,
