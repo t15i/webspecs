@@ -44,7 +44,7 @@ export function attributeChangeSteps<E extends Element>(
   this: ReflectedTargetAssociations<E>,
   _: ReflectedIDLAttribute<E>,
   reflectedContentAttributeName: string,
-  __: E,
+  __: Element,
   localName: string,
   ___: string | null,
   ____: string | null,
