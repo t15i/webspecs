@@ -1,4 +1,9 @@
-import type { Type } from "@webidl";
+import {
+  isDoubleType,
+  isUnsignedLongType,
+  regularAttributeExtraValidationRules,
+  type Type,
+} from "@webidl";
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -7,3 +12,14 @@ declare module "@webidl" {
     limitedToOnlyPositiveNumbers?: boolean;
   }
 }
+
+regularAttributeExtraValidationRules.push((attr) => {
+  if (
+    "limitedToOnlyPositiveNumbers" in attr &&
+    !(isUnsignedLongType(attr.type) || isDoubleType(attr.type))
+  ) {
+    throw TypeError(
+      `A reflected IDL attribute limited to only non-negative numbers greater than zero must have the type "unsigned long" or "double".`,
+    );
+  }
+});

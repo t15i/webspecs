@@ -1,4 +1,9 @@
-import type { Type } from "@webidl";
+import {
+  isDOMStringType,
+  isNullableType,
+  regularAttributeExtraValidationRules,
+  type Type,
+} from "@webidl";
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -7,3 +12,17 @@ declare module "@webidl" {
     limitedToOnlyKnownValues?: boolean;
   }
 }
+
+regularAttributeExtraValidationRules.push((attr) => {
+  if (
+    "limitedToOnlyKnownValues" in attr &&
+    !(
+      isDOMStringType(attr.type) ||
+      (isNullableType(attr.type) && isDOMStringType(attr.type.innerType))
+    )
+  ) {
+    throw TypeError(
+      `A reflected IDL attribute limited to only known values must have the type "DOMString" or "DOMString?".`,
+    );
+  }
+});

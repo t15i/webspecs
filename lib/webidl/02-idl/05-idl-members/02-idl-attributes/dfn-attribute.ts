@@ -2,17 +2,18 @@ import {
   DICTIONARY_TYPE_NAME,
   RECORD_TYPE_NAME,
   SEQUENCE_TYPE_NAME,
-  isAnnotatedType,
+  getInnermostType,
   isDeclaredToInheritItsGetterAttribute,
   isDictionaryType,
   isIdentifier,
-  isNullableType,
   isReadonlyAttribute,
   isRecordType,
+  isRegularAttribute,
   isSequenceType,
   isStaticAttribute,
   isUnionType,
   validateReadonlyAttribute,
+  validateRegularAttribute,
   validateStaticAttribute,
 } from "@webidl";
 import type { Identifier, Member, Type } from "@webidl";
@@ -49,10 +50,7 @@ export function validateAttribute(attr: Attribute): void {
     );
   }
 
-  let type = attr.type;
-  while (isAnnotatedType(type) || isNullableType(type)) {
-    type = type.innerType;
-  }
+  const type = getInnermostType(attr.type);
   if (
     isSequenceType(type) ||
     isDictionaryType(type) ||
@@ -76,7 +74,9 @@ export function validateAttribute(attr: Attribute): void {
     );
   }
 
-  if (isStaticAttribute(attr)) {
+  if (isRegularAttribute(attr)) {
+    validateRegularAttribute(attr);
+  } else if (isStaticAttribute(attr)) {
     validateStaticAttribute(attr);
   }
 

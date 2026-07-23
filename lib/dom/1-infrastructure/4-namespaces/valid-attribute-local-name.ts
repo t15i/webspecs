@@ -5,3 +5,9 @@ export const validAttributeLocalName: RegExp =
 export function isValidAttributeLocalName(name: string): boolean {
   return validAttributeLocalName.test(name);
 }
+
+export function validateAttributeLocalName(name: string): void {
+  if (!isValidAttributeLocalName(name)) {
+    throw TypeError(`"${name}" is not a valid attribute local name.`);
+  }
+}

@@ -16,6 +16,9 @@ import {
   setContentAttributeOfElementReflectedTarget,
   type ReflectedTargetAssociations,
 } from "lib/html";
+import type { RegularAttribute, Type } from "lib/webidl";
+
+import { makeAttribute } from "../../../../../webidl/02-idl/05-idl-members/utils";
 
 export function makeElementReflectedTarget(
   element: HTMLElement,
@@ -33,4 +36,18 @@ export function makeElementReflectedTarget(
 
 export function makeReflectedIDLAttribute<A>(properties: object = {}): A {
   return properties as unknown as A;
+}
+
+/**
+ * Builds a regular (non-static) attribute with a fixed `type`, carrying any
+ * reflection metadata (`treatedAsURL`, `defaultValue`, `clampedToRange`, the
+ * `limitedTo…` flags, …) and/or reflection `extendedAttributes` a validation
+ * test wants to exercise. Used to drive `validateRegularAttribute` and the
+ * reflection rules registered against `regularAttributeExtraValidationRules`.
+ */
+export function makeReflectedRegularAttribute<T extends Type>(
+  type: T,
+  overrides: Partial<Omit<RegularAttribute<T>, "type">> = {},
+): RegularAttribute<T> {
+  return { ...makeAttribute({ type }), ...overrides } as RegularAttribute<T>;
 }

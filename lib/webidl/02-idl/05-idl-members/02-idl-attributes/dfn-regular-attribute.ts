@@ -8,3 +8,14 @@ export interface RegularAttribute<T extends Type = Type> extends Attribute<T> {}
 export function isRegularAttribute(attribute: Attribute): boolean {
   return !isStaticAttribute(attribute);
 }
+
+type RegularAttributeValidationRule = (attribute: RegularAttribute) => void;
+
+export const regularAttributeExtraValidationRules: RegularAttributeValidationRule[] =
+  [];
+
+export function validateRegularAttribute(attribute: RegularAttribute): void {
+  for (const rule of regularAttributeExtraValidationRules) {
+    rule(attribute);
+  }
+}
