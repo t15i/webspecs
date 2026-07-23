@@ -1,4 +1,8 @@
-import type { Type } from "@webidl";
+import {
+  isUnsignedLongType,
+  regularAttributeExtraValidationRules,
+  type Type,
+} from "@webidl";
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -7,3 +11,11 @@ declare module "@webidl" {
     clampedToRange?: [number, number];
   }
 }
+
+regularAttributeExtraValidationRules.push((attr) => {
+  if ("clampedToRange" in attr && !isUnsignedLongType(attr.type)) {
+    throw TypeError(
+      `A reflected IDL attribute clamped to the range must have the type "unsigned long".`,
+    );
+  }
+});

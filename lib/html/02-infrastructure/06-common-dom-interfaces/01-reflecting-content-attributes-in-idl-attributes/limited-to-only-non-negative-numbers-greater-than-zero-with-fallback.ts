@@ -1,4 +1,8 @@
-import type { Type } from "@webidl";
+import {
+  isUnsignedLongType,
+  regularAttributeExtraValidationRules,
+  type Type,
+} from "@webidl";
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -7,3 +11,14 @@ declare module "@webidl" {
     limitedToOnlyPositiveNumbersWithFallback?: boolean;
   }
 }
+
+regularAttributeExtraValidationRules.push((attr) => {
+  if (
+    "limitedToOnlyPositiveNumbersWithFallback" in attr &&
+    !isUnsignedLongType(attr.type)
+  ) {
+    throw TypeError(
+      `A reflected IDL attribute limited to only non-negative numbers greater than zero, with fallback, must have the type "unsigned long".`,
+    );
+  }
+});

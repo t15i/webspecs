@@ -119,6 +119,12 @@ export const DISTINCTION_TABLE: Map<
   ],
 ]);
 
+export function getInnermostType(T: Type): Type {
+  if (isAnnotatedType(T)) T = T.innerType;
+  if (isNullableType(T)) T = T.innerType;
+  return T;
+}
+
 function getDistinctionTableKey(T: Type) {
   const innermostName = getInnermostType(T).name;
 
@@ -135,12 +141,6 @@ function getDistinctionTableKey(T: Type) {
   }
 
   return undefined;
-}
-
-function getInnermostType(T: Type): Type {
-  if (isAnnotatedType(T)) T = T.innerType;
-  if (isNullableType(T)) T = T.innerType;
-  return T;
 }
 
 function isUnionOrNullableUnionType(
