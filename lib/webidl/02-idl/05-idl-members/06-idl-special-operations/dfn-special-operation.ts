@@ -1,7 +1,11 @@
 import {
-  isDOMStringType,
   isStaticOperation,
   isUnsignedLongType,
+  validateIndexedPropertyGetter,
+  validateIndexedPropertySetter,
+  validateNamedPropertyDeleter,
+  validateNamedPropertyGetter,
+  validateNamedPropertySetter,
   type Operation,
   type Type,
 } from "@webidl";
@@ -22,7 +26,17 @@ export function isSpecialOperation(op: Operation): boolean {
   );
 }
 
-/** @see https://webidl.spec.whatwg.org/#dfn-special-operation */
+/**
+ * Validates the invariants shared by every special operation, then dispatches
+ * to the validator for the specific variety it declares. Every variety takes at
+ * least one argument, so an operation declared as special with none matches no
+ * declaration. Whether a getter or setter is indexed or named is decided by its
+ * first argument: an "unsigned long" index makes it indexed, anything else makes
+ * it named (and the named validator rejects a first argument that is not a
+ * "DOMString"). A deleter has only the named variety.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-special-operation
+ */
 export function validateSpecialOperation(op: Operation): void {
   if (isStaticOperation(op)) {
     throw TypeError(`A special operation must not be static.`);
@@ -45,34 +59,27 @@ export function validateSpecialOperation(op: Operation): void {
     );
   }
 
-  const isIndexOrNameType = (type: Type): boolean =>
-    isUnsignedLongType(type) || isDOMStringType(type);
+  if (op.arguments.length === 0) {
+    throw TypeError(
+      `This operation is declared as a special operation but, taking no arguments, matches no getter, setter, or deleter declaration.`,
+    );
+  }
+
+  const isIndexed = isUnsignedLongType(op.arguments[0]!.type);
 
   if (op.keywords.has("getter")) {
-    if (
-      op.arguments.length !== 1 ||
-      !isIndexOrNameType(op.arguments[0]!.type)
-    ) {
-      throw TypeError(
-        `A getter must take a single "unsigned long" or "DOMString" argument.`,
-      );
+    if (isIndexed) {
+      validateIndexedPropertyGetter(op);
+    } else {
+      validateNamedPropertyGetter(op);
     }
-  }
-
-  if (op.keywords.has("setter")) {
-    if (
-      op.arguments.length !== 2 ||
-      !isIndexOrNameType(op.arguments[0]!.type)
-    ) {
-      throw TypeError(
-        `A setter must take an "unsigned long" or "DOMString" argument followed by a value argument.`,
-      );
+  } else if (op.keywords.has("setter")) {
+    if (isIndexed) {
+      validateIndexedPropertySetter(op);
+    } else {
+      validateNamedPropertySetter(op);
     }
-  }
-
-  if (op.keywords.has("deleter")) {
-    if (op.arguments.length !== 1 || !isDOMStringType(op.arguments[0]!.type)) {
-      throw TypeError(`A deleter must take a single "DOMString" argument.`);
-    }
+  } else {
+    validateNamedPropertyDeleter(op);
   }
 }

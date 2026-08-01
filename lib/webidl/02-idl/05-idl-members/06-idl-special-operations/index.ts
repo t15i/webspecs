@@ -29,32 +29,6 @@ const specialOperationSlots = [
 ];
 
 /**
- * § 2.5.6: "If an interface has a setter of a given variety, then it must also
- * have a getter of that variety."
- *
- * @see https://webidl.spec.whatwg.org/#idl-special-operations
- */
-interfaceExtraValidationRules.push((iface) => {
-  if (
-    IndexedPropertySetter in iface.members &&
-    !(IndexedPropertyGetter in iface.members)
-  ) {
-    throw TypeError(
-      "An interface with an indexed property setter must also have an indexed property getter.",
-    );
-  }
-
-  if (
-    NamedPropertySetter in iface.members &&
-    !(NamedPropertyGetter in iface.members)
-  ) {
-    throw TypeError(
-      "An interface with a named property setter must also have a named property getter.",
-    );
-  }
-});
-
-/**
  * § 2.5.6: "On a given interface, there must exist at most one named property
  * deleter, and at most one of each variety of getter and setter."
  *
@@ -83,22 +57,5 @@ interfaceExtraValidationRules.push((iface) => {
         `On a given interface, there must exist at most one named property deleter, and at most one of each variety of getter and setter. The member "${String(key)}" is a special operation but is not registered under a special-operation slot.`,
       );
     }
-  }
-});
-
-/**
- * § 2.5.6: "If it has a named property deleter, then it must also have a named
- * property getter."
- *
- * @see https://webidl.spec.whatwg.org/#idl-special-operations
- */
-interfaceExtraValidationRules.push((iface) => {
-  if (
-    NamedPropertyDeleter in iface.members &&
-    !(NamedPropertyGetter in iface.members)
-  ) {
-    throw TypeError(
-      "An interface with a named property deleter must also have a named property getter.",
-    );
   }
 });

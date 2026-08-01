@@ -15,12 +15,19 @@
  */
 import { describe, expect, test } from "vitest";
 import {
+  ExistingIndexedPropertySetter,
+  ExistingNamedPropertyDeleter,
+  ExistingNamedPropertySetter,
   Exposed,
+  IndexedPropertyDeterminator,
   IndexedPropertyGetter,
   IndexedPropertySetter,
+  NamedPropertyDeterminator,
   NamedPropertyDeleter,
   NamedPropertyGetter,
   NamedPropertySetter,
+  NewIndexedPropertySetter,
+  NewNamedPropertySetter,
   SupportedPropertyIndices,
   SupportedPropertyNames,
   validateInterface,
@@ -106,6 +113,46 @@ function makeSupportedPropertyNames(): () => SupportedPropertyNames {
       has: () => false,
       *[Symbol.iterator]() {},
     }) as SupportedPropertyNames;
+}
+
+function makeUnnamedIndexedGetter(): IndexedPropertyGetterOperation {
+  return makeOperation({
+    identifier: undefined,
+    keywords: ["getter"],
+    argumentTypes: [makeUnsignedLongType()],
+  }) as IndexedPropertyGetterOperation;
+}
+
+function makeUnnamedIndexedSetter(): IndexedPropertySetterOperation {
+  return makeOperation({
+    identifier: undefined,
+    keywords: ["setter"],
+    argumentTypes: [makeUnsignedLongType(), makeLongType()],
+  }) as IndexedPropertySetterOperation;
+}
+
+function makeUnnamedNamedGetter(): NamedPropertyGetterOperation {
+  return makeOperation({
+    identifier: undefined,
+    keywords: ["getter"],
+    argumentTypes: [makeDOMStringType()],
+  }) as NamedPropertyGetterOperation;
+}
+
+function makeUnnamedNamedSetter(): NamedPropertySetterOperation {
+  return makeOperation({
+    identifier: undefined,
+    keywords: ["setter"],
+    argumentTypes: [makeDOMStringType(), makeLongType()],
+  }) as NamedPropertySetterOperation;
+}
+
+function makeUnnamedNamedDeleter(): NamedPropertyDeleterOperation {
+  return makeOperation({
+    identifier: undefined,
+    keywords: ["deleter"],
+    argumentTypes: [makeDOMStringType()],
+  }) as NamedPropertyDeleterOperation;
 }
 
 describe("validateInterface - identifier", () => {
@@ -370,6 +417,169 @@ describe("validateInterface - indexed properties length attribute", () => {
       members: {
         [NamedPropertyGetter]: makeNamedGetter(),
         [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - unnamed indexed property getter", () => {
+  test("throws without steps to determine the value of an indexed property", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeUnnamedIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
+  test("does not throw once those steps are provided", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeUnnamedIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+        [IndexedPropertyDeterminator]: () => undefined,
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("does not require those steps when the getter is named", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - unnamed indexed property setter", () => {
+  test("throws without steps to set new and existing indexed properties", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+        [IndexedPropertySetter]: makeUnnamedIndexedSetter(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
+  test("throws when only the new-property steps are present", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+        [IndexedPropertySetter]: makeUnnamedIndexedSetter(),
+        [NewIndexedPropertySetter]: () => undefined,
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
+  test("does not throw once both new and existing steps are provided", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+        [IndexedPropertySetter]: makeUnnamedIndexedSetter(),
+        [NewIndexedPropertySetter]: () => undefined,
+        [ExistingIndexedPropertySetter]: () => undefined,
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - unnamed named property getter", () => {
+  test("throws without steps to determine the value of a named property", () => {
+    const iface = makeInterface({
+      members: {
+        [NamedPropertyGetter]: makeUnnamedNamedGetter(),
+        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
+  test("does not throw once those steps are provided", () => {
+    const iface = makeInterface({
+      members: {
+        [NamedPropertyGetter]: makeUnnamedNamedGetter(),
+        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+        [NamedPropertyDeterminator]: () => undefined,
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - unnamed named property setter", () => {
+  test("throws without steps to set new and existing named properties", () => {
+    const iface = makeInterface({
+      members: {
+        [NamedPropertyGetter]: makeNamedGetter(),
+        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+        [NamedPropertySetter]: makeUnnamedNamedSetter(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
+  test("does not throw once both new and existing steps are provided", () => {
+    const iface = makeInterface({
+      members: {
+        [NamedPropertyGetter]: makeNamedGetter(),
+        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+        [NamedPropertySetter]: makeUnnamedNamedSetter(),
+        [NewNamedPropertySetter]: () => undefined,
+        [ExistingNamedPropertySetter]: () => undefined,
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - unnamed named property deleter", () => {
+  test("throws without steps to delete an existing named property", () => {
+    const iface = makeInterface({
+      members: {
+        [NamedPropertyGetter]: makeNamedGetter(),
+        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+        [NamedPropertyDeleter]: makeUnnamedNamedDeleter(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
+  test("does not throw once those steps are provided", () => {
+    const iface = makeInterface({
+      members: {
+        [NamedPropertyGetter]: makeNamedGetter(),
+        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+        [NamedPropertyDeleter]: makeUnnamedNamedDeleter(),
+        [ExistingNamedPropertyDeleter]: () => undefined,
       },
     });
 

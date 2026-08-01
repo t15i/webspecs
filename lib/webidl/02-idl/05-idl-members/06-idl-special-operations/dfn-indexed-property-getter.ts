@@ -1,3 +1,9 @@
+import {
+  IndexedPropertyDeterminator,
+  interfaceExtraValidationRules,
+  isUnsignedLongType,
+  type Operation,
+} from "@webidl";
 import type { IndexedPropertyGetterOperation } from "./01-idl-indexed-properties";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-indexed-property-getter */
@@ -10,3 +16,36 @@ declare module "@webidl" {
     [IndexedPropertyGetter]?: IndexedPropertyGetterOperation;
   }
 }
+
+/**
+ * Argument-shape validation for an indexed property getter: it must take a
+ * single "unsigned long" argument.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-indexed-property-getter
+ */
+export function validateIndexedPropertyGetter(op: Operation): void {
+  if (op.arguments.length !== 1 || !isUnsignedLongType(op.arguments[0]!.type)) {
+    throw TypeError(
+      `An indexed property getter must take a single "unsigned long" argument.`,
+    );
+  }
+}
+
+interfaceExtraValidationRules.push((iface) => {
+  const getter = iface.members[IndexedPropertyGetter];
+
+  // § 2.5.6.1: the value of an indexed property is determined by invoking the
+  // getter. When the getter is declared without an identifier the interface
+  // must instead supply the anonymous steps to determine the value of an
+  // indexed property; a named getter determines it through its own steps.
+  // https://webidl.spec.whatwg.org/#dfn-determine-the-value-of-an-indexed-property
+  if (
+    getter !== undefined &&
+    getter.identifier === undefined &&
+    !(IndexedPropertyDeterminator in iface.members)
+  ) {
+    throw TypeError(
+      "An interface with an unnamed indexed property getter must define the steps to determine the value of an indexed property.",
+    );
+  }
+});
