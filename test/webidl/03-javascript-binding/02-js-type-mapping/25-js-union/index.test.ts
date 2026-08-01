@@ -1,10 +1,11 @@
 /**
  * @see https://webidl.spec.whatwg.org/#js-union
  *
- * Spec algorithm (top-level steps relevant to this library - buffer
- * source / TypedArray / DataView cases are explicitly out of scope and
- * are skipped, as is the [[StringData]] internal slot branch for the
- * async sequence case):
+ * Spec algorithm (top-level steps relevant to this library - the buffer
+ * source steps are supported only through their "types includes object"
+ * sub-branch, since this library ships no ArrayBuffer / DataView / typed
+ * array IDL types to convert to; the [[StringData]] internal slot branch
+ * for the async sequence case is likewise partial):
  *
  *   1. If the union type includes undefined and V is undefined, return
  *      the unique undefined value.
@@ -18,6 +19,13 @@
  *      1. If types includes an interface type that V implements,
  *         return V.
  *      2. If types includes object, return V.
+ *   6. If V is an Object with an [[ArrayBufferData]] internal slot
+ *      (ArrayBuffer or SharedArrayBuffer) and types includes object,
+ *      return V.
+ *   7. If V is an Object with a [[DataView]] internal slot and types
+ *      includes object, return V.
+ *   8. If V is an Object with a [[TypedArrayName]] internal slot and
+ *      types includes object, return V.
  *   10. If IsCallable(V):
  *       1. If types includes a callback function type, then return the
  *          result of converting V to that callback function type.
@@ -124,6 +132,49 @@ describe("asUnion - step 5: platform object / interface matching", () => {
     const T = makeUnionType([I, makeObjectType()]);
     const v = new Foo();
     expect(T(v)).toBe(v);
+  });
+});
+
+describe("asUnion - steps 6-8: buffer source object sub-branch", () => {
+  test("(object), V is an ArrayBuffer -> V", () => {
+    const T = makeUnionType([makeObjectType()]);
+    const v = new ArrayBuffer(8);
+    expect(T(v)).toBe(v);
+  });
+
+  test("(object), V is a DataView -> V", () => {
+    const T = makeUnionType([makeObjectType()]);
+    const v = new DataView(new ArrayBuffer(8));
+    expect(T(v)).toBe(v);
+  });
+
+  test("(object), V is a typed array -> V", () => {
+    const T = makeUnionType([makeObjectType()]);
+    const v = new Int8Array([1, 2, 3]);
+    expect(T(v)).toBe(v);
+  });
+
+  test("(sequence<long> or object), V is a typed array -> V (not copied to a sequence)", () => {
+    // A typed array is iterable, so without the [[TypedArrayName]] step it
+    // would be captured by the sequence branch. That step runs first and,
+    // since object is included, returns V as-is.
+    const T = makeUnionType([
+      makeSequenceType(makeLongType()),
+      makeObjectType(),
+    ]);
+    const v = new Int8Array([1, 2, 3]);
+    expect(T(v)).toBe(v);
+  });
+
+  test("(sequence<long>) without object, V is a typed array -> converted to a sequence", () => {
+    // No object member: the buffer source step falls through and the iterable
+    // typed array is converted to a plain sequence, per the spec fall-through.
+    const T = makeUnionType([makeSequenceType(makeLongType())]);
+    const v = new Int8Array([1, 2, 3]);
+    const out = T(v);
+    expect(out).not.toBe(v);
+    expect(Array.isArray(out)).toBe(true);
+    expect(out).toEqual([1, 2, 3]);
   });
 });
 

@@ -1,11 +1,15 @@
 import {
   getMethod,
+  hasArrayBufferDataInternalSlot,
+  hasDataViewInternalSlot,
   hasStringDataInternalSlot,
+  hasTypedArrayNameInternalSlot,
   isBigInt,
   isBoolean,
   isCallable,
   isNumber,
   isObject,
+  isSharedArrayBuffer,
 } from "@ecma";
 import {
   asNumericOrBigint,
@@ -109,10 +113,30 @@ export function asUnion<UnionMembersType extends Type>(
     return v as T;
   }
 
-  // Skipped per scope:
-  //   If V is an Object with [[ArrayBufferData]] internal slot ...
-  //   If V is an Object with [[DataView]] internal slot ...
-  //   If V is an Object with [[TypedArrayName]] internal slot ...
+  // TODO: no ArrayBuffer / DataView / typed-array IDL types exist yet, so only
+  // the "types includes object -> return V" sub-branch is handled. Add their
+  // conversions here when those types are implemented.
+  if (
+    types.has(OBJECT_TYPE_NAME) &&
+    hasArrayBufferDataInternalSlot(v) &&
+    !isSharedArrayBuffer(v)
+  ) {
+    return v as T;
+  }
+  /* istanbul ignore next -- SharedArrayBuffer needs cross-origin isolation, unavailable in the test browsers */
+  if (
+    types.has(OBJECT_TYPE_NAME) &&
+    hasArrayBufferDataInternalSlot(v) &&
+    isSharedArrayBuffer(v)
+  ) {
+    return v as T;
+  }
+  if (types.has(OBJECT_TYPE_NAME) && hasDataViewInternalSlot(v)) {
+    return v as T;
+  }
+  if (types.has(OBJECT_TYPE_NAME) && hasTypedArrayNameInternalSlot(v)) {
+    return v as T;
+  }
 
   if (isCallable(v)) {
     if (types.has(CALLBACK_FUNCTION_TYPE_NAME)) {
