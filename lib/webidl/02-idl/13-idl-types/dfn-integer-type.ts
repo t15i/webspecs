@@ -33,9 +33,3 @@ export type IntegerType =
 export function isIntegerType(T: Type): T is IntegerType {
   return INTEGER_TYPE_NAMES.has(T.name);
 }
-
-declare module "@webidl" {
-  interface TypeMap {
-    [INTEGER_TYPE_NAME]: IntegerType;
-  }
-}

@@ -1,7 +1,7 @@
-import { isAnyType, type UnionType } from "@webidl";
+import { isAnyType, type Type, type UnionType } from "@webidl";
 
 declare module "@webidl" {
-  interface UnionType<T> {
+  interface UnionType<T extends Type = Type> {
     /** @see https://webidl.spec.whatwg.org/#dfn-union-member-type */
     memberTypes: T[];
   }

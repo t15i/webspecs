@@ -1,11 +1,11 @@
 import { isBigInt, toNumeric } from "@ecma";
-import type { Type } from "@webidl";
+import type { NumericType } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#converted-to-a-numeric-type-or-bigint */
-export function asNumericOrBigint<T>(this: Type<T>, v: unknown): T | bigint {
+export function asNumericOrBigint(T: NumericType, v: unknown): number | bigint {
   const x = toNumeric(v);
   if (isBigInt(x)) {
     return x;
   }
-  return this(x);
+  return T(x);
 }

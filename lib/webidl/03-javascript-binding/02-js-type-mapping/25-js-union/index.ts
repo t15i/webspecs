@@ -1,11 +1,15 @@
 import {
   getMethod,
+  hasArrayBufferDataInternalSlot,
+  hasDataViewInternalSlot,
   hasStringDataInternalSlot,
+  hasTypedArrayNameInternalSlot,
   isBigInt,
   isBoolean,
   isCallable,
   isNumber,
   isObject,
+  isSharedArrayBuffer,
 } from "@ecma";
 import {
   asNumericOrBigint,
@@ -28,6 +32,7 @@ import {
   STRING_TYPE_NAME,
   UNDEFINED_TYPE_NAME,
   type FlattenedMemberTypes,
+  type NativeType,
   type Type,
   type UnionType,
 } from "@webidl";
@@ -81,7 +86,12 @@ function isPlatformObjectAndTypesIncludesObjectOrInterfaceTypeImplementedBy(
 }
 
 /** @see https://webidl.spec.whatwg.org/#js-union */
-export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
+export function asUnion<UnionMembersType extends Type>(
+  this: UnionType<UnionMembersType>,
+  v: unknown,
+): NativeType<UnionMembersType> {
+  type T = NativeType<UnionMembersType>;
+
   const types = this.flattenedMemberTypes;
 
   if (types.has(UNDEFINED_TYPE_NAME) && v === undefined) {
@@ -103,10 +113,30 @@ export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
     return v as T;
   }
 
-  // Skipped per scope:
-  //   If V is an Object with [[ArrayBufferData]] internal slot ...
-  //   If V is an Object with [[DataView]] internal slot ...
-  //   If V is an Object with [[TypedArrayName]] internal slot ...
+  // TODO: no ArrayBuffer / DataView / typed-array IDL types exist yet, so only
+  // the "types includes object -> return V" sub-branch is handled. Add their
+  // conversions here when those types are implemented.
+  if (
+    types.has(OBJECT_TYPE_NAME) &&
+    hasArrayBufferDataInternalSlot(v) &&
+    !isSharedArrayBuffer(v)
+  ) {
+    return v as T;
+  }
+  /* istanbul ignore next -- SharedArrayBuffer needs cross-origin isolation, unavailable in the test browsers */
+  if (
+    types.has(OBJECT_TYPE_NAME) &&
+    hasArrayBufferDataInternalSlot(v) &&
+    isSharedArrayBuffer(v)
+  ) {
+    return v as T;
+  }
+  if (types.has(OBJECT_TYPE_NAME) && hasDataViewInternalSlot(v)) {
+    return v as T;
+  }
+  if (types.has(OBJECT_TYPE_NAME) && hasTypedArrayNameInternalSlot(v)) {
+    return v as T;
+  }
 
   if (isCallable(v)) {
     if (types.has(CALLBACK_FUNCTION_TYPE_NAME)) {
@@ -191,7 +221,7 @@ export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
   }
 
   if (types.has(NUMERIC_TYPE_NAME) && types.has(BIGINT_TYPE_NAME)) {
-    return asNumericOrBigint.call(types.get(NUMERIC_TYPE_NAME), v) as T;
+    return asNumericOrBigint(types.get(NUMERIC_TYPE_NAME), v) as T;
   }
 
   if (types.has(NUMERIC_TYPE_NAME)) {

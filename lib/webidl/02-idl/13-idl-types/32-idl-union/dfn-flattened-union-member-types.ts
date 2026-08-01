@@ -8,13 +8,15 @@ import {
 import { isUnionType, type UnionType } from "./dfn-union-type";
 
 declare module "@webidl" {
-  interface UnionType<T> {
+  interface UnionType<T extends Type = Type> {
     /** @see https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types */
     flattenedMemberTypes: FlattenedMemberTypes<T>;
   }
 }
 
-export interface FlattenedMemberTypes<T> extends ReadonlyArray<T> {
+export interface FlattenedMemberTypes<
+  T extends Type = Type,
+> extends ReadonlyArray<T> {
   has(name: string): boolean;
   get<K extends keyof TypeMap>(name: K): TypeMap[K];
 }
