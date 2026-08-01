@@ -396,10 +396,7 @@ function buildFlattenedMemberTypes<T extends Type>(
 
 export function makeUnionType<T extends Type>(memberTypes: T[]): UnionType<T> {
   const fn = function (this: UnionType<T>, v: unknown): ReturnType<T> {
-    return asUnion.call(
-      fn as UnionType<Type<ReturnType<T>>>,
-      v,
-    ) as ReturnType<T>;
+    return asUnion.call(fn as UnionType<T>, v) as ReturnType<T>;
   } as UnionType<T>;
   defineName(fn, UNION_TYPE_NAME);
   fn.memberTypes = memberTypes;

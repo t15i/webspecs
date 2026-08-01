@@ -4,15 +4,16 @@ import {
   isAnnotatedWithExtAttribute,
   isCallbackFunctionType,
   LegacyTreatNonObjectAsNull,
+  type NativeType,
   type NullableType,
   type Type,
 } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#js-nullable-type */
-export function asNullable<T>(
-  this: NullableType<Type<T>>,
+export function asNullable<T extends Type>(
+  this: NullableType<T>,
   v: unknown,
-): T | null {
+): NativeType<T> | null {
   if (
     !isObject(v) &&
     isCallbackFunctionType(this.innerType) &&
@@ -22,7 +23,7 @@ export function asNullable<T>(
   }
 
   if (v === undefined && includesUndefined(this.innerType)) {
-    return undefined as T;
+    return undefined as NativeType<T>;
   }
 
   if (v === null || v === undefined) {

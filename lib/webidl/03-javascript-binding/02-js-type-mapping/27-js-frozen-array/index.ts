@@ -1,6 +1,7 @@
 import {
   asSequence,
   type FrozenArrayType,
+  type NativeType,
   type SequenceType,
   type Type,
 } from "@webidl";
@@ -13,13 +14,12 @@ export function createFrozenArray<T>(values: T[]): readonly T[] {
 }
 
 /** @see https://webidl.spec.whatwg.org/#js-frozen-array */
-export function asFrozenArray<T>(
-  this: FrozenArrayType<Type<T>>,
+export function asFrozenArray<T extends Type>(
+  this: FrozenArrayType<T>,
   v: unknown,
-): readonly T[] {
-  const values = asSequence.call(
-    this as unknown as SequenceType<Type<T>>,
-    v,
-  ) as T[];
+): readonly NativeType<T>[] {
+  const asSequenceT = asSequence<T>;
+
+  const values = asSequenceT.call(this as unknown as SequenceType<T>, v);
   return createFrozenArray(values);
 }

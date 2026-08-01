@@ -1,4 +1,4 @@
-import type { Type } from "@webidl";
+import type { DoubleType, IntegerType } from "@webidl";
 
 import { LONG_TYPE_NAME } from "./08-idl-long";
 import { UNSIGNED_LONG_TYPE_NAME } from "./09-idl-unsigned-long";
@@ -13,8 +13,10 @@ export const NUMERIC_TYPE_NAMES: Set<string> = new Set([
   DOUBLE_TYPE_NAME,
 ]);
 
-declare module "@webidl" {
-  interface TypeMap {
-    [NUMERIC_TYPE_NAME]: Type<number>;
-  }
-}
+/** @see https://webidl.spec.whatwg.org/#dfn-numeric-type */
+export type NumericType =
+  | IntegerType
+  // | FloatType
+  // | UnrestrictedFloatType
+  | DoubleType;
+// | UnrestrictedDoubleType;

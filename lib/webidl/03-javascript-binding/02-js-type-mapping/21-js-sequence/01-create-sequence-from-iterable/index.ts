@@ -1,11 +1,11 @@
-import type { Type } from "@webidl";
+import type { NativeType, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#create-sequence-from-iterable */
-export function createSequenceFromIterable<T>(
-  T: Type<T>,
+export function createSequenceFromIterable<T extends Type>(
+  T: T,
   iterable: Iterable<unknown>,
-): T[] {
-  const sequence: T[] = [];
+): NativeType<T>[] {
+  const sequence: NativeType<T>[] = [];
   const iterator = iterable[Symbol.iterator]();
 
   while (true) {

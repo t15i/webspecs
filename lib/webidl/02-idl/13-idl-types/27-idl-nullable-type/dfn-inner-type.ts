@@ -10,7 +10,7 @@ import {
 } from "@webidl";
 
 declare module "@webidl" {
-  interface NullableType<T> {
+  interface NullableType<T extends Type = Type> {
     /** @see https://webidl.spec.whatwg.org/#dfn-inner-type */
     innerType: T;
   }

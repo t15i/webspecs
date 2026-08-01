@@ -5,6 +5,7 @@ import {
   type ByteStringType,
   type DOMStringType,
   type Type,
+  type TypeBase,
   type USVStringType,
 } from "@webidl";
 
@@ -16,12 +17,13 @@ export const RECORD_TYPE_NAME = "Record";
 export interface RecordType<
   K extends RecordKeyType = RecordKeyType,
   V extends Type = Type,
-> extends Type<Record<ReturnType<K>, ReturnType<V>>> {
+> extends TypeBase<Record<ReturnType<K>, ReturnType<V>>> {
   name: typeof RECORD_TYPE_NAME;
   K: K;
   V: V;
 }
 
+/** @see https://webidl.spec.whatwg.org/#idl-record */
 export function isRecordType(T: Type): T is RecordType {
   return T.name === RECORD_TYPE_NAME;
 }
@@ -31,10 +33,4 @@ export function validateRecordKeyType(T: Type): T is RecordKeyType {
     throw TypeError("K must be one of DOMString, USVString, or ByteString.");
   }
   return true;
-}
-
-declare module "@webidl" {
-  interface TypeMap {
-    [RECORD_TYPE_NAME]: RecordType;
-  }
 }

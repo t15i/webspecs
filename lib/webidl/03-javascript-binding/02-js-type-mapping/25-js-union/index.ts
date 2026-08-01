@@ -28,6 +28,7 @@ import {
   STRING_TYPE_NAME,
   UNDEFINED_TYPE_NAME,
   type FlattenedMemberTypes,
+  type NativeType,
   type Type,
   type UnionType,
 } from "@webidl";
@@ -81,7 +82,12 @@ function isPlatformObjectAndTypesIncludesObjectOrInterfaceTypeImplementedBy(
 }
 
 /** @see https://webidl.spec.whatwg.org/#js-union */
-export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
+export function asUnion<UnionMembersType extends Type>(
+  this: UnionType<UnionMembersType>,
+  v: unknown,
+): NativeType<UnionMembersType> {
+  type T = NativeType<UnionMembersType>;
+
   const types = this.flattenedMemberTypes;
 
   if (types.has(UNDEFINED_TYPE_NAME) && v === undefined) {
@@ -191,7 +197,7 @@ export function asUnion<T>(this: UnionType<Type<T>>, v: unknown): T {
   }
 
   if (types.has(NUMERIC_TYPE_NAME) && types.has(BIGINT_TYPE_NAME)) {
-    return asNumericOrBigint.call(types.get(NUMERIC_TYPE_NAME), v) as T;
+    return asNumericOrBigint(types.get(NUMERIC_TYPE_NAME), v) as T;
   }
 
   if (types.has(NUMERIC_TYPE_NAME)) {

@@ -1,7 +1,7 @@
 import { isAnnotatedType, type Type } from "@webidl";
 
 declare module "@webidl" {
-  interface AnnotatedType<T extends Type> {
+  interface AnnotatedType<T extends Type = Type> {
     /** @see https://webidl.spec.whatwg.org/#annotated-types-inner-type */
     innerType: T;
   }
