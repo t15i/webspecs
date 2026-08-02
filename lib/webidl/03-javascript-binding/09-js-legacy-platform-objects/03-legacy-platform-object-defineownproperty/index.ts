@@ -7,7 +7,6 @@ import {
 
 import {
   type PlatformObject,
-  Global,
   LegacyOverrideBuiltIns,
   IndexedPropertySetter,
   NamedPropertySetter,
@@ -44,7 +43,7 @@ export function defineOwnProperty(
 
   if (
     supportsNamedProperties(o) &&
-    !implementsInterfaceWithExtAttribute(o, Global) &&
+    // TODO (Global): O does not implement an interface with the [Global] extended attribute
     isString(p) &&
     !isUnforgeablePropertyName(o, p)
   ) {

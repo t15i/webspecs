@@ -3,13 +3,11 @@ import { type PropertyName, toUint32 } from "@ecma";
 import {
   PlatformObject,
   NamedPropertyDeleter,
-  Global,
   deleteExistingNamedProperty,
   isSupportedPropertyIndex,
   supportsIndexedProperties,
   supportsNamedProperties,
   implementsInterfaceWith,
-  implementsInterfaceWithExtAttribute,
   isArrayIndex,
   isBooleanType,
   isNamedPropertyVisible,
@@ -28,7 +26,7 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
 
   if (
     supportsNamedProperties(o) &&
-    !implementsInterfaceWithExtAttribute(o, Global) &&
+    // TODO (Global): O does not implement an interface with the [Global] extended attribute
     isNamedPropertyVisible(p, o)
   ) {
     if (!implementsInterfaceWith(o, NamedPropertyDeleter)) {
