@@ -3,7 +3,6 @@ import {
   type PlatformObject,
   LegacyOverrideBuiltIns,
   isSupportedPropertyName,
-  isNamedPropertyObject,
   implementsInterfaceWithExtAttribute,
 } from "@webidl";
 
@@ -27,7 +26,10 @@ export function isNamedPropertyVisible(
   let prototype = Object.getPrototypeOf(o);
 
   while (prototype !== null) {
-    if (!isNamedPropertyObject(prototype) && Object.hasOwn(prototype, p)) {
+    if (
+      // TODO (Global): prototype is not a named properties object
+      Object.hasOwn(prototype, p)
+    ) {
       return false;
     }
 
