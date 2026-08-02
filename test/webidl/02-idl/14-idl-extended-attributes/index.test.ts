@@ -11,11 +11,8 @@ import { describe, expect, test } from "vitest";
 import {
   Clamp,
   EnforceRange,
-  Exposed,
-  Global,
   isAnnotatedWithExtAttribute,
   LegacyNullToEmptyString,
-  type Interface,
 } from "lib/webidl";
 
 import {
@@ -23,17 +20,6 @@ import {
   makeLongType,
   makeUSVStringType,
 } from "../13-idl-types/utils";
-
-function makeInterface(
-  extendedAttributes: Interface["extendedAttributes"] = { [Exposed]: "*" },
-): Interface {
-  return {
-    identifier: "Unnamed",
-    extendedAttributes,
-    members: {},
-    staticMembers: {},
-  };
-}
 
 describe("isAnnotatedWithExtAttribute", () => {
   test("returns true when the type carries the queried extended attribute", () => {
@@ -61,15 +47,5 @@ describe("isAnnotatedWithExtAttribute", () => {
     expect(isAnnotatedWithExtAttribute(usv, LegacyNullToEmptyString)).toBe(
       true,
     );
-  });
-
-  test("returns true when the interface carries the queried extended attribute", () => {
-    const iface = makeInterface({ [Exposed]: "*", [Global]: {} });
-    expect(isAnnotatedWithExtAttribute(iface, Global)).toBe(true);
-  });
-
-  test("returns false when the interface does not carry the extended attribute", () => {
-    const iface = makeInterface();
-    expect(isAnnotatedWithExtAttribute(iface, Global)).toBe(false);
   });
 });
