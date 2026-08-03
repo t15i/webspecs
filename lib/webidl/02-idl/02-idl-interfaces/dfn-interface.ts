@@ -11,11 +11,15 @@ export interface InterfaceStaticMembers {
 }
 
 export interface InterfaceMembers {
+  // `constructor` is deliberately not declared as a named key: doing so collides
+  // with the built-in `Object.prototype.constructor`, and any own constructor is
+  // resolved through `getConstructor` (which guards against that inherited value).
   [key: Identifier]: Member;
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-interface */
 export interface Interface {
+  inherit: Interface | null;
   extendedAttributes: InterfaceExtendedAttributes;
   identifier: Identifier;
   staticMembers: InterfaceStaticMembers;

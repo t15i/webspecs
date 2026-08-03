@@ -50,6 +50,7 @@ function makeInterface(overrides: Partial<Interface> = {}): Interface {
   return {
     identifier: "Example",
     extendedAttributes: { [Exposed]: "*" },
+    inherit: null,
     staticMembers: {},
     members: {},
     ...overrides,

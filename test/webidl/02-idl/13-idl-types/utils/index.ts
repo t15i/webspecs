@@ -421,9 +421,24 @@ export function makePlatformObject(id: string = "Unnamed"): PlatformObject {
   platformObjects.set(obj, {
     identifier: id,
     extendedAttributes: { [Exposed]: "*" },
+    inherit: null,
     members: {},
     staticMembers: {},
   });
 
   return obj as PlatformObject;
+}
+
+/**
+ * Associates an existing object with a caller-supplied interface, using the
+ * same registry that the mocked `getPrimaryInterfaceOf` reads. Unlike
+ * {@link makePlatformObject}, this lets a test pin an object to a specific
+ * interface (with its own members and `inherit` chain).
+ */
+export function associateInterface<T extends object>(
+  obj: T,
+  iface: Interface,
+): T {
+  platformObjects.set(obj, iface);
+  return obj;
 }

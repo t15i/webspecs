@@ -2,6 +2,7 @@ import {
   IndexedPropertyDeterminator,
   interfaceExtraValidationRules,
   isUnsignedLongType,
+  type Interface,
   type Operation,
 } from "@webidl";
 import type { IndexedPropertyGetterOperation } from "./01-idl-indexed-properties";
@@ -15,6 +16,17 @@ declare module "@webidl" {
   interface InterfaceMembers {
     [IndexedPropertyGetter]?: IndexedPropertyGetterOperation;
   }
+}
+
+/**
+ * Tests, at the level of an interface definition, whether the interface has an
+ * indexed property getter — i.e. declares a member under the indexed property
+ * getter slot. The object-level counterpart is `supportsIndexedProperties`.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-indexed-property-getter
+ */
+export function interfaceHasIndexedPropertyGetter(iface: Interface): boolean {
+  return IndexedPropertyGetter in iface.members;
 }
 
 /**
