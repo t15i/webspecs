@@ -5,6 +5,7 @@ import {
   isAttribute,
   isOperation,
   isAnnotatedWithExtAttribute,
+  type Member,
 } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-unforgeable-on-an-interface */
@@ -16,8 +17,10 @@ export function isUnforgeableOnInterface(
     return false;
   }
 
-  const member = a.members[identifier]!;
+  return isUnforgeable(a.members[identifier]!);
+}
 
+export function isUnforgeable(member: Member): boolean {
   if (!isOperation(member) && !isAttribute(member)) {
     return false;
   }

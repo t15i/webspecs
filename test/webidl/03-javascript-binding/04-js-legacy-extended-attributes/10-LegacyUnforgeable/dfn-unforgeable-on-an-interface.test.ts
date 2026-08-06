@@ -22,6 +22,7 @@ function makeInterface(members: Interface["members"] = {}): Interface {
   return {
     identifier: "Unnamed",
     extendedAttributes: { [Exposed]: "*" },
+    inherit: null,
     members,
     staticMembers: {},
   };

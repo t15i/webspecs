@@ -1,5 +1,6 @@
 export * from "./02-idl-attributes";
 export * from "./03-idl-operations";
+export * from "./04-idl-constructors";
 export * from "./06-idl-special-operations";
 export * from "./08-idl-overloading";
 

@@ -1,6 +1,8 @@
+import { isObject } from "@ecma";
 import {
   isAnnotatedWithExtAttribute,
   PlatformObject,
+  type Interface,
   type InterfaceExtendedAttributes,
   type InterfaceMembers,
 } from "@webidl";
@@ -21,4 +23,27 @@ export function implementsInterfaceWithExtAttribute(
 ): boolean {
   const iface = PlatformObject.getPrimaryInterfaceOf(o);
   return iface !== undefined && isAnnotatedWithExtAttribute(iface, key);
+}
+
+/**
+ * Tests whether an object implements an interface: its primary interface is
+ * that interface or one that inherits it, walked through each interface's
+ * `inherit` reference. A non-object never implements an interface.
+ *
+ * @see https://webidl.spec.whatwg.org/#implements
+ */
+export function implementsInterface(o: unknown, iface: Interface): boolean {
+  if (!isObject(o)) {
+    return false;
+  }
+
+  let i: Interface | null | undefined = PlatformObject.getPrimaryInterfaceOf(o);
+  while (i !== null && i !== undefined) {
+    if (i === iface) {
+      return true;
+    }
+    i = i.inherit;
+  }
+
+  return false;
 }
