@@ -1,5 +1,11 @@
 import { createBuiltinFunction } from "@ecma";
-import { implementsInterface, isPromiseType, isStaticOperation } from "@webidl";
+import {
+  computeEffectiveOverloadSet,
+  implementsInterface,
+  isPromiseType,
+  isStaticOperation,
+  resolveOverloads,
+} from "@webidl";
 import type { Interface, Operation } from "@webidl";
 
 /**
@@ -34,20 +40,32 @@ export function createOperationFunction(
         idlObject = jsValue;
       }
 
-      // NOTE (no overloading): the JS runtime has a single signature per
-      // operation, ignoring "Compute the effective overload set..."
-      const operation = op.methodSteps;
-      const values = op.arguments.map((argument, index) =>
-        argument.type(args[index]),
+      const S = computeEffectiveOverloadSet(
+        isStaticOperation(op) ? "static" : "regular",
+        id!,
+        args.length,
+        target,
       );
 
-      let R = null;
+      try {
+        const [operation, values] = resolveOverloads(S, args);
 
-      // TODO (Default): "If operation is declared with a [Default]
-      // extended attribute..."
-      R = Reflect.apply(operation, idlObject, values);
+        let R = null;
 
-      return op.returnType(R);
+        // TODO (Default): "If operation is declared with a [Default]
+        // extended attribute..."
+        R = Reflect.apply(operation.methodSteps, idlObject, values);
+
+        return op.returnType(R);
+      } catch (e) {
+        if (e instanceof TypeError) {
+          e.message = `Failed to execute '${id}' on '${target.identifier}': ${e.message}`;
+          throw e;
+        }
+        throw TypeError(`Failed to execute '${id}' on '${target.identifier}'`, {
+          cause: e,
+        });
+      }
     } catch (error) {
       // Per spec the check is on the operation's return type directly ("if op
       // has a return type that is a promise type"); a promise type is never

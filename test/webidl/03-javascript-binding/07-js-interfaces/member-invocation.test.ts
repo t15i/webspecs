@@ -3,15 +3,23 @@
  * @see https://webidl.spec.whatwg.org/#dfn-attribute-setter
  * @see https://webidl.spec.whatwg.org/#dfn-create-operation-function
  *
- * Runtime behaviour of the accessor and operation functions installed on the
+ * Runtime behaviour of the accessor and operation functions defined on an
  * interface prototype object: a regular member checks that `this` implements
  * the interface (throwing "Illegal invocation" otherwise), converts JS values
  * to IDL values on the way in, and forwards `this` to the member's steps. A
  * member whose type/return is a promise turns a synchronous throw into a
  * rejected promise.
+ *
+ * The prototype is assembled directly from the "define the regular
+ * attributes/operations" algorithms, which is what an interface prototype
+ * object would install on itself.
  */
 import { describe, expect, test } from "vitest";
-import { getInterfacePrototypeObject } from "lib/webidl";
+import {
+  defineRegularAttributes,
+  defineRegularOperations,
+  type Interface,
+} from "lib/webidl";
 
 import { makeInterface } from "./utils";
 import {
@@ -32,6 +40,14 @@ function readCount(this: object): number {
 
 function writeCount(this: object, value: number): void {
   store.set(this, value);
+}
+
+/** Builds a prototype-like object carrying the interface's regular members. */
+function prototypeOf(iface: Interface): object {
+  const proto = {};
+  defineRegularAttributes(iface, proto);
+  defineRegularOperations(iface, proto);
+  return proto;
 }
 
 function getterOf(proto: object, key: string): () => unknown {
@@ -60,7 +76,7 @@ describe("regular attribute accessors", () => {
         }),
       },
     });
-    const proto = getInterfacePrototypeObject(iface);
+    const proto = prototypeOf(iface);
     const instance = associateInterface(Object.create(proto), iface);
     store.set(instance, 7);
 
@@ -78,7 +94,7 @@ describe("regular attribute accessors", () => {
         }),
       },
     });
-    const proto = getInterfacePrototypeObject(iface);
+    const proto = prototypeOf(iface);
     const instance = associateInterface(Object.create(proto), iface);
 
     (instance as { count: unknown }).count = "9"; // converted via long → 9
@@ -97,7 +113,7 @@ describe("regular attribute accessors", () => {
         }),
       },
     });
-    const getter = getterOf(getInterfacePrototypeObject(iface), "count");
+    const getter = getterOf(prototypeOf(iface), "count");
 
     expect(() => getter.call({})).toThrow(TypeError);
   });
@@ -113,7 +129,7 @@ describe("regular attribute accessors", () => {
         }),
       },
     });
-    const setter = setterOf(getInterfacePrototypeObject(iface), "count");
+    const setter = setterOf(prototypeOf(iface), "count");
 
     expect(() => setter.call({}, 1)).toThrow(TypeError);
   });
@@ -134,7 +150,7 @@ describe("regular operations", () => {
         }),
       },
     });
-    const proto = getInterfacePrototypeObject(iface);
+    const proto = prototypeOf(iface);
     const instance = associateInterface(Object.create(proto), iface);
 
     const result = (instance as { add: (n: unknown) => unknown }).add("4");
@@ -153,9 +169,55 @@ describe("regular operations", () => {
         }),
       },
     });
-    const method = methodOf(getInterfacePrototypeObject(iface), "add");
+    const method = methodOf(prototypeOf(iface), "add");
 
     expect(() => method.call({}, 1)).toThrow(TypeError);
+  });
+
+  test("throws when fewer arguments than required are passed", () => {
+    // Overload resolution requires at least the operation's argument count; a
+    // short call is reported as a TypeError naming the operation and interface.
+    const iface = makeInterface({
+      identifier: "Calculator",
+      members: {
+        add: makeOperation({
+          identifier: "add",
+          argumentTypes: [makeLongType()],
+          methodSteps: () => undefined,
+        }),
+      },
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+    const add = (instance as { add: (...a: unknown[]) => unknown }).add;
+
+    expect(() => add.call(instance)).toThrow(
+      /Failed to execute 'add' on 'Calculator'/,
+    );
+    expect(() => add.call(instance)).toThrow(/at least 1 argument/i);
+  });
+
+  test("ignores arguments beyond the operation's declared count", () => {
+    const seen: unknown[] = [];
+    const iface = makeInterface({
+      members: {
+        one: makeOperation({
+          identifier: "one",
+          argumentTypes: [makeLongType()],
+          methodSteps(this: unknown, ...args: unknown[]) {
+            seen.push(...args);
+            return undefined;
+          },
+        }),
+      },
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+
+    (instance as { one: (...a: unknown[]) => unknown }).one("1", "2", "3");
+
+    // Only the single declared long argument is converted and forwarded.
+    expect(seen).toEqual([1]);
   });
 });
 
@@ -170,7 +232,7 @@ describe("promise-typed members reject rather than throw", () => {
         }),
       },
     });
-    const method = methodOf(getInterfacePrototypeObject(iface), "load");
+    const method = methodOf(prototypeOf(iface), "load");
 
     await expect(method.call({}) as Promise<unknown>).rejects.toThrow(
       TypeError,
@@ -188,7 +250,7 @@ describe("promise-typed members reject rather than throw", () => {
         }),
       },
     });
-    const getter = getterOf(getInterfacePrototypeObject(iface), "ready");
+    const getter = getterOf(prototypeOf(iface), "ready");
 
     await expect(getter.call({}) as Promise<unknown>).rejects.toThrow(
       TypeError,

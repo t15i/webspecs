@@ -1,187 +1,80 @@
 /**
- * @see https://webidl.spec.whatwg.org/#create-an-interface-prototype-object
+ * @see https://webidl.spec.whatwg.org/#interface-prototype-object
  *
- * The interface prototype object holds the interface's regular attributes
- * (accessors), regular operations (data properties), iteration methods, and
- * constants, plus a `constructor` data property pointing back at the interface
- * object. Its `[[Prototype]]` is the inherited interface's prototype, or
- * `%Error.prototype%` for DOMException, or `%Object.prototype%` otherwise.
+ * `InterfacePrototypeObject` is the identity registry that associates an
+ * interface prototype object with the interface it belongs to. It is an
+ * identity map: lookups are by object reference, an unregistered proto resolves
+ * to `null`, and `setInterfaceOf` returns the very proto it was handed so it can
+ * be used fluently.
  */
 import { describe, expect, test } from "vitest";
-import {
-  getInterfaceObject,
-  getInterfacePrototypeObject,
-  IndexedPropertyGetter,
-  LegacyUnforgeable,
-  type IndexedPropertyGetterOperation,
-} from "lib/webidl";
+import { InterfacePrototypeObject } from "lib/webidl";
+import type { InterfacePrototypeObject as InterfacePrototypeObjectShape } from "lib/webidl";
 
 import { makeInterface } from "../utils";
-import {
-  makeAttribute,
-  makeOperation,
-} from "../../../02-idl/05-idl-members/utils";
-import {
-  makeLongType,
-  makeUnsignedLongType,
-} from "../../../02-idl/13-idl-types/utils";
 
-describe("createInterfacePrototypeObject - constructor property", () => {
-  test("points back at the interface object (W:true, E:false, C:true)", () => {
+/**
+ * An interface prototype object's `constructor` points back at its interface
+ * object (a constructor); any object carrying such a `constructor` satisfies the
+ * shape the registry expects.
+ */
+function makeProto(): InterfacePrototypeObjectShape {
+  return { constructor: class {} };
+}
+
+describe("InterfacePrototypeObject.getInterfaceOf", () => {
+  test("returns null for a proto that was never registered", () => {
+    expect(InterfacePrototypeObject.getInterfaceOf(makeProto())).toBeNull();
+  });
+});
+
+describe("InterfacePrototypeObject.setInterfaceOf", () => {
+  test("records the interface so getInterfaceOf resolves it", () => {
+    const proto = makeProto();
     const iface = makeInterface();
-    const proto = getInterfacePrototypeObject(iface);
-    const descriptor = Object.getOwnPropertyDescriptor(proto, "constructor")!;
 
-    expect(descriptor.value).toBe(getInterfaceObject(iface));
-    expect(descriptor.writable).toBe(true);
-    expect(descriptor.enumerable).toBe(false);
-    expect(descriptor.configurable).toBe(true);
+    InterfacePrototypeObject.setInterfaceOf(proto, iface);
+
+    expect(InterfacePrototypeObject.getInterfaceOf(proto)).toBe(iface);
   });
-});
 
-describe("createInterfacePrototypeObject - [[Prototype]]", () => {
-  test("is Object.prototype by default", () => {
+  test("returns the same proto object it was given", () => {
+    const proto = makeProto();
+
     expect(
-      Object.getPrototypeOf(getInterfacePrototypeObject(makeInterface())),
-    ).toBe(Object.prototype);
+      InterfacePrototypeObject.setInterfaceOf(proto, makeInterface()),
+    ).toBe(proto);
   });
 
-  test("is the inherited interface's prototype object", () => {
-    const parent = makeInterface({ identifier: "Parent" });
-    const child = makeInterface({ identifier: "Child", inherit: parent });
-    expect(Object.getPrototypeOf(getInterfacePrototypeObject(child))).toBe(
-      getInterfacePrototypeObject(parent),
-    );
+  test("keeps registrations of distinct protos independent", () => {
+    const a = makeProto();
+    const b = makeProto();
+    const ifaceA = makeInterface({ identifier: "A" });
+    const ifaceB = makeInterface({ identifier: "B" });
+
+    InterfacePrototypeObject.setInterfaceOf(a, ifaceA);
+    InterfacePrototypeObject.setInterfaceOf(b, ifaceB);
+
+    expect(InterfacePrototypeObject.getInterfaceOf(a)).toBe(ifaceA);
+    expect(InterfacePrototypeObject.getInterfaceOf(b)).toBe(ifaceB);
   });
 
-  test("is Error.prototype for DOMException", () => {
-    expect(
-      Object.getPrototypeOf(
-        getInterfacePrototypeObject(
-          makeInterface({ identifier: "DOMException" }),
-        ),
-      ),
-    ).toBe(Error.prototype);
-  });
-});
+  test("overwrites a previous registration for the same proto", () => {
+    const proto = makeProto();
+    const first = makeInterface({ identifier: "First" });
+    const second = makeInterface({ identifier: "Second" });
 
-describe("createInterfacePrototypeObject - members", () => {
-  test("a read-only regular attribute is an accessor with only a getter", () => {
-    const iface = makeInterface({
-      members: {
-        foo: makeAttribute({
-          type: makeLongType(),
-          identifier: "foo",
-          keywords: ["readonly"],
-          getterSteps: () => 1,
-        }),
-      },
-    });
-    const descriptor = Object.getOwnPropertyDescriptor(
-      getInterfacePrototypeObject(iface),
-      "foo",
-    )!;
+    InterfacePrototypeObject.setInterfaceOf(proto, first);
+    InterfacePrototypeObject.setInterfaceOf(proto, second);
 
-    expect(typeof descriptor.get).toBe("function");
-    expect(descriptor.set).toBeUndefined();
-    expect(descriptor.enumerable).toBe(true);
-    expect(descriptor.configurable).toBe(true);
+    expect(InterfacePrototypeObject.getInterfaceOf(proto)).toBe(second);
   });
 
-  test("a read-write regular attribute has both a getter and a setter", () => {
-    const iface = makeInterface({
-      members: {
-        foo: makeAttribute({ type: makeLongType(), identifier: "foo" }),
-      },
-    });
-    const descriptor = Object.getOwnPropertyDescriptor(
-      getInterfacePrototypeObject(iface),
-      "foo",
-    )!;
+  test("looks proto up by identity, not by structural equality", () => {
+    const proto = makeProto();
+    InterfacePrototypeObject.setInterfaceOf(proto, makeInterface());
 
-    expect(typeof descriptor.get).toBe("function");
-    expect(typeof descriptor.set).toBe("function");
-  });
-
-  test("a regular operation is a data property (W:true, E:true, C:true)", () => {
-    const iface = makeInterface({
-      members: {
-        doIt: makeOperation({ identifier: "doIt", methodSteps: () => "ok" }),
-      },
-    });
-    const descriptor = Object.getOwnPropertyDescriptor(
-      getInterfacePrototypeObject(iface),
-      "doIt",
-    )!;
-
-    expect(typeof descriptor.value).toBe("function");
-    expect(descriptor.writable).toBe(true);
-    expect(descriptor.enumerable).toBe(true);
-    expect(descriptor.configurable).toBe(true);
-  });
-
-  test("an operation without an identifier is not a regular operation and is not defined", () => {
-    // Per spec an operation only declares a regular operation when it has an
-    // identifier; an identifier-less (special) operation must not surface as a
-    // named property on the prototype.
-    const iface = makeInterface({
-      members: {
-        anon: makeOperation({ identifier: undefined, methodSteps: () => "x" }),
-      },
-    });
-    const proto = getInterfacePrototypeObject(iface);
-
-    expect(Object.getOwnPropertyDescriptor(proto, "undefined")).toBeUndefined();
-  });
-
-  test("excludes an unforgeable operation from the prototype", () => {
-    const iface = makeInterface({
-      members: {
-        pin: makeOperation({
-          identifier: "pin",
-          methodSteps: () => "pinned",
-          extendedAttributes: { [LegacyUnforgeable]: undefined },
-        }),
-      },
-    });
-    // Unforgeable members are defined on the [[Unforgeables]] object, not on the
-    // interface prototype object.
-    expect(
-      Object.getOwnPropertyDescriptor(
-        getInterfacePrototypeObject(iface),
-        "pin",
-      ),
-    ).toBeUndefined();
-  });
-});
-
-describe("createInterfacePrototypeObject - iteration methods", () => {
-  test("binds Symbol.iterator to Array.prototype.values for an indexed getter", () => {
-    const iface = makeInterface({
-      members: {
-        [IndexedPropertyGetter]: makeOperation({
-          keywords: ["getter"],
-          argumentTypes: [makeUnsignedLongType()],
-        }) as IndexedPropertyGetterOperation,
-      },
-    });
-    const descriptor = Object.getOwnPropertyDescriptor(
-      getInterfacePrototypeObject(iface),
-      Symbol.iterator,
-    )!;
-
-    expect(descriptor.value).toBe(Array.prototype.values);
-    expect(descriptor.writable).toBe(true);
-    expect(descriptor.enumerable).toBe(false);
-    expect(descriptor.configurable).toBe(true);
-  });
-
-  test("does not define Symbol.iterator without an indexed getter", () => {
-    expect(
-      Object.getOwnPropertyDescriptor(
-        getInterfacePrototypeObject(makeInterface()),
-        Symbol.iterator,
-      ),
-    ).toBeUndefined();
+    // A different object with the same shape is not the registered key.
+    expect(InterfacePrototypeObject.getInterfaceOf(makeProto())).toBeNull();
   });
 });

@@ -1,15 +1,13 @@
 import {
   isAttribute,
-  isConstructor,
   isOperation,
   validateAttribute,
-  validateConstructor,
   validateOperation,
 } from "@webidl";
-import type { Attribute, Constructor, Operation } from "@webidl";
+import type { Attribute, ConstructorOperation, Operation } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-member */
-export type Member = Operation | Attribute | Constructor;
+export type Member = Operation | Attribute | ConstructorOperation;
 
 /**
  * Validates a member of any kind by dispatching to the validator for its
@@ -22,7 +20,7 @@ export function validateMember(member: Member): void {
     validateAttribute(member);
   } else if (isOperation(member)) {
     validateOperation(member);
-  } else if (isConstructor(member)) {
-    validateConstructor(member);
+  } else {
+    throw TypeError(`A member must be an attribute or an operation.`);
   }
 }

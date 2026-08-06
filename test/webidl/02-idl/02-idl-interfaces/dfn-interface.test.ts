@@ -39,7 +39,11 @@ import {
   type NamedPropertySetterOperation,
 } from "lib/webidl";
 
-import { makeAttribute, makeOperation } from "../05-idl-members/utils";
+import {
+  makeAttribute,
+  makeConstructor,
+  makeOperation,
+} from "../05-idl-members/utils";
 import {
   makeDOMStringType,
   makeLongType,
@@ -220,6 +224,54 @@ describe("validateInterface - members", () => {
           identifier: "prototype",
           keywords: ["static"],
         }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+});
+
+describe("validateInterface - static members require the static keyword", () => {
+  test("throws for a static member declared without the static keyword", () => {
+    const iface = makeInterface({
+      staticMembers: {
+        make: makeOperation({ identifier: "make" }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/static/i);
+  });
+
+  test("does not throw for a static operation declared with the static keyword", () => {
+    const iface = makeInterface({
+      staticMembers: {
+        make: makeOperation({ identifier: "make", keywords: ["static"] }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - constructor operations", () => {
+  test("does not throw for an interface with a valid constructor operation", () => {
+    // A constructor operation is a legal member; an interface that declares one
+    // must validate. (It is validated as a constructor, not routed through the
+    // attribute/operation member validator.)
+    const iface = makeInterface({
+      members: {
+        constructor: makeConstructor({ argumentTypes: [makeLongType()] }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("still validates the interface's other members alongside a constructor", () => {
+    const iface = makeInterface({
+      members: {
+        constructor: makeConstructor({}),
+        attr: makeAttribute({ type: makeDOMStringType(), identifier: "1bad" }),
       },
     });
 

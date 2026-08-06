@@ -10,10 +10,9 @@
  */
 import type {
   Attribute,
-  Constructor,
+  ConstructorOperation,
   Identifier,
   Operation,
-  PlatformObject,
   Type,
 } from "lib/webidl";
 
@@ -72,19 +71,20 @@ export function makeOperation(options: {
 
 export function makeConstructor(options: {
   argumentTypes?: Type[];
-  constructorSteps?: Constructor["constructorSteps"];
-  extendedAttributes?: Constructor["extendedAttributes"];
-}): Constructor {
+  keywords?: string[];
+  constructorSteps?: ConstructorOperation["constructorSteps"];
+  extendedAttributes?: ConstructorOperation["extendedAttributes"];
+}): ConstructorOperation {
   return {
     kind: "constructor",
+    keywords: new Set(options.keywords ?? []),
     extendedAttributes: options.extendedAttributes ?? {},
     arguments: (options.argumentTypes ?? []).map((type) => ({ type })),
-    // The default steps must be a constructable function: create an interface
-    // object invokes the constructor steps through Reflect.construct.
+    // `constructorSteps` is a constructor (`new (...) => object`): the effective
+    // overload set invokes it through `new`/`Reflect.construct`. The default is a
+    // trivial constructable that yields a fresh object.
     constructorSteps:
       options.constructorSteps ??
-      function (): PlatformObject {
-        return {};
-      },
-  } as Constructor;
+      (class {} as ConstructorOperation["constructorSteps"]),
+  } as ConstructorOperation;
 }
