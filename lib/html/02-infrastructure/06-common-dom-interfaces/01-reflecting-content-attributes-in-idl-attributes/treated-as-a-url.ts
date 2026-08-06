@@ -1,8 +1,4 @@
-import {
-  isUSVStringType,
-  regularAttributeExtraValidationRules,
-  type Type,
-} from "@webidl";
+import { isUSVStringType, type RegularAttribute, type Type } from "@webidl";
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12,10 +8,11 @@ declare module "@webidl" {
   }
 }
 
-regularAttributeExtraValidationRules.push((attr) => {
+/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#treated-as-a-url */
+export function validateTreatedAsURL(attr: RegularAttribute): void {
   if ("treatedAsURL" in attr && !isUSVStringType(attr.type)) {
     throw TypeError(
       `A reflected IDL attribute treated as a URL must have the type "USVString".`,
     );
   }
-});
+}

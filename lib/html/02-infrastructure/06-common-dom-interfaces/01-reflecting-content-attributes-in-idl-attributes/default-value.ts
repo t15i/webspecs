@@ -2,7 +2,7 @@ import {
   isDoubleType,
   isLongType,
   isUnsignedLongType,
-  regularAttributeExtraValidationRules,
+  type RegularAttribute,
   type Type,
 } from "@webidl";
 
@@ -14,7 +14,8 @@ declare module "@webidl" {
   }
 }
 
-regularAttributeExtraValidationRules.push((attr) => {
+/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#default-value */
+export function validateDefaultValue(attr: RegularAttribute): void {
   if (
     "defaultValue" in attr &&
     !(
@@ -27,4 +28,4 @@ regularAttributeExtraValidationRules.push((attr) => {
       `A reflected IDL attribute with a default value must have the type "long", "unsigned long", or "double".`,
     );
   }
-});
+}

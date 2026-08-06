@@ -2,8 +2,8 @@ import {
   ExistingIndexedPropertySetter,
   IndexedPropertyGetter,
   NewIndexedPropertySetter,
-  interfaceExtraValidationRules,
   isUnsignedLongType,
+  type Interface,
   type Operation,
 } from "@webidl";
 import type { IndexedPropertySetterOperation } from "./01-idl-indexed-properties";
@@ -33,10 +33,19 @@ export function validateIndexedPropertySetter(op: Operation): void {
   }
 }
 
-interfaceExtraValidationRules.push((iface) => {
-  // § 2.5.6: "If an interface has a setter of a given variety, then it must also
-  // have a getter of that variety."
-  // https://webidl.spec.whatwg.org/#idl-special-operations
+/**
+ * § 2.5.6: "If an interface has a setter of a given variety, then it must also
+ * have a getter of that variety." § 2.5.6.1: when an unnamed setter is declared
+ * the interface must supply the anonymous steps to set the value of both new and
+ * existing indexed properties.
+ *
+ * @see https://webidl.spec.whatwg.org/#idl-special-operations
+ * @see https://webidl.spec.whatwg.org/#dfn-set-the-value-of-a-new-indexed-property
+ * @see https://webidl.spec.whatwg.org/#dfn-set-the-value-of-an-existing-indexed-property
+ */
+export function validateIndexedPropertySetterConstraints(
+  iface: Interface,
+): void {
   if (
     IndexedPropertySetter in iface.members &&
     !(IndexedPropertyGetter in iface.members)
@@ -46,12 +55,6 @@ interfaceExtraValidationRules.push((iface) => {
     );
   }
 
-  // § 2.5.6.1: setting an indexed property is performed by invoking the setter.
-  // When the setter is declared without an identifier the interface must instead
-  // supply the anonymous steps to set the value of both new and existing indexed
-  // properties; a named setter sets the value through its own steps.
-  // https://webidl.spec.whatwg.org/#dfn-set-the-value-of-a-new-indexed-property
-  // https://webidl.spec.whatwg.org/#dfn-set-the-value-of-an-existing-indexed-property
   const setter = iface.members[IndexedPropertySetter];
   if (
     setter !== undefined &&
@@ -63,4 +66,4 @@ interfaceExtraValidationRules.push((iface) => {
       "An interface with an unnamed indexed property setter must define the steps to set the value of both new and existing indexed properties.",
     );
   }
-});
+}

@@ -1,9 +1,9 @@
 import {
   IndexedPropertyGetter,
   SupportedPropertyIndices,
-  interfaceExtraValidationRules,
   isAttribute,
   isIntegerType,
+  type Interface,
   type Type,
   type UnsignedLongType,
   type SpecialOperation,
@@ -32,7 +32,9 @@ export type IndexedPropertySetterOperation<
  *
  * @see https://webidl.spec.whatwg.org/#idl-indexed-properties
  */
-interfaceExtraValidationRules.push((iface) => {
+export function validateIndexedPropertiesLengthAttribute(
+  iface: Interface,
+): void {
   if (!(IndexedPropertyGetter in iface.members)) {
     return;
   }
@@ -47,7 +49,7 @@ interfaceExtraValidationRules.push((iface) => {
       'An interface that supports indexed properties must define an integer-typed attribute named "length".',
     );
   }
-});
+}
 
 /**
  * § 2.5.6.1: an interface that supports indexed properties must define a way to
@@ -56,7 +58,9 @@ interfaceExtraValidationRules.push((iface) => {
  *
  * @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices
  */
-interfaceExtraValidationRules.push((iface) => {
+export function validateSupportedPropertyIndicesDefined(
+  iface: Interface,
+): void {
   if (
     IndexedPropertyGetter in iface.members &&
     !(SupportedPropertyIndices in iface.members)
@@ -65,4 +69,4 @@ interfaceExtraValidationRules.push((iface) => {
       "An interface that supports indexed properties must define its supported property indices.",
     );
   }
-});
+}
