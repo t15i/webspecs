@@ -2,8 +2,8 @@ import {
   ExistingNamedPropertySetter,
   NamedPropertyGetter,
   NewNamedPropertySetter,
-  interfaceExtraValidationRules,
   isDOMStringType,
+  type Interface,
   type Operation,
 } from "@webidl";
 import type { NamedPropertySetterOperation } from "./02-idl-named-properties";
@@ -36,7 +36,7 @@ export function validateNamedPropertySetter(op: Operation): void {
  * @see https://webidl.spec.whatwg.org/#dfn-set-the-value-of-a-new-named-property
  * @see https://webidl.spec.whatwg.org/#dfn-set-the-value-of-an-existing-named-property
  */
-interfaceExtraValidationRules.push((iface) => {
+export function validateNamedPropertySetterConstraints(iface: Interface): void {
   // § 2.5.6: "If an interface has a setter of a given variety, then it must also
   // have a getter of that variety."
   if (
@@ -63,4 +63,4 @@ interfaceExtraValidationRules.push((iface) => {
       "An interface with an unnamed named property setter must define the steps to set the value of both new and existing named properties.",
     );
   }
-});
+}

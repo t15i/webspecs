@@ -1,7 +1,7 @@
 import {
   NamedPropertyDeterminator,
-  interfaceExtraValidationRules,
   isDOMStringType,
+  type Interface,
   type Operation,
 } from "@webidl";
 import type { NamedPropertyGetterOperation } from "./02-idl-named-properties";
@@ -37,7 +37,9 @@ export function validateNamedPropertyGetter(op: Operation): void {
  *
  * @see https://webidl.spec.whatwg.org/#dfn-determine-the-value-of-a-named-property
  */
-interfaceExtraValidationRules.push((iface) => {
+export function validateNamedPropertyGetterDeterminator(
+  iface: Interface,
+): void {
   const getter = iface.members[NamedPropertyGetter];
 
   if (
@@ -49,4 +51,4 @@ interfaceExtraValidationRules.push((iface) => {
       "An interface with an unnamed named property getter must define the steps to determine the value of a named property.",
     );
   }
-});
+}

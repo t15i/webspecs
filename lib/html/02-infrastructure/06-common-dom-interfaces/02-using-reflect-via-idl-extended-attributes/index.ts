@@ -1,5 +1,5 @@
 import { validateAttributeLocalName } from "@dom";
-import { regularAttributeExtraValidationRules } from "@webidl";
+import type { RegularAttribute } from "@webidl";
 
 import { Reflect } from "./xattr-reflect";
 import { ReflectNonNegative } from "./xattr-reflectnonnegative";
@@ -47,7 +47,10 @@ export const reflectionSupplements: Set<ReflectionSupplements> = new Set([
   ReflectRange,
 ]);
 
-regularAttributeExtraValidationRules.push((attr) => {
+/** @see https://html.spec.whatwg.org/#using-reflect-via-idl-extended-attributes */
+export function validateReflectionExtendedAttributes(
+  attr: RegularAttribute,
+): void {
   let hasTrigger = false;
   for (const trigger of reflectionTriggers) {
     if (!(trigger in attr.extendedAttributes)) continue;
@@ -141,4 +144,4 @@ regularAttributeExtraValidationRules.push((attr) => {
       );
     }
   }
-});
+}

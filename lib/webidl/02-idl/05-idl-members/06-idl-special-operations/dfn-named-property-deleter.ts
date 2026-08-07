@@ -1,8 +1,8 @@
 import {
   ExistingNamedPropertyDeleter,
   NamedPropertyGetter,
-  interfaceExtraValidationRules,
   isDOMStringType,
+  type Interface,
   type Operation,
 } from "@webidl";
 import type { NamedPropertyDeleterOperation } from "./02-idl-named-properties";
@@ -33,7 +33,9 @@ export function validateNamedPropertyDeleter(op: Operation): void {
 }
 
 /** @see https://webidl.spec.whatwg.org/#idl-special-operations */
-interfaceExtraValidationRules.push((iface) => {
+export function validateNamedPropertyDeleterConstraints(
+  iface: Interface,
+): void {
   // § 2.5.6: "If it has a named property deleter, then it must also have a named
   // property getter."
   if (
@@ -59,4 +61,4 @@ interfaceExtraValidationRules.push((iface) => {
       "An interface with an unnamed named property deleter must define the steps to delete an existing named property.",
     );
   }
-});
+}

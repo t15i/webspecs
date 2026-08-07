@@ -4,11 +4,10 @@ import {
   NamedPropertyDeleter,
   NamedPropertyGetter,
   NamedPropertySetter,
-  interfaceExtraValidationRules,
   isOperation,
   isSpecialOperation,
 } from "@webidl";
-import type { Member } from "@webidl";
+import type { Interface, Member } from "@webidl";
 
 export * from "./01-idl-indexed-properties";
 export * from "./02-idl-named-properties";
@@ -38,7 +37,9 @@ const specialOperationSlots = [
  *
  * @see https://webidl.spec.whatwg.org/#idl-special-operations
  */
-interfaceExtraValidationRules.push((iface) => {
+export function validateAtMostOneSpecialOperationPerVariety(
+  iface: Interface,
+): void {
   const specialOperations = new Set(
     specialOperationSlots
       .map((slot) => Reflect.get(iface.members, slot))
@@ -58,4 +59,4 @@ interfaceExtraValidationRules.push((iface) => {
       );
     }
   }
-});
+}

@@ -1,7 +1,7 @@
 import {
   isDOMStringType,
   isNullableType,
-  regularAttributeExtraValidationRules,
+  type RegularAttribute,
   type Type,
 } from "@webidl";
 
@@ -13,7 +13,8 @@ declare module "@webidl" {
   }
 }
 
-regularAttributeExtraValidationRules.push((attr) => {
+/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-known-values */
+export function validateLimitedToOnlyKnownValues(attr: RegularAttribute): void {
   if (
     "limitedToOnlyKnownValues" in attr &&
     !(
@@ -25,4 +26,4 @@ regularAttributeExtraValidationRules.push((attr) => {
       `A reflected IDL attribute limited to only known values must have the type "DOMString" or "DOMString?".`,
     );
   }
-});
+}

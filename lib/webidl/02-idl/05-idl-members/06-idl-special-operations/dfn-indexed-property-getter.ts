@@ -1,6 +1,5 @@
 import {
   IndexedPropertyDeterminator,
-  interfaceExtraValidationRules,
   isUnsignedLongType,
   type Interface,
   type Operation,
@@ -43,14 +42,19 @@ export function validateIndexedPropertyGetter(op: Operation): void {
   }
 }
 
-interfaceExtraValidationRules.push((iface) => {
+/**
+ * § 2.5.6.1: the value of an indexed property is determined by invoking the
+ * getter. When the getter is declared without an identifier the interface must
+ * instead supply the anonymous steps to determine the value of an indexed
+ * property; a named getter determines it through its own steps.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-determine-the-value-of-an-indexed-property
+ */
+export function validateIndexedPropertyGetterDeterminator(
+  iface: Interface,
+): void {
   const getter = iface.members[IndexedPropertyGetter];
 
-  // § 2.5.6.1: the value of an indexed property is determined by invoking the
-  // getter. When the getter is declared without an identifier the interface
-  // must instead supply the anonymous steps to determine the value of an
-  // indexed property; a named getter determines it through its own steps.
-  // https://webidl.spec.whatwg.org/#dfn-determine-the-value-of-an-indexed-property
   if (
     getter !== undefined &&
     getter.identifier === undefined &&
@@ -60,4 +64,4 @@ interfaceExtraValidationRules.push((iface) => {
       "An interface with an unnamed indexed property getter must define the steps to determine the value of an indexed property.",
     );
   }
-});
+}

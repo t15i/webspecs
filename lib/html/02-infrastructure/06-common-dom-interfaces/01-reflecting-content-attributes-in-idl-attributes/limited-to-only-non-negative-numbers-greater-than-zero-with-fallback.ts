@@ -1,8 +1,4 @@
-import {
-  isUnsignedLongType,
-  regularAttributeExtraValidationRules,
-  type Type,
-} from "@webidl";
+import { isUnsignedLongType, type RegularAttribute, type Type } from "@webidl";
 
 declare module "@webidl" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12,7 +8,10 @@ declare module "@webidl" {
   }
 }
 
-regularAttributeExtraValidationRules.push((attr) => {
+/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#limited-to-only-non-negative-numbers-greater-than-zero-with-fallback */
+export function validateLimitedToOnlyPositiveNumbersWithFallback(
+  attr: RegularAttribute,
+): void {
   if (
     "limitedToOnlyPositiveNumbersWithFallback" in attr &&
     !isUnsignedLongType(attr.type)
@@ -21,4 +20,4 @@ regularAttributeExtraValidationRules.push((attr) => {
       `A reflected IDL attribute limited to only non-negative numbers greater than zero, with fallback, must have the type "unsigned long".`,
     );
   }
-});
+}
