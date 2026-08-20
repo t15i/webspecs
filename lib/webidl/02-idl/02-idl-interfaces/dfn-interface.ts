@@ -1,5 +1,6 @@
 import {
   isAttribute,
+  isConstructorOperation,
   isIdentifier,
   isOperation,
   validateMember,
@@ -45,7 +46,11 @@ export function validateInterface(iface: Interface): void {
   for (const key of Reflect.ownKeys(iface.members)) {
     const member = Reflect.get(iface.members, key) as Member;
 
-    if (isAttribute(member) || isOperation(member)) {
+    if (
+      isAttribute(member) ||
+      isOperation(member) ||
+      isConstructorOperation(member)
+    ) {
       validateMember(member);
     }
   }

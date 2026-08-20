@@ -77,9 +77,15 @@ export function createOperationFunction(
     }
   };
 
-  // NOTE (no overloading): the JS runtime has a single signature per
-  // operation, ignoring "Compute the effective overload set..."
-  const length = op.arguments.length;
+  let length = op.arguments.length;
+  for (const [, typeList] of computeEffectiveOverloadSet(
+    isStaticOperation(op) ? "static" : "regular",
+    id!,
+    0,
+    target,
+  )) {
+    length = Math.min(length, typeList.length);
+  }
 
   return createBuiltinFunction(steps, length, id!, {
     construct: false,

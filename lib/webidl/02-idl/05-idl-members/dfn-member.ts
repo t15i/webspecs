@@ -1,7 +1,9 @@
 import {
   isAttribute,
+  isConstructorOperation,
   isOperation,
   validateAttribute,
+  validateConstructorOperation,
   validateOperation,
 } from "@webidl";
 import type { Attribute, ConstructorOperation, Operation } from "@webidl";
@@ -20,6 +22,8 @@ export function validateMember(member: Member): void {
     validateAttribute(member);
   } else if (isOperation(member)) {
     validateOperation(member);
+  } else if (isConstructorOperation(member)) {
+    validateConstructorOperation(member);
   } else {
     throw TypeError(`A member must be an attribute or an operation.`);
   }

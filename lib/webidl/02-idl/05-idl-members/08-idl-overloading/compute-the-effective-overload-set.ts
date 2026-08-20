@@ -2,9 +2,12 @@ import {
   getOwnConstructorOperation,
   isConstructorOperation,
   isOperation,
+  isOptionalArgument,
+  type Argument,
   type Identifier,
   type Interface,
   type Member,
+  type Type,
 } from "@webidl";
 
 import type {
@@ -12,6 +15,7 @@ import type {
   EffectiveOverloadSet,
   OperationEffectiveOverloadSet,
 } from "./dfn-effective-overload-set";
+import type { EffectiveOverloadSetOptionalityValue } from "./dfn-optionality-value";
 
 export function computeEffectiveOverloadSet(
   kind: "regular" | "static",
@@ -50,14 +54,23 @@ export function computeEffectiveOverloadSet(
   }
 
   if (op && (isOperation(op) || isConstructorOperation(op))) {
-    S.add([
-      op,
-      op.arguments.map((arg) => arg.type),
-      op.arguments.map(() => "required" as const),
-    ]);
+    const args: readonly Argument[] = op.arguments;
+
+    const types: Type[] = args.map((argument) => argument.type);
+    const optionalityValues: EffectiveOverloadSetOptionalityValue[] = args.map(
+      (argument) => (isOptionalArgument(argument) ? "optional" : "required"),
+    );
+
+    S.add([op, types, optionalityValues]);
+
+    for (let i = args.length - 1; i >= 0 && isOptionalArgument(args[i]!); --i) {
+      S.add([op, types.slice(0, i), optionalityValues.slice(0, i)]);
+    }
   }
 
-  // TODO (overloading)
+  // TODO (overloading): F is built from every operation on the interface with
+  // identifier A. An interface holds at most one member per identifier, so F is
+  // a singleton and only that member contributes to S.
 
   return S as EffectiveOverloadSet;
 }

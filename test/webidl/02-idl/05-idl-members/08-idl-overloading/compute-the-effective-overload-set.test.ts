@@ -8,8 +8,12 @@
  * list marks every argument "required". The set is empty when the requested
  * member does not exist or is not an operation/constructor.
  *
+ * An optional argument can be left out at the call site, so an operation that
+ * declares one stands for several allowable invocations: the set holds one tuple
+ * per argument count the operation can be called with.
+ *
  * (Overloading itself is not yet modelled — the algorithm only ever contributes
- * the operation's own single signature.)
+ * the signatures of the operation's own declaration.)
  */
 import { describe, expect, test } from "vitest";
 import {
@@ -154,5 +158,112 @@ describe("computeEffectiveOverloadSet - constructor operations", () => {
     expect(
       computeEffectiveOverloadSet("constructor", "Example", 0, iface).size,
     ).toBe(0);
+  });
+});
+
+describe("computeEffectiveOverloadSet - optional arguments", () => {
+  test("contributes one tuple per allowable argument count", () => {
+    const longType = makeLongType();
+    const stringType = makeDOMStringType();
+    const op = makeOperation({
+      identifier: "draw",
+      arguments: [
+        { type: longType, identifier: "x" },
+        { type: stringType, identifier: "label", keywords: ["optional"] },
+      ],
+    });
+    const iface = makeInterface({ members: { draw: op } });
+
+    const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
+
+    expect([...S].map(([, typeList]) => typeList)).toEqual([
+      [longType, stringType],
+      [longType],
+    ]);
+  });
+
+  test('marks an optional argument "optional" in the optionality list', () => {
+    const op = makeOperation({
+      identifier: "draw",
+      arguments: [
+        { type: makeLongType(), identifier: "x" },
+        {
+          type: makeDOMStringType(),
+          identifier: "label",
+          keywords: ["optional"],
+        },
+      ],
+    });
+    const iface = makeInterface({ members: { draw: op } });
+
+    const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
+
+    expect([...S].map(([, , optionality]) => optionality)).toEqual([
+      ["required", "optional"],
+      ["required"],
+    ]);
+  });
+
+  test("contributes the empty invocation when every argument is optional", () => {
+    const op = makeOperation({
+      identifier: "draw",
+      arguments: [
+        { type: makeLongType(), identifier: "x", keywords: ["optional"] },
+        { type: makeLongType(), identifier: "y", keywords: ["optional"] },
+      ],
+    });
+    const iface = makeInterface({ members: { draw: op } });
+
+    const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
+
+    expect([...S].map(([, typeList]) => typeList.length)).toEqual([2, 1, 0]);
+  });
+
+  test("stops truncating at the first argument that is not optional", () => {
+    // Only trailing arguments can be omitted: an optional argument followed by a
+    // required one is never left out on its own.
+    const op = makeOperation({
+      identifier: "draw",
+      arguments: [
+        { type: makeLongType(), identifier: "x", keywords: ["optional"] },
+        { type: makeLongType(), identifier: "y" },
+      ],
+    });
+    const iface = makeInterface({ members: { draw: op } });
+
+    const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
+
+    expect([...S].map(([, typeList]) => typeList.length)).toEqual([2]);
+  });
+
+  test("is unaffected by the requested argument count", () => {
+    const op = makeOperation({
+      identifier: "draw",
+      arguments: [
+        { type: makeLongType(), identifier: "x", keywords: ["optional"] },
+      ],
+    });
+    const iface = makeInterface({ members: { draw: op } });
+
+    for (const n of [0, 1, 5]) {
+      const S = computeEffectiveOverloadSet("regular", "draw", n, iface);
+
+      expect([...S].map(([, typeList]) => typeList.length)).toEqual([1, 0]);
+    }
+  });
+
+  test("truncates the optional arguments of a constructor operation too", () => {
+    const ctor = makeConstructor({
+      arguments: [
+        { type: makeLongType(), identifier: "width" },
+        { type: makeLongType(), identifier: "height", keywords: ["optional"] },
+      ],
+    });
+    const iface = makeInterface({ members: { constructor: ctor } });
+
+    const S = computeEffectiveOverloadSet("constructor", "Example", 2, iface);
+
+    expect([...S].map(([, typeList]) => typeList.length)).toEqual([2, 1]);
+    expect([...S].every(([callable]) => callable === ctor)).toBe(true);
   });
 });

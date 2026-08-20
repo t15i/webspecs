@@ -256,11 +256,60 @@ describe("validateInterface - static members require the static keyword", () => 
 describe("validateInterface - constructor operations", () => {
   test("does not throw for an interface with a valid constructor operation", () => {
     // A constructor operation is a legal member; an interface that declares one
-    // must validate. (It is validated as a constructor, not routed through the
-    // attribute/operation member validator.)
+    // must validate. It has neither an identifier nor a return type, so what is
+    // checked of it is its argument list.
     const iface = makeInterface({
       members: {
         constructor: makeConstructor({ argumentTypes: [makeLongType()] }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("throws for a constructor operation with an invalid argument list", () => {
+    const iface = makeInterface({
+      members: {
+        constructor: makeConstructor({
+          arguments: [
+            { type: makeLongType(), identifier: "x" },
+            { type: makeLongType(), identifier: "x" },
+          ],
+        }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/declared twice/i);
+  });
+
+  test("throws for a constructor argument with a default value but no optional keyword", () => {
+    const iface = makeInterface({
+      members: {
+        constructor: makeConstructor({
+          arguments: [
+            { type: makeLongType(), identifier: "x", defaultValue: 0 },
+          ],
+        }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/optional/i);
+  });
+
+  test("does not throw for a constructor with an optional argument", () => {
+    const iface = makeInterface({
+      members: {
+        constructor: makeConstructor({
+          arguments: [
+            { type: makeLongType(), identifier: "width" },
+            {
+              type: makeLongType(),
+              identifier: "height",
+              keywords: ["optional"],
+              defaultValue: 0,
+            },
+          ],
+        }),
       },
     });
 

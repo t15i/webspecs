@@ -19,6 +19,7 @@ import {
   defineRegularAttributes,
   defineRegularOperations,
   type Interface,
+  type Operation,
 } from "lib/webidl";
 
 import { makeInterface } from "./utils";
@@ -28,6 +29,7 @@ import {
 } from "../../02-idl/05-idl-members/utils";
 import {
   associateInterface,
+  makeDOMStringType,
   makeLongType,
   makePromiseType,
 } from "../../02-idl/13-idl-types/utils";
@@ -255,5 +257,105 @@ describe("promise-typed members reject rather than throw", () => {
     await expect(getter.call({}) as Promise<unknown>).rejects.toThrow(
       TypeError,
     );
+  });
+});
+
+describe("optional arguments of an operation", () => {
+  /** Builds an interface whose single operation takes one optional argument. */
+  function withOptionalLabel(
+    label: { keywords: string[]; defaultValue?: unknown },
+    methodSteps: Operation["methodSteps"],
+  ): Interface {
+    return makeInterface({
+      identifier: "Painter",
+      members: {
+        draw: makeOperation({
+          identifier: "draw",
+          arguments: [
+            { type: makeLongType(), identifier: "x" },
+            { type: makeDOMStringType(), identifier: "label", ...label },
+          ],
+          methodSteps,
+        }),
+      },
+    });
+  }
+
+  test("the function's length counts only the required arguments", () => {
+    const iface = withOptionalLabel(
+      { keywords: ["optional"] },
+      () => undefined,
+    );
+
+    expect(methodOf(prototypeOf(iface), "draw").length).toBe(1);
+  });
+
+  test("the function's length is the declared arity when nothing is optional", () => {
+    const iface = withOptionalLabel({ keywords: [] }, () => undefined);
+
+    expect(methodOf(prototypeOf(iface), "draw").length).toBe(2);
+  });
+
+  test("an omitted optional argument reaches the method steps as its default value", () => {
+    const seen: unknown[] = [];
+    const iface = withOptionalLabel(
+      { keywords: ["optional"], defaultValue: "auto" },
+      (...args: unknown[]) => {
+        seen.push(...args);
+        return undefined;
+      },
+    );
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+
+    (instance as { draw: (...a: unknown[]) => unknown }).draw("3");
+
+    expect(seen).toEqual([3, "auto"]);
+  });
+
+  test("an omitted optional argument without a default is not passed to the method steps at all", () => {
+    const seen: unknown[] = [];
+    const iface = withOptionalLabel(
+      { keywords: ["optional"] },
+      (...args: unknown[]) => {
+        seen.push(...args);
+        return undefined;
+      },
+    );
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+
+    (instance as { draw: (...a: unknown[]) => unknown }).draw("3");
+
+    expect(seen).toEqual([3]);
+  });
+
+  test("a supplied optional argument is converted like any other", () => {
+    const seen: unknown[] = [];
+    const iface = withOptionalLabel(
+      { keywords: ["optional"], defaultValue: "auto" },
+      (...args: unknown[]) => {
+        seen.push(...args);
+        return undefined;
+      },
+    );
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+
+    (instance as { draw: (...a: unknown[]) => unknown }).draw("3", 12);
+
+    expect(seen).toEqual([3, "12"]);
+  });
+
+  test("the required arguments before an optional one are still enforced", () => {
+    const iface = withOptionalLabel(
+      { keywords: ["optional"] },
+      () => undefined,
+    );
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+    const draw = (instance as { draw: (...a: unknown[]) => unknown }).draw;
+
+    expect(() => draw.call(instance)).toThrow(/at least 1 argument/i);
   });
 });
