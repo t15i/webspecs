@@ -162,10 +162,10 @@ export function asUnion<UnionMembersType extends Type>(
     if (types.has(SEQUENCE_TYPE_NAME)) {
       const method = getMethod(v, Symbol.iterator);
       if (method !== undefined) {
-        const iterable = v as Iterable<unknown>;
         return createSequenceFromIterable(
           types.get(SEQUENCE_TYPE_NAME).T,
-          iterable,
+          v,
+          method,
         ) as T;
       }
     }
@@ -173,10 +173,10 @@ export function asUnion<UnionMembersType extends Type>(
     if (types.has(FROZEN_ARRAY_TYPE_NAME)) {
       const method = getMethod(v, Symbol.iterator);
       if (method !== undefined) {
-        const iterable = v as Iterable<unknown>;
         return createFrozenArrayFromIterable(
           types.get(FROZEN_ARRAY_TYPE_NAME).T,
-          iterable,
+          v,
+          method,
         ) as T;
       }
     }

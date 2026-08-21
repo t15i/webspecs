@@ -119,7 +119,7 @@ function distinguish(
   entries: Entry[],
   i: number,
   V: unknown,
-): { entries: Entry[]; method: unknown } {
+): { entries: Entry[]; method: CallableFunction | undefined } {
   if (V === undefined) {
     const found = entries.filter((entry) => entry[2][i] === "optional");
     if (found.length !== 0) {
@@ -325,7 +325,7 @@ export function resolveOverloads(
   }
 
   let d = -1;
-  let method: unknown = undefined;
+  let method: CallableFunction | undefined = undefined;
 
   if (candidates.length > 1) {
     d = getDistinguishingArgumentIndex(
@@ -366,10 +366,7 @@ export function resolveOverloads(
 
     if (isSequenceType(T)) {
       values.push(
-        createSequenceFromIterable(
-          (T as SequenceType).T,
-          args[i] as Iterable<unknown>,
-        ),
+        createSequenceFromIterable((T as SequenceType).T, args[i], method),
       );
       i += 1;
     }

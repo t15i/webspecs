@@ -1,15 +1,21 @@
+import { getIteratorFromMethod } from "@ecma";
 import type { NativeType, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#create-sequence-from-iterable */
 export function createSequenceFromIterable<T extends Type>(
   T: T,
-  iterable: Iterable<unknown>,
+  iterable: unknown,
+  method: CallableFunction,
 ): NativeType<T>[] {
+  const iteratorRecord = getIteratorFromMethod(iterable, method);
   const sequence: NativeType<T>[] = [];
-  const iterator = iterable[Symbol.iterator]();
 
   while (true) {
-    const next = iterator.next();
+    const next = Reflect.apply(
+      iteratorRecord.nextMethod as CallableFunction,
+      iteratorRecord.iterator,
+      [],
+    ) as IteratorResult<unknown>;
 
     if (next.done) {
       return sequence;
