@@ -15,6 +15,8 @@ import {
   makeAnnotatedType,
   makeAnyType,
   makeAsyncSequenceType,
+  makeBigIntType,
+  makeBooleanType,
   makeByteStringType,
   makeCallbackFunctionType,
   makeCallbackInterfaceType,
@@ -76,23 +78,190 @@ describe("isDistinguishable - types that include a nullable type", () => {
   });
 });
 
-describe("isDistinguishable - the distinguishability table", () => {
-  test("a numeric type and a string type are distinguishable", () => {
-    expect(isDistinguishable(makeDoubleType(), makeDOMStringType())).toBe(true);
-  });
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-distinguishable
+ *
+ * The fourth step of the algorithm, decided by the table under § 2.5.8:
+ * "If these two innermost types appear or are in categories appearing in the
+ * following table and there is a '●' mark in the corresponding entry or there
+ * is a letter in the corresponding entry and the designated additional
+ * requirement below the table is satisfied, then return true. Otherwise return
+ * false."
+ *
+ * Transcribed below is the table itself: each row lists the entries the table
+ * marks in it, from the diagonal rightwards, exactly as it draws them. The
+ * table states each pair once, in one order, but distinguishability is a
+ * property of the pair, so every cell is asserted both ways round.
+ *
+ * The letters are the cells carrying an additional requirement. (b) and (d)
+ * only qualify what a marked cell means elsewhere, so they read as marked here;
+ * (a) and (c) are conditions on the pair, and the representatives below are
+ * chosen to satisfy them — what happens when they do not has its own tests.
+ */
+type Category =
+  | "undefined"
+  | "boolean"
+  | "numeric types"
+  | "bigint"
+  | "string types"
+  | "object"
+  | "symbol"
+  | "interface-like"
+  | "callback function"
+  | "dictionary-like"
+  | "async sequence"
+  | "sequence-like";
 
-  test("two numeric types are not distinguishable", () => {
-    expect(isDistinguishable(makeDoubleType(), makeLongType())).toBe(false);
-  });
+const CATEGORIES: readonly Category[] = [
+  "undefined",
+  "boolean",
+  "numeric types",
+  "bigint",
+  "string types",
+  "object",
+  "symbol",
+  "interface-like",
+  "callback function",
+  "dictionary-like",
+  "async sequence",
+  "sequence-like",
+];
 
-  test("two interface types of unrelated classes are distinguishable", () => {
-    expect(
-      isDistinguishable(
-        makeInterfaceType(Interface1),
-        makeInterfaceType(Interface2),
-      ),
-    ).toBe(true);
-  });
+const MARKED: Record<Category, readonly Category[]> = {
+  undefined: [
+    "boolean",
+    "numeric types",
+    "bigint",
+    "string types",
+    "object",
+    "symbol",
+    "interface-like",
+    "callback function",
+    // dictionary-like is blank: undefined converts to a dictionary whose
+    // members all take their default values.
+    "async sequence",
+    "sequence-like",
+  ],
+  boolean: [
+    "numeric types",
+    "bigint",
+    "string types",
+    "object",
+    "symbol",
+    "interface-like",
+    "callback function",
+    "dictionary-like",
+    "async sequence",
+    "sequence-like",
+  ],
+  "numeric types": [
+    "bigint", // (b)
+    "string types",
+    "object",
+    "symbol",
+    "interface-like",
+    "callback function",
+    "dictionary-like",
+    "async sequence",
+    "sequence-like",
+  ],
+  bigint: [
+    "string types",
+    "object",
+    "symbol",
+    "interface-like",
+    "callback function",
+    "dictionary-like",
+    "async sequence",
+    "sequence-like",
+  ],
+  "string types": [
+    "object",
+    "symbol",
+    "interface-like",
+    "callback function",
+    "dictionary-like",
+    "async sequence", // (d)
+    "sequence-like",
+  ],
+  object: ["symbol"],
+  symbol: [
+    "interface-like",
+    "callback function",
+    "dictionary-like",
+    "async sequence",
+    "sequence-like",
+  ],
+  "interface-like": [
+    "interface-like", // (a)
+    "callback function",
+    "dictionary-like",
+    "async sequence",
+    "sequence-like",
+  ],
+  "callback function": [
+    "dictionary-like", // (c)
+    "async sequence",
+    "sequence-like",
+  ],
+  "dictionary-like": ["async sequence", "sequence-like"],
+  "async sequence": [],
+  "sequence-like": [],
+};
+
+/**
+ * Two types per category, so that a cell on the diagonal compares two members
+ * of one category rather than a type with itself. Where the category holds
+ * several types, the two are different ones, which is what makes the diagonal
+ * say something: `long` and `double` are told apart by neither.
+ *
+ * `symbol` has no entry — the symbol type is not modelled yet — so the cells
+ * naming it are left out of this walk.
+ */
+const REPRESENTATIVES: Partial<Record<Category, [() => Type, () => Type]>> = {
+  undefined: [makeUndefinedType, makeUndefinedType],
+  boolean: [makeBooleanType, makeBooleanType],
+  "numeric types": [makeLongType, makeDoubleType],
+  bigint: [makeBigIntType, makeBigIntType],
+  "string types": [makeDOMStringType, makeUSVStringType],
+  object: [makeObjectType, makeObjectType],
+  "interface-like": [
+    () => makeInterfaceType(Interface1),
+    () => makeInterfaceType(Interface2),
+  ],
+  "callback function": [makeCallbackFunctionType, makeCallbackFunctionType],
+  "dictionary-like": [
+    makeDictionaryType,
+    () => makeRecordType(makeDOMStringType(), makeLongType()),
+  ],
+  "async sequence": [
+    () => makeAsyncSequenceType(makeLongType()),
+    () => makeAsyncSequenceType(makeLongType()),
+  ],
+  "sequence-like": [
+    () => makeSequenceType(makeLongType()),
+    () => makeFrozenArrayType(makeLongType()),
+  ],
+};
+
+describe("isDistinguishable - every cell of the table", () => {
+  for (const [i, row] of CATEGORIES.entries()) {
+    for (const column of CATEGORIES.slice(i)) {
+      const one = REPRESENTATIVES[row];
+      const other = REPRESENTATIVES[column];
+
+      if (one === undefined || other === undefined) {
+        continue;
+      }
+
+      const marked = MARKED[row].includes(column);
+
+      test(`${row} and ${column} are ${marked ? "" : "not "}distinguishable`, () => {
+        expect(isDistinguishable(one[0](), other[1]())).toBe(marked);
+        expect(isDistinguishable(other[1](), one[0]())).toBe(marked);
+      });
+    }
+  }
 });
 
 /**
@@ -175,52 +344,6 @@ describe("isDistinguishable - interface-like types", () => {
     expect(
       isDistinguishable(makeNullableType(Interface1Type), Interface2Type),
     ).toBe(true);
-  });
-});
-
-/**
- * @see https://webidl.spec.whatwg.org/#dfn-distinguishable
- *
- * The table gives each pair once, in one order. Distinguishability is a
- * property of the pair, so a lookup that misses because the pair was given the
- * other way round has to be retried swapped: the blank cells below say "not
- * distinguishable" no matter which of the two types is named first.
- */
-describe("isDistinguishable - the table read in either order", () => {
-  const pairs: [string, () => [Type, Type]][] = [
-    [
-      "undefined and a dictionary type",
-      () => [makeUndefinedType(), makeDictionaryType()],
-    ],
-    [
-      "object and an interface type",
-      () => [makeObjectType(), makeInterfaceType(Interface1)],
-    ],
-    [
-      "object and a sequence type",
-      () => [makeObjectType(), makeSequenceType(makeLongType())],
-    ],
-    [
-      "an async sequence type and a sequence type",
-      () => [
-        makeAsyncSequenceType(makeLongType()),
-        makeSequenceType(makeLongType()),
-      ],
-    ],
-  ];
-
-  for (const [label, makePair] of pairs) {
-    test(`${label} are not distinguishable either way round`, () => {
-      const [one, other] = makePair();
-
-      expect(isDistinguishable(one, other)).toBe(false);
-      expect(isDistinguishable(other, one)).toBe(false);
-    });
-  }
-
-  test("a numeric type and a string type are distinguishable either way round", () => {
-    expect(isDistinguishable(makeDOMStringType(), makeLongType())).toBe(true);
-    expect(isDistinguishable(makeLongType(), makeDOMStringType())).toBe(true);
   });
 });
 
