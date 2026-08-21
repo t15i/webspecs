@@ -16,7 +16,7 @@ import {
   validateRegularAttribute,
   validateStaticAttribute,
 } from "@webidl";
-import type { Identifier, Member, Type } from "@webidl";
+import type { Identifier, MemberSlot, Type } from "@webidl";
 
 /**
  * The single merge target for extended attributes applicable to attributes
@@ -38,8 +38,8 @@ export interface Attribute<T extends Type = Type> {
   setterSteps?(value: ReturnType<T>): void;
 }
 
-export function isAttribute(member: Member): member is Attribute {
-  return !Array.isArray(member) && member.kind === "attribute";
+export function isAttribute(slot: MemberSlot): slot is Attribute {
+  return !Array.isArray(slot) && slot.kind === "attribute";
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-attribute */

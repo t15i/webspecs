@@ -47,7 +47,7 @@ describe("isInterfaceSupportIndexedProperties", () => {
 
   test("is false for an interface without an indexed property getter", () => {
     const iface = makeInterface({
-      members: { foo: makeOperation({ identifier: "foo" }) },
+      members: { foo: [makeOperation({ identifier: "foo" })] },
     });
 
     expect(isInterfaceSupportIndexedProperties(iface)).toBe(false);

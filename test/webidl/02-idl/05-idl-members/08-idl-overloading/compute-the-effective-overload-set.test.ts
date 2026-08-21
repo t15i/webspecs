@@ -44,7 +44,7 @@ describe("computeEffectiveOverloadSet - regular operations", () => {
       identifier: "foo",
       argumentTypes: [longType, stringType],
     });
-    const iface = makeInterface({ members: { foo: op } });
+    const iface = makeInterface({ members: { foo: [op] } });
 
     const S = computeEffectiveOverloadSet("regular", "foo", 2, iface);
 
@@ -57,7 +57,7 @@ describe("computeEffectiveOverloadSet - regular operations", () => {
 
   test("yields a zero-length type list for a no-argument operation", () => {
     const op = makeOperation({ identifier: "ping", argumentTypes: [] });
-    const iface = makeInterface({ members: { ping: op } });
+    const iface = makeInterface({ members: { ping: [op] } });
 
     const [, typeList, optionalityList] = [
       ...computeEffectiveOverloadSet("regular", "ping", 0, iface),
@@ -69,7 +69,7 @@ describe("computeEffectiveOverloadSet - regular operations", () => {
 
   test("is empty when the interface has no member of that name", () => {
     const iface = makeInterface({
-      members: { foo: makeOperation({ identifier: "foo" }) },
+      members: { foo: [makeOperation({ identifier: "foo" })] },
     });
 
     expect(computeEffectiveOverloadSet("regular", "bar", 0, iface).size).toBe(
@@ -92,13 +92,15 @@ describe("computeEffectiveOverloadSet - regular operations", () => {
   test("reads regular operations from members, ignoring same-named static ones", () => {
     const regular = makeOperation({ identifier: "run", argumentTypes: [] });
     const iface = makeInterface({
-      members: { run: regular },
+      members: { run: [regular] },
       staticMembers: {
-        run: makeOperation({
-          identifier: "run",
-          keywords: ["static"],
-          argumentTypes: [makeLongType()],
-        }),
+        run: [
+          makeOperation({
+            identifier: "run",
+            keywords: ["static"],
+            argumentTypes: [makeLongType()],
+          }),
+        ],
       },
     });
 
@@ -117,7 +119,7 @@ describe("computeEffectiveOverloadSet - static operations", () => {
       keywords: ["static"],
       argumentTypes: [makeLongType()],
     });
-    const iface = makeInterface({ staticMembers: { make: op } });
+    const iface = makeInterface({ staticMembers: { make: [op] } });
 
     const S = computeEffectiveOverloadSet("static", "make", 1, iface);
 
@@ -127,7 +129,7 @@ describe("computeEffectiveOverloadSet - static operations", () => {
 
   test("does not find a static operation among the instance members", () => {
     const iface = makeInterface({
-      members: { make: makeOperation({ identifier: "make" }) },
+      members: { make: [makeOperation({ identifier: "make" })] },
     });
 
     expect(computeEffectiveOverloadSet("static", "make", 0, iface).size).toBe(
@@ -139,7 +141,7 @@ describe("computeEffectiveOverloadSet - static operations", () => {
 describe("computeEffectiveOverloadSet - constructor operations", () => {
   test("contributes the interface's own constructor operation", () => {
     const ctor = makeConstructor({ argumentTypes: [makeLongType()] });
-    const iface = makeInterface({ members: { constructor: ctor } });
+    const iface = makeInterface({ members: { constructor: [ctor] } });
 
     const S = computeEffectiveOverloadSet("constructor", "Example", 1, iface);
 
@@ -152,7 +154,7 @@ describe("computeEffectiveOverloadSet - constructor operations", () => {
 
   test("is empty when the interface declares no constructor", () => {
     const iface = makeInterface({
-      members: { foo: makeOperation({ identifier: "foo" }) },
+      members: { foo: [makeOperation({ identifier: "foo" })] },
     });
 
     expect(
@@ -172,7 +174,7 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
         { type: stringType, identifier: "label", keywords: ["optional"] },
       ],
     });
-    const iface = makeInterface({ members: { draw: op } });
+    const iface = makeInterface({ members: { draw: [op] } });
 
     const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
 
@@ -194,7 +196,7 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
         },
       ],
     });
-    const iface = makeInterface({ members: { draw: op } });
+    const iface = makeInterface({ members: { draw: [op] } });
 
     const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
 
@@ -212,7 +214,7 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
         { type: makeLongType(), identifier: "y", keywords: ["optional"] },
       ],
     });
-    const iface = makeInterface({ members: { draw: op } });
+    const iface = makeInterface({ members: { draw: [op] } });
 
     const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
 
@@ -229,7 +231,7 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
         { type: makeLongType(), identifier: "y" },
       ],
     });
-    const iface = makeInterface({ members: { draw: op } });
+    const iface = makeInterface({ members: { draw: [op] } });
 
     const S = computeEffectiveOverloadSet("regular", "draw", 2, iface);
 
@@ -243,7 +245,7 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
         { type: makeLongType(), identifier: "x", keywords: ["optional"] },
       ],
     });
-    const iface = makeInterface({ members: { draw: op } });
+    const iface = makeInterface({ members: { draw: [op] } });
 
     for (const n of [0, 1, 5]) {
       const S = computeEffectiveOverloadSet("regular", "draw", n, iface);
@@ -259,7 +261,7 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
         { type: makeLongType(), identifier: "height", keywords: ["optional"] },
       ],
     });
-    const iface = makeInterface({ members: { constructor: ctor } });
+    const iface = makeInterface({ members: { constructor: [ctor] } });
 
     const S = computeEffectiveOverloadSet("constructor", "Example", 2, iface);
 

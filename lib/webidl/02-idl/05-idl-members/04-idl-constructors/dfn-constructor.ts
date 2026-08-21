@@ -1,9 +1,8 @@
 import {
-  asMemberList,
   validateArgumentList,
   type ArgumentList,
   type Interface,
-  type Member,
+  type MemberSlot,
   type Type,
 } from "@webidl";
 
@@ -26,10 +25,9 @@ export interface ConstructorOperation<Args extends Type[] = Type[]> {
 
 /** @see https://webidl.spec.whatwg.org/#idl-constructors */
 export function isConstructorOperation(
-  member: Member,
-): member is ConstructorOperation | ConstructorOperation[] {
-  const first = Array.isArray(member) ? member[0] : member;
-  return first?.kind === "constructor";
+  slot: MemberSlot,
+): slot is ConstructorOperation[] {
+  return Array.isArray(slot) && slot[0]?.kind === "constructor";
 }
 
 /** @see https://webidl.spec.whatwg.org/#idl-constructors */
@@ -45,9 +43,5 @@ export function getOwnConstructorOperations(
     return [];
   }
 
-  return asMemberList(
-    iface.members["constructor"] as unknown as
-      | ConstructorOperation
-      | ConstructorOperation[],
-  );
+  return iface.members["constructor"] as unknown as ConstructorOperation[];
 }

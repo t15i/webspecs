@@ -177,7 +177,7 @@ describe("validateInterface - members", () => {
     const iface = makeInterface({
       members: {
         attr: makeAttribute({ type: makeDOMStringType() }),
-        operate: makeOperation({ argumentTypes: [] }),
+        operate: [makeOperation({ argumentTypes: [] })],
       },
     });
 
@@ -196,7 +196,7 @@ describe("validateInterface - members", () => {
 
   test("propagates operation validation - invalid identifier throws", () => {
     const iface = makeInterface({
-      members: { operate: makeOperation({ identifier: "1bad" }) },
+      members: { operate: [makeOperation({ identifier: "1bad" })] },
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -235,7 +235,7 @@ describe("validateInterface - static members require the static keyword", () => 
   test("throws for a static member declared without the static keyword", () => {
     const iface = makeInterface({
       staticMembers: {
-        make: makeOperation({ identifier: "make" }),
+        make: [makeOperation({ identifier: "make" })],
       },
     });
 
@@ -245,7 +245,7 @@ describe("validateInterface - static members require the static keyword", () => 
   test("does not throw for a static operation declared with the static keyword", () => {
     const iface = makeInterface({
       staticMembers: {
-        make: makeOperation({ identifier: "make", keywords: ["static"] }),
+        make: [makeOperation({ identifier: "make", keywords: ["static"] })],
       },
     });
 
@@ -260,7 +260,7 @@ describe("validateInterface - constructor operations", () => {
     // checked of it is its argument list.
     const iface = makeInterface({
       members: {
-        constructor: makeConstructor({ argumentTypes: [makeLongType()] }),
+        constructor: [makeConstructor({ argumentTypes: [makeLongType()] })],
       },
     });
 
@@ -270,12 +270,14 @@ describe("validateInterface - constructor operations", () => {
   test("throws for a constructor operation with an invalid argument list", () => {
     const iface = makeInterface({
       members: {
-        constructor: makeConstructor({
-          arguments: [
-            { type: makeLongType(), identifier: "x" },
-            { type: makeLongType(), identifier: "x" },
-          ],
-        }),
+        constructor: [
+          makeConstructor({
+            arguments: [
+              { type: makeLongType(), identifier: "x" },
+              { type: makeLongType(), identifier: "x" },
+            ],
+          }),
+        ],
       },
     });
 
@@ -285,11 +287,13 @@ describe("validateInterface - constructor operations", () => {
   test("throws for a constructor argument with a default value but no optional keyword", () => {
     const iface = makeInterface({
       members: {
-        constructor: makeConstructor({
-          arguments: [
-            { type: makeLongType(), identifier: "x", defaultValue: 0 },
-          ],
-        }),
+        constructor: [
+          makeConstructor({
+            arguments: [
+              { type: makeLongType(), identifier: "x", defaultValue: 0 },
+            ],
+          }),
+        ],
       },
     });
 
@@ -299,17 +303,19 @@ describe("validateInterface - constructor operations", () => {
   test("does not throw for a constructor with an optional argument", () => {
     const iface = makeInterface({
       members: {
-        constructor: makeConstructor({
-          arguments: [
-            { type: makeLongType(), identifier: "width" },
-            {
-              type: makeLongType(),
-              identifier: "height",
-              keywords: ["optional"],
-              defaultValue: 0,
-            },
-          ],
-        }),
+        constructor: [
+          makeConstructor({
+            arguments: [
+              { type: makeLongType(), identifier: "width" },
+              {
+                type: makeLongType(),
+                identifier: "height",
+                keywords: ["optional"],
+                defaultValue: 0,
+              },
+            ],
+          }),
+        ],
       },
     });
 
@@ -319,7 +325,7 @@ describe("validateInterface - constructor operations", () => {
   test("still validates the interface's other members alongside a constructor", () => {
     const iface = makeInterface({
       members: {
-        constructor: makeConstructor({}),
+        constructor: [makeConstructor({})],
         attr: makeAttribute({ type: makeDOMStringType(), identifier: "1bad" }),
       },
     });
@@ -410,7 +416,7 @@ describe("validateInterface - at most one special operation of each variety", ()
         [IndexedPropertyGetter]: makeIndexedGetter(),
         [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
         // A second indexed getter declared as an ordinary named member.
-        item: makeIndexedGetter(),
+        item: [makeIndexedGetter()],
       },
     });
 
@@ -438,7 +444,7 @@ describe("validateInterface - at most one special operation of each variety", ()
         [NamedPropertyGetter]: makeNamedGetter(),
         [SupportedPropertyNames]: makeSupportedPropertyNames(),
         [NamedPropertyDeleter]: makeNamedDeleter(),
-        remove: makeNamedDeleter(),
+        remove: [makeNamedDeleter()],
       },
     });
 
@@ -520,7 +526,7 @@ describe("validateInterface - indexed properties length attribute", () => {
   test("throws when the length member is an operation rather than an attribute", () => {
     const iface = makeInterface({
       members: {
-        length: makeOperation({ identifier: "length" }),
+        length: [makeOperation({ identifier: "length" })],
         [IndexedPropertyGetter]: makeIndexedGetter(),
         [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
       },

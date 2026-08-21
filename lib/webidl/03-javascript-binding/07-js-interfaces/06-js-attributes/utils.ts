@@ -1,15 +1,22 @@
-import { isAttribute, type Attribute, type Member } from "@webidl";
+import {
+  isAttribute,
+  iterateMemberSlots,
+  type Attribute,
+  type InterfaceMembers,
+  type InterfaceStaticMembers,
+} from "@webidl";
 
 export function collectAttributes(
-  members: object,
+  members: InterfaceMembers | InterfaceStaticMembers,
   predicate?: (attribute: Attribute) => boolean,
 ): Attribute[] {
   const result: Attribute[] = [];
-  for (const key of Reflect.ownKeys(members)) {
-    const member = Reflect.get(members, key) as Member;
-    if (isAttribute(member) && (predicate?.(member) ?? true)) {
-      result.push(member);
+
+  for (const [, slot] of iterateMemberSlots(members)) {
+    if (isAttribute(slot) && (predicate?.(slot) ?? true)) {
+      result.push(slot);
     }
   }
+
   return result;
 }

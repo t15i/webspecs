@@ -45,7 +45,7 @@ export function isAnnotatedWithExtAttribute<
 >(value: V, xattr: K): value is AnnotatedWithExtendedAttribute<V, K>;
 
 export function isAnnotatedWithExtAttribute(
-  value: Interface | Exclude<Member, readonly unknown[]> | Type,
+  value: Interface | Member | Type,
   xattr: symbol,
 ): boolean {
   if (typeof value === "function") {

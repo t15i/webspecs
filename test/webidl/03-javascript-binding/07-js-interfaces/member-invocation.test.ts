@@ -19,6 +19,8 @@ import {
   LegacyUnforgeable,
   defineRegularAttributes,
   defineRegularOperations,
+  defineUnforgeableRegularAttributes,
+  defineUnforgeableRegularOperations,
   type Interface,
   type Operation,
   type Type,
@@ -144,14 +146,16 @@ describe("regular operations", () => {
     const calls: Array<{ self: unknown; arg: unknown }> = [];
     const iface = makeInterface({
       members: {
-        add: makeOperation({
-          identifier: "add",
-          argumentTypes: [makeLongType()],
-          methodSteps(this: unknown, n: unknown) {
-            calls.push({ self: this, arg: n });
-            return n;
-          },
-        }),
+        add: [
+          makeOperation({
+            identifier: "add",
+            argumentTypes: [makeLongType()],
+            methodSteps(this: unknown, n: unknown) {
+              calls.push({ self: this, arg: n });
+              return n;
+            },
+          }),
+        ],
       },
     });
     const proto = prototypeOf(iface);
@@ -166,11 +170,13 @@ describe("regular operations", () => {
   test("throws Illegal invocation for a foreign this", () => {
     const iface = makeInterface({
       members: {
-        add: makeOperation({
-          identifier: "add",
-          argumentTypes: [makeLongType()],
-          methodSteps: () => undefined,
-        }),
+        add: [
+          makeOperation({
+            identifier: "add",
+            argumentTypes: [makeLongType()],
+            methodSteps: () => undefined,
+          }),
+        ],
       },
     });
     const method = methodOf(prototypeOf(iface), "add");
@@ -184,11 +190,13 @@ describe("regular operations", () => {
     const iface = makeInterface({
       identifier: "Calculator",
       members: {
-        add: makeOperation({
-          identifier: "add",
-          argumentTypes: [makeLongType()],
-          methodSteps: () => undefined,
-        }),
+        add: [
+          makeOperation({
+            identifier: "add",
+            argumentTypes: [makeLongType()],
+            methodSteps: () => undefined,
+          }),
+        ],
       },
     });
     const proto = prototypeOf(iface);
@@ -205,14 +213,16 @@ describe("regular operations", () => {
     const seen: unknown[] = [];
     const iface = makeInterface({
       members: {
-        one: makeOperation({
-          identifier: "one",
-          argumentTypes: [makeLongType()],
-          methodSteps(this: unknown, ...args: unknown[]) {
-            seen.push(...args);
-            return undefined;
-          },
-        }),
+        one: [
+          makeOperation({
+            identifier: "one",
+            argumentTypes: [makeLongType()],
+            methodSteps(this: unknown, ...args: unknown[]) {
+              seen.push(...args);
+              return undefined;
+            },
+          }),
+        ],
       },
     });
     const proto = prototypeOf(iface);
@@ -229,11 +239,13 @@ describe("promise-typed members reject rather than throw", () => {
   test("a promise-typed operation returns a rejected promise on illegal invocation", async () => {
     const iface = makeInterface({
       members: {
-        load: makeOperation({
-          identifier: "load",
-          returnType: makePromiseType(makeLongType()),
-          methodSteps: () => Promise.resolve(1),
-        }),
+        load: [
+          makeOperation({
+            identifier: "load",
+            returnType: makePromiseType(makeLongType()),
+            methodSteps: () => Promise.resolve(1),
+          }),
+        ],
       },
     });
     const method = methodOf(prototypeOf(iface), "load");
@@ -271,14 +283,16 @@ describe("optional arguments of an operation", () => {
     return makeInterface({
       identifier: "Painter",
       members: {
-        draw: makeOperation({
-          identifier: "draw",
-          arguments: [
-            { type: makeLongType(), identifier: "x" },
-            { type: makeDOMStringType(), identifier: "label", ...label },
-          ],
-          methodSteps,
-        }),
+        draw: [
+          makeOperation({
+            identifier: "draw",
+            arguments: [
+              { type: makeLongType(), identifier: "x" },
+              { type: makeDOMStringType(), identifier: "label", ...label },
+            ],
+            methodSteps,
+          }),
+        ],
       },
     });
   }
@@ -473,6 +487,79 @@ describe("overloaded operations on the prototype", () => {
       },
     });
 
+    expect(Object.getOwnPropertyNames(prototypeOf(iface))).toEqual([]);
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#LegacyUnforgeable
+ *
+ * The unforgeable members are the ones the regular passes leave out, and they
+ * go on a separate target — in the binding, the object itself rather than the
+ * prototype — as non-configurable properties. An overloaded identifier carries
+ * the extended attribute on every one of its overloads, so the slot moves over
+ * whole.
+ */
+describe("unforgeable members", () => {
+  function unforgeableOf(iface: Interface): object {
+    const target = {};
+    defineUnforgeableRegularAttributes(iface, target);
+    defineUnforgeableRegularOperations(iface, target);
+    return target;
+  }
+
+  const unforgeable = (type: Type) =>
+    makeOperation({
+      identifier: "f",
+      argumentTypes: [type],
+      extendedAttributes: { [LegacyUnforgeable]: undefined },
+    });
+
+  test("an overloaded unforgeable operation is defined as one property", () => {
+    const iface = makeInterface({
+      members: {
+        f: [unforgeable(makeLongType()), unforgeable(makeDOMStringType())],
+      },
+    });
+
+    const target = unforgeableOf(iface);
+
+    expect(Object.getOwnPropertyNames(target)).toEqual(["f"]);
+    expect(Object.getOwnPropertyDescriptor(target, "f")).toMatchObject({
+      writable: false,
+      configurable: false,
+      enumerable: true,
+    });
+  });
+
+  test("an operation without the extended attribute is left to the prototype", () => {
+    const iface = makeInterface({
+      members: { f: [makeOperation({ identifier: "f" })] },
+    });
+
+    expect(Object.getOwnPropertyNames(unforgeableOf(iface))).toEqual([]);
+    expect(Object.getOwnPropertyNames(prototypeOf(iface))).toEqual(["f"]);
+  });
+
+  test("an unforgeable attribute is defined as a non-configurable accessor", () => {
+    const iface = makeInterface({
+      members: {
+        count: makeAttribute({
+          type: makeLongType(),
+          identifier: "count",
+          getterSteps: readCount,
+          extendedAttributes: { [LegacyUnforgeable]: undefined },
+        }),
+      },
+    });
+
+    const target = unforgeableOf(iface);
+
+    expect(Object.getOwnPropertyNames(target)).toEqual(["count"]);
+    expect(Object.getOwnPropertyDescriptor(target, "count")).toMatchObject({
+      configurable: false,
+      enumerable: true,
+    });
     expect(Object.getOwnPropertyNames(prototypeOf(iface))).toEqual([]);
   });
 });

@@ -29,15 +29,15 @@ function makeInterface(members: Interface["members"] = {}): Interface {
 }
 
 describe("isConstructorOperation", () => {
-  test("returns true for a constructor member", () => {
-    expect(isConstructorOperation(makeConstructor({}))).toBe(true);
+  test("returns true for a slot of constructor operations", () => {
+    expect(isConstructorOperation([makeConstructor({})])).toBe(true);
   });
 
-  test("returns false for an operation member", () => {
-    expect(isConstructorOperation(makeOperation({}))).toBe(false);
+  test("returns false for a slot of operations", () => {
+    expect(isConstructorOperation([makeOperation({})])).toBe(false);
   });
 
-  test("returns false for an attribute member", () => {
+  test("returns false for an attribute", () => {
     expect(
       isConstructorOperation(makeAttribute({ type: makeDOMStringType() })),
     ).toBe(false);
@@ -47,7 +47,7 @@ describe("isConstructorOperation", () => {
 describe("getOwnConstructorOperations", () => {
   test("returns the constructor when the interface declares one", () => {
     const constructor = makeConstructor({ argumentTypes: [makeLongType()] });
-    const iface = makeInterface({ constructor });
+    const iface = makeInterface({ constructor: [constructor] });
     expect(getOwnConstructorOperations(iface)).toEqual([constructor]);
   });
 
@@ -59,7 +59,7 @@ describe("getOwnConstructorOperations", () => {
   });
 
   test("returns an empty list when the interface declares no constructor", () => {
-    const iface = makeInterface({ operate: makeOperation({}) });
+    const iface = makeInterface({ operate: [makeOperation({})] });
     expect(getOwnConstructorOperations(iface)).toEqual([]);
   });
 

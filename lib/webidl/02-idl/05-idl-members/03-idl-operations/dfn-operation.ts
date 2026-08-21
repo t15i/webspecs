@@ -6,7 +6,7 @@ import {
   validateSpecialOperation,
   validateStaticOperation,
 } from "@webidl";
-import type { Identifier, Member, Type } from "@webidl";
+import type { Identifier, MemberSlot, Type } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
 export interface Argument<T extends Type = Type> {
@@ -74,9 +74,8 @@ export interface Operation<
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */
-export function isOperation(member: Member): member is Operation | Operation[] {
-  const first = Array.isArray(member) ? member[0] : member;
-  return first?.kind === "operation";
+export function isOperation(slot: MemberSlot): slot is Operation[] {
+  return Array.isArray(slot) && slot[0]?.kind === "operation";
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */

@@ -47,7 +47,7 @@ describe("isInterfaceSupportNamedProperties", () => {
 
   test("is false for an interface without a named property getter", () => {
     const iface = makeInterface({
-      members: { foo: makeOperation({ identifier: "foo" }) },
+      members: { foo: [makeOperation({ identifier: "foo" })] },
     });
 
     expect(isInterfaceSupportNamedProperties(iface)).toBe(false);

@@ -1,5 +1,6 @@
 import {
   validateExposedOverloads,
+  validateUnforgeableInheritance,
   validateUnforgeableOverloads,
 } from "@webidl";
 import type { Interface } from "@webidl";
@@ -43,4 +44,5 @@ export const interfaceExtraValidationRules: ((iface: Interface) => void)[] = [
   validateOverloads,
   validateExposedOverloads,
   validateUnforgeableOverloads,
+  validateUnforgeableInheritance,
 ];

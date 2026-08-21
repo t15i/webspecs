@@ -1,11 +1,10 @@
 import {
-  asMemberList,
   computeEffectiveOverloadSet,
   isConstructorOperation,
   isOperation,
   isPromiseType,
+  iterateMemberSlots,
   type Interface,
-  type Member,
   type Operation,
 } from "@webidl";
 
@@ -24,31 +23,27 @@ function validateOverloadedReturnTypes(operations: Operation[]): void {
 
 /** @see https://webidl.spec.whatwg.org/#idl-overloading */
 export function validateOverloads(iface: Interface): void {
-  for (const key of Object.keys(iface.members)) {
-    const member = Reflect.get(iface.members, key) as Member;
-
-    if (isConstructorOperation(member)) {
+  for (const [identifier, slot] of iterateMemberSlots(iface.members)) {
+    if (isConstructorOperation(slot)) {
       validateEffectiveOverloadSet(
         computeEffectiveOverloadSet("constructor", iface.identifier, 0, iface),
       );
-    } else if (isOperation(member)) {
-      validateOverloadedReturnTypes(asMemberList(member));
+    } else if (isOperation(slot)) {
+      validateOverloadedReturnTypes(slot);
       validateEffectiveOverloadSet(
-        computeEffectiveOverloadSet("regular", key, 0, iface),
+        computeEffectiveOverloadSet("regular", identifier, 0, iface),
       );
     }
   }
 
-  for (const key of Object.keys(iface.staticMembers)) {
-    const member = Reflect.get(iface.staticMembers, key) as Member;
-
-    if (!isOperation(member)) {
+  for (const [identifier, slot] of iterateMemberSlots(iface.staticMembers)) {
+    if (!isOperation(slot)) {
       continue;
     }
 
-    validateOverloadedReturnTypes(asMemberList(member));
+    validateOverloadedReturnTypes(slot);
     validateEffectiveOverloadSet(
-      computeEffectiveOverloadSet("static", key, 0, iface),
+      computeEffectiveOverloadSet("static", identifier, 0, iface),
     );
   }
 }

@@ -1,12 +1,10 @@
 import {
-  asMemberList,
-  isAttribute,
-  isConstructorOperation,
   isIdentifier,
-  isOperation,
-  validateMember,
+  iterateMemberSlots,
+  validateMemberSlot,
+  validateStaticMemberSlot,
 } from "@webidl";
-import type { Member, Identifier } from "@webidl";
+import type { MemberSlot, Identifier } from "@webidl";
 
 import { interfaceExtraValidationRules } from "./interface-extra-validation-rules";
 
@@ -14,7 +12,7 @@ import { interfaceExtraValidationRules } from "./interface-extra-validation-rule
 export interface InterfaceExtendedAttributes {}
 
 export interface InterfaceStaticMembers {
-  [key: Identifier]: Member;
+  [key: Identifier]: MemberSlot;
 }
 
 export interface InterfaceMembers {
@@ -23,7 +21,7 @@ export interface InterfaceMembers {
   // object literal assigned to this type would fail to typecheck. An own
   // constructor operation is still stored under the `constructor` key at runtime
   // and resolved through `getOwnConstructorOperation`, which reads it by own-key.
-  [key: Identifier]: Member;
+  [key: Identifier]: MemberSlot;
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-interface */
@@ -44,30 +42,12 @@ export function validateInterface(iface: Interface): void {
     );
   }
 
-  for (const key of Reflect.ownKeys(iface.members)) {
-    const member = Reflect.get(iface.members, key) as Member;
-
-    if (
-      Array.isArray(member) ||
-      isAttribute(member) ||
-      isOperation(member) ||
-      isConstructorOperation(member)
-    ) {
-      validateMember(member);
-    }
+  for (const [, slot] of iterateMemberSlots(iface.members)) {
+    validateMemberSlot(slot);
   }
 
-  for (const key of Reflect.ownKeys(iface.staticMembers)) {
-    const staticMember = Reflect.get(iface.staticMembers, key) as Member;
-
-    for (const member of asMemberList(staticMember)) {
-      if (!member.keywords.has("static")) {
-        throw TypeError(
-          `A static member of an interface must be declared with the "static" keyword.`,
-        );
-      }
-    }
-    validateMember(staticMember);
+  for (const [, slot] of iterateMemberSlots(iface.staticMembers)) {
+    validateStaticMemberSlot(slot);
   }
 
   for (const rule of interfaceExtraValidationRules) {

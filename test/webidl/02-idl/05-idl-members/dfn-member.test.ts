@@ -1,72 +1,79 @@
 /**
  * @see https://webidl.spec.whatwg.org/#dfn-member
  *
- * `validateMember` dispatches to the validator for the member's kind — attribute,
- * operation, or constructor operation — and rejects any other kind. Errors raised
- * by the per-kind validators propagate unchanged.
+ * `validateMemberSlot` dispatches to the validator for the kind the slot holds —
+ * an attribute, or a list of operations or constructor operations — and rejects
+ * anything else. Errors raised by the per-kind validators propagate unchanged.
  *
- * A member slot may hold several operations overloaded under one identifier, in
- * which case every one of them is validated, and the group itself must be a
- * well-formed one: non-empty, of a single kind, and declaring one identifier.
+ * A slot holds every operation overloaded under one identifier, so all of them
+ * are validated, and the list itself must be a well-formed one: non-empty, of a
+ * single kind, and declaring one identifier.
  */
 import { describe, expect, test } from "vitest";
-import { validateMember, type Member } from "lib/webidl";
+import {
+  iterateMemberSlots,
+  iterateMembers,
+  validateMemberSlot,
+  type MemberSlot,
+} from "lib/webidl";
 
 import { makeAttribute, makeConstructor, makeOperation } from "./utils";
 import { makeDOMStringType, makeLongType } from "../13-idl-types/utils";
 
-describe("validateMember", () => {
+describe("validateMemberSlot", () => {
   test("does not throw for a valid attribute", () => {
     expect(() =>
-      validateMember(makeAttribute({ type: makeDOMStringType() })),
+      validateMemberSlot(makeAttribute({ type: makeDOMStringType() })),
     ).not.toThrow();
   });
 
   test("does not throw for a valid operation", () => {
     expect(() =>
-      validateMember(makeOperation({ identifier: "operate" })),
+      validateMemberSlot([makeOperation({ identifier: "operate" })]),
     ).not.toThrow();
   });
 
   test("propagates attribute validation errors", () => {
     expect(() =>
-      validateMember(
+      validateMemberSlot(
         makeAttribute({ type: makeDOMStringType(), identifier: "1bad" }),
       ),
     ).toThrow(TypeError);
   });
 
   test("propagates operation validation errors", () => {
-    expect(() => validateMember(makeOperation({ identifier: "1bad" }))).toThrow(
-      TypeError,
-    );
+    expect(() =>
+      validateMemberSlot([makeOperation({ identifier: "1bad" })]),
+    ).toThrow(TypeError);
   });
 
   test("does not throw for a valid constructor operation", () => {
-    expect(() => validateMember(makeConstructor({}))).not.toThrow();
+    expect(() => validateMemberSlot([makeConstructor({})])).not.toThrow();
   });
 
   test("propagates constructor operation validation errors", () => {
     expect(() =>
-      validateMember(
+      validateMemberSlot([
         makeConstructor({
           arguments: [{ type: makeLongType(), identifier: "1bad" }],
         }),
-      ),
+      ]),
     ).toThrow(TypeError);
   });
 
   test("throws for a member of an unrecognised kind", () => {
     const bogus = { kind: "mystery", keywords: new Set<string>() };
 
-    expect(() => validateMember(bogus as unknown as Member)).toThrow(TypeError);
+    expect(() => validateMemberSlot(bogus as unknown as MemberSlot)).toThrow(
+      TypeError,
+    );
   });
 });
 
-describe("validateMember - overloads", () => {
+describe("validateMemberSlot - overloads", () => {
   test("does not throw for a well-formed group of overloads", () => {
     expect(() =>
-      validateMember([
+      validateMemberSlot([
         makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
         makeOperation({ identifier: "f" }),
       ]),
@@ -75,7 +82,7 @@ describe("validateMember - overloads", () => {
 
   test("validates every overload of the group", () => {
     expect(() =>
-      validateMember([
+      validateMemberSlot([
         makeOperation({ identifier: "f" }),
         makeOperation({ identifier: "1bad" }),
       ]),
@@ -83,21 +90,21 @@ describe("validateMember - overloads", () => {
   });
 
   test("throws for an empty group", () => {
-    expect(() => validateMember([])).toThrow(/at least one operation/i);
+    expect(() => validateMemberSlot([])).toThrow(/at least one operation/i);
   });
 
   test("throws when the group mixes operations of different kinds", () => {
     expect(() =>
-      validateMember([
+      validateMemberSlot([
         makeOperation({ identifier: "f" }),
         makeConstructor({}),
-      ] as unknown as Member),
+      ] as unknown as MemberSlot),
     ).toThrow(/same kind/i);
   });
 
   test("throws when the overloads declare different identifiers", () => {
     expect(() =>
-      validateMember([
+      validateMemberSlot([
         makeOperation({ identifier: "f" }),
         makeOperation({ identifier: "g" }),
       ]),
@@ -106,7 +113,7 @@ describe("validateMember - overloads", () => {
 
   test("does not throw for a group of constructor overloads", () => {
     expect(() =>
-      validateMember([
+      validateMemberSlot([
         makeConstructor({ argumentTypes: [makeLongType()] }),
         makeConstructor({}),
       ]),
@@ -115,12 +122,93 @@ describe("validateMember - overloads", () => {
 
   test("validates every constructor overload of the group", () => {
     expect(() =>
-      validateMember([
+      validateMemberSlot([
         makeConstructor({}),
         makeConstructor({
           arguments: [{ type: makeLongType(), identifier: "1bad" }],
         }),
       ]),
     ).toThrow(TypeError);
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-member
+ *
+ * The member table also carries the machinery of special operations under
+ * symbol keys, and those are not members; both walks pass over them. A slot
+ * holds every operation overloaded under one identifier, so `iterateMembers`
+ * reports the identifier once per overload while `iterateMemberSlots` reports
+ * it once with all of them.
+ */
+describe("iterateMemberSlots", () => {
+  test("yields each slot with the identifier it is declared under", () => {
+    const attribute = makeAttribute({
+      type: makeDOMStringType(),
+      identifier: "label",
+    });
+    const overloads = [
+      makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+      makeOperation({ identifier: "f" }),
+    ];
+
+    expect([...iterateMemberSlots({ label: attribute, f: overloads })]).toEqual(
+      [
+        ["label", attribute],
+        ["f", overloads],
+      ],
+    );
+  });
+
+  test("passes over a symbol-keyed slot", () => {
+    const marker = Symbol("marker");
+    const attribute = makeAttribute({
+      type: makeDOMStringType(),
+      identifier: "label",
+    });
+
+    expect([
+      ...iterateMemberSlots({
+        [marker]: (() => undefined) as never,
+        label: attribute,
+      }),
+    ]).toEqual([["label", attribute]]);
+  });
+
+  test("passes over a value that is not a member", () => {
+    expect([
+      ...iterateMemberSlots({ determinator: (() => true) as never }),
+    ]).toEqual([]);
+  });
+
+  test("yields an empty slot, which is not a well-formed member", () => {
+    // Filtering it out here would let `validateInterface` accept it silently.
+    expect([...iterateMemberSlots({ f: [] })]).toEqual([["f", []]]);
+  });
+});
+
+describe("iterateMembers", () => {
+  test("yields every overload of a slot under the same identifier", () => {
+    const one = makeOperation({
+      identifier: "f",
+      argumentTypes: [makeLongType()],
+    });
+    const two = makeOperation({ identifier: "f" });
+
+    expect([...iterateMembers({ f: [one, two] })]).toEqual([
+      ["f", one],
+      ["f", two],
+    ]);
+  });
+
+  test("yields an attribute once", () => {
+    const attribute = makeAttribute({
+      type: makeDOMStringType(),
+      identifier: "label",
+    });
+
+    expect([...iterateMembers({ label: attribute })]).toEqual([
+      ["label", attribute],
+    ]);
   });
 });

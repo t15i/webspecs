@@ -1,12 +1,13 @@
 import {
-  asMemberList,
   type Interface,
   type Identifier,
   LegacyUnforgeable,
   isAttribute,
   isOperation,
   isAnnotatedWithExtAttribute,
-  type Member,
+  iterateMemberSlots,
+  type Attribute,
+  type Operation,
 } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-unforgeable-on-an-interface */
@@ -18,44 +19,61 @@ export function isUnforgeableOnInterface(
     return false;
   }
 
-  return isUnforgeable(a.members[identifier]!);
-}
+  const slot = a.members[identifier]!;
 
-export function isUnforgeable(member: Member): boolean {
-  if (isAttribute(member)) {
-    return isAnnotatedWithExtAttribute(member, LegacyUnforgeable);
+  if (isAttribute(slot)) {
+    return isUnforgeable(slot);
   }
 
-  if (!isOperation(member)) {
+  if (!isOperation(slot)) {
     return false;
   }
 
-  const operations = asMemberList(member);
+  // [LegacyUnforgeable] must appear on every operation with a given identifier
+  // if it appears on one, so the first overload answers for the whole slot.
+  return isUnforgeable(slot[0]!);
+}
 
-  return (
-    operations.length > 0 &&
-    operations.every((op) => isAnnotatedWithExtAttribute(op, LegacyUnforgeable))
-  );
+/** @see https://webidl.spec.whatwg.org/#dfn-unforgeable-on-an-interface */
+export function isUnforgeable(member: Attribute | Operation): boolean {
+  return isAnnotatedWithExtAttribute(member, LegacyUnforgeable);
 }
 
 /** @see https://webidl.spec.whatwg.org/#LegacyUnforgeable */
 export function validateUnforgeableOverloads(a: Interface): void {
-  for (const key of Reflect.ownKeys(a.members)) {
-    const member = Reflect.get(a.members, key) as Member;
-
-    if (!isOperation(member)) {
+  for (const [identifier, slot] of iterateMemberSlots(a.members)) {
+    if (!isOperation(slot)) {
       continue;
     }
 
-    const operations = asMemberList(member);
-    const unforgeable = operations.filter((op) =>
-      isAnnotatedWithExtAttribute(op, LegacyUnforgeable),
-    );
+    const unforgeable = slot.filter(isUnforgeable);
 
-    if (unforgeable.length !== 0 && unforgeable.length !== operations.length) {
+    if (unforgeable.length !== 0 && unforgeable.length !== slot.length) {
       throw TypeError(
-        `If [LegacyUnforgeable] appears on an operation, then it must appear on all operations with the same identifier on that interface, but "${String(key)}" declares it on only some of its overloads.`,
+        `If [LegacyUnforgeable] appears on an operation, then it must appear on all operations with the same identifier on that interface, but "${identifier}" declares it on only some of its overloads.`,
       );
+    }
+  }
+}
+
+/** @see https://webidl.spec.whatwg.org/#LegacyUnforgeable */
+export function validateUnforgeableInheritance(b: Interface): void {
+  const identifiers = new Set<Identifier>();
+
+  for (const [identifier] of iterateMemberSlots(b.members)) {
+    identifiers.add(identifier);
+  }
+
+  for (let a = b.inherit; a !== null; a = a.inherit) {
+    for (const [identifier] of iterateMemberSlots(a.members)) {
+      if (
+        isUnforgeableOnInterface(a, identifier) &&
+        identifiers.has(identifier)
+      ) {
+        throw TypeError(
+          `If an attribute or operation X is unforgeable on an interface A, and A is one of the inherited interfaces of another interface B, then B must not have a regular attribute or non-static operation with the same identifier as X, but "${b.identifier}" declares "${identifier}", which is unforgeable on "${a.identifier}".`,
+        );
+      }
     }
   }
 }

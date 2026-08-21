@@ -1,14 +1,13 @@
 import {
-  asMemberList,
   IndexedPropertyGetter,
   IndexedPropertySetter,
   NamedPropertyDeleter,
   NamedPropertyGetter,
   NamedPropertySetter,
-  isOperation,
   isSpecialOperation,
+  iterateMembers,
 } from "@webidl";
-import type { Interface, Member } from "@webidl";
+import type { Interface } from "@webidl";
 
 export * from "./01-idl-indexed-properties";
 export * from "./02-idl-named-properties";
@@ -47,18 +46,12 @@ export function validateAtMostOneSpecialOperationPerVariety(
       .filter((operation) => operation !== undefined),
   );
 
-  for (const key of Reflect.ownKeys(iface.members)) {
-    const member = Reflect.get(iface.members, key) as Member;
-
-    if (!isOperation(member)) {
+  for (const [key, member] of iterateMembers(iface.members)) {
+    if (member.kind !== "operation") {
       continue;
     }
 
-    for (const op of asMemberList(member)) {
-      if (!isSpecialOperation(op) || specialOperations.has(op)) {
-        continue;
-      }
-
+    if (isSpecialOperation(member) && !specialOperations.has(member)) {
       throw TypeError(
         `On a given interface, there must exist at most one named property deleter, and at most one of each variety of getter and setter. The member "${String(key)}" is a special operation but is not registered under a special-operation slot.`,
       );

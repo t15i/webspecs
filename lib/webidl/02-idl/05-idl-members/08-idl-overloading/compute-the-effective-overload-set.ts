@@ -1,5 +1,4 @@
 import {
-  asMemberList,
   getOwnConstructorOperations,
   isConstructorOperation,
   isOperation,
@@ -8,7 +7,7 @@ import {
   type ConstructorOperation,
   type Identifier,
   type Interface,
-  type Member,
+  type MemberSlot,
   type Operation,
   type Type,
 } from "@webidl";
@@ -43,7 +42,7 @@ export function computeEffectiveOverloadSet(
 ): EffectiveOverloadSet {
   const S = new Set();
 
-  let slot: Member | undefined;
+  let slot: MemberSlot | undefined;
   switch (kind) {
     case "regular":
       slot = iface.members[id];
@@ -58,7 +57,7 @@ export function computeEffectiveOverloadSet(
 
   const F: (Operation | ConstructorOperation)[] =
     slot !== undefined && (isOperation(slot) || isConstructorOperation(slot))
-      ? asMemberList(slot)
+      ? slot
       : [];
 
   for (const X of F) {
