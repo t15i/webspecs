@@ -11,26 +11,27 @@ import {
   isObject,
 } from "@ecma";
 import {
-  ANY_TYPE_NAME,
-  ASYNC_SEQUENCE_TYPE_NAME,
-  BIGINT_TYPE_NAME,
-  BOOLEAN_TYPE_NAME,
-  CALLBACK_FUNCTION_TYPE_NAME,
-  CALLBACK_INTERFACE_TYPE_NAME,
   createSequenceFromIterable,
-  DICTIONARY_TYPE_NAME,
   getDistinguishingArgumentIndex,
-  includesNullableType,
-  isDeclaredWithDefaultValue,
-  isInterfaceType,
-  isPlatformObject,
-  isSequenceType,
-  NUMERIC_TYPE_NAME,
-  OBJECT_TYPE_NAME,
-  RECORD_TYPE_NAME,
-  SEQUENCE_TYPE_NAME,
-  STRING_TYPE_NAME,
   getInnermostType,
+  includesNullableType,
+  isAnnotatedType,
+  isAnyType,
+  isAsyncSequenceType,
+  isBigIntType,
+  isBooleanType,
+  isCallbackFunctionType,
+  isCallbackInterfaceType,
+  isDeclaredWithDefaultValue,
+  isDictionaryType,
+  isInterfaceType,
+  isNumericType,
+  isObjectType,
+  isPlatformObject,
+  isRecordType,
+  isSequenceType,
+  isStringType,
+  isUnionType,
 } from "@webidl";
 import type {
   Argument,
@@ -45,8 +46,6 @@ import type {
   Type,
 } from "@webidl";
 
-import { leafTypes, typeIncludes } from "./utils";
-
 type Entry = OperationEffectiveOverload | ConstructorOperationEffectiveOverload;
 
 const MISSING = Symbol("missing");
@@ -56,81 +55,132 @@ function omittedArgumentValue(argument: Argument): unknown {
 }
 
 /**
- * The interface branch of the distinguishing step, decided the way the union
- * conversion decides it: an entry matches when the value is an instance of an
- * interface type at that position, or when the value is a platform object and
- * the position holds `object`.
- *
- * @see https://webidl.spec.whatwg.org/#js-union
- */
-function isPlatformObjectMatchedBy(T: Type, V: unknown): boolean {
-  if (isPlatformObject(V) && typeIncludes(T, OBJECT_TYPE_NAME)) {
-    return true;
-  }
-
-  return leafTypes(T).some((U) => isInterfaceType(U) && V instanceof U.T);
-}
-
-function includesAnyOf(T: Type, names: string[]): boolean {
-  return names.some((name) => typeIncludes(T, name));
-}
-
-/**
- * Narrows the entries to those whose type at the distinguishing argument index
- * accepts the value, following the cascade of the overload resolution
- * algorithm. Returns the surviving entries, and the iterator method already
- * fetched when a sequence type decided the match.
+ * "there is an entry in S that has one of the following types at position i of
+ * its type list" — the phrase every step of the distinguishing argument is
+ * built on. Each of them names
+ * its own types and then the same three ways one of them may be wrapped: a
+ * nullable version of it, an annotated type whose inner type is it, and a union
+ * type — nullable or annotated — carrying it among its flattened member types.
+ * Those are looked through here, so a step names only its own types.
  *
  * @see https://webidl.spec.whatwg.org/#dfn-overload-resolution-algorithm
  */
+function having(
+  entries: Entry[],
+  i: number,
+  accepts: (T: Type) => boolean,
+): Entry[] | undefined {
+  const found = entries.filter((entry) => {
+    const T = getInnermostType(entry[1][i]!);
+
+    return isUnionType(T) ? T.flattenedMemberTypes.some(accepts) : accepts(T);
+  });
+
+  return found.length === 0 ? undefined : found;
+}
+
+/**
+ * Decides the "V is a platform object then ..." step of the overload resolution
+ * algorithm, the same question the union conversion asks of its own member
+ * types, and answered the same way.
+ *
+ * @see https://webidl.spec.whatwg.org/#dfn-overload-resolution-algorithm
+ *
+ * The spec phrases this step as:
+ *
+ *     If V is a platform object, and there is an entry in S that has one of the
+ *     following types at position i of its type list,
+ *       - an interface type that V implements
+ *       - object
+ *     then remove from S all other entries.
+ *
+ * NOTE: Both are gated behind "V is a platform object", and that guard is kept
+ * only by the second, for the reason `asUnion` sets out at length: an arbitrary
+ * object cannot be told to be a *built-in* platform object without an
+ * exhaustive enumeration of every such type. The interface branch is therefore
+ * decided solely by `V instanceof T.T`, and a type occupying an interface slot
+ * which is not in fact a platform object could have V accepted where the spec
+ * would reject it. The two steps are one question, so they are left to agree
+ * rather than made to differ here.
+ */
+function isPlatformObjectAndTypeIsObjectOrInterfaceTypeImplementedBy(
+  T: Type,
+  V: unknown,
+): boolean {
+  if (isPlatformObject(V) && isObjectType(T)) {
+    return true;
+  }
+
+  return isInterfaceType(T) && V instanceof T.T;
+}
+
+/** @see https://webidl.spec.whatwg.org/#dfn-overload-resolution-algorithm */
 function distinguish(
   entries: Entry[],
   i: number,
   V: unknown,
 ): { entries: Entry[]; method: unknown } {
-  const matching = (predicate: (T: Type) => boolean): Entry[] | undefined => {
-    const found = entries.filter((entry) => predicate(entry[1][i]!));
-    return found.length === 0 ? undefined : found;
-  };
-
   if (V === undefined) {
-    const optional = entries.filter((entry) => entry[2][i] === "optional");
-    if (optional.length !== 0) {
-      return { entries: optional, method: undefined };
+    const found = entries.filter((entry) => entry[2][i] === "optional");
+    if (found.length !== 0) {
+      return { entries: found, method: undefined };
     }
   }
 
   if (V === null || V === undefined) {
-    const found = matching(
-      (T) => includesNullableType(T) || typeIncludes(T, DICTIONARY_TYPE_NAME),
-    );
+    const found = entries.filter((entry) => {
+      const T = entry[1][i]!;
+      const U = isAnnotatedType(T) ? T.innerType : T;
+
+      return (
+        includesNullableType(U) ||
+        isDictionaryType(U) ||
+        (isUnionType(U) && U.flattenedMemberTypes.some(isDictionaryType))
+      );
+    });
+
+    if (found.length !== 0) {
+      return { entries: found, method: undefined };
+    }
+  }
+
+  const platformObject = having(entries, i, (T) =>
+    isPlatformObjectAndTypeIsObjectOrInterfaceTypeImplementedBy(T, V),
+  );
+  if (platformObject) {
+    return { entries: platformObject, method: undefined };
+  }
+
+  // TODO: no ArrayBuffer / DataView / typed-array IDL types exist yet, so only
+  // the "there is an entry in S that has one of the following types: object"
+  // branch is implemented.
+  if (hasArrayBufferDataInternalSlot(V)) {
+    const found = having(entries, i, isObjectType);
     if (found) {
       return { entries: found, method: undefined };
     }
   }
 
-  const platformObject = matching((T) => isPlatformObjectMatchedBy(T, V));
-  if (platformObject) {
-    return { entries: platformObject, method: undefined };
+  if (hasDataViewInternalSlot(V)) {
+    const found = having(entries, i, isObjectType);
+    if (found) {
+      return { entries: found, method: undefined };
+    }
   }
 
-  // TODO: no ArrayBuffer / SharedArrayBuffer / DataView / typed-array IDL types
-  // exist yet, so only the "object" sub-branch of each is handled here, as in
-  // the union conversion. Add their own sub-branches when those types land.
-  if (
-    hasArrayBufferDataInternalSlot(V) ||
-    hasDataViewInternalSlot(V) ||
-    hasTypedArrayNameInternalSlot(V)
-  ) {
-    const found = matching((T) => typeIncludes(T, OBJECT_TYPE_NAME));
+  // Likewise: the typed array types are not modelled as IDL types.
+  if (hasTypedArrayNameInternalSlot(V)) {
+    const found = having(entries, i, isObjectType);
     if (found) {
       return { entries: found, method: undefined };
     }
   }
 
   if (isCallable(V)) {
-    const found = matching((T) =>
-      includesAnyOf(T, [CALLBACK_FUNCTION_TYPE_NAME, OBJECT_TYPE_NAME]),
+    const found = having(
+      entries,
+      i,
+      (T) => isCallbackFunctionType(T) || isObjectType(T),
     );
     if (found) {
       return { entries: found, method: undefined };
@@ -138,76 +188,94 @@ function distinguish(
   }
 
   if (isObject(V)) {
-    const asyncSequence = matching((T) =>
-      typeIncludes(T, ASYNC_SEQUENCE_TYPE_NAME),
-    );
-    if (
-      asyncSequence &&
-      !(
-        hasStringDataInternalSlot(V) &&
-        entries.some((entry) => typeIncludes(entry[1][i]!, STRING_TYPE_NAME))
-      )
-    ) {
+    const found = having(entries, i, isAsyncSequenceType);
+    const isStringObjectAgainstAStringType =
+      hasStringDataInternalSlot(V) &&
+      having(entries, i, isStringType) !== undefined;
+
+    if (found && !isStringObjectAgainstAStringType) {
       const method =
         getMethod(V, Symbol.asyncIterator) ?? getMethod(V, Symbol.iterator);
       if (method !== undefined) {
-        return { entries: asyncSequence, method };
+        return { entries: found, method };
       }
     }
+  }
 
-    const sequence = matching((T) => typeIncludes(T, SEQUENCE_TYPE_NAME));
-    if (sequence) {
+  if (isObject(V)) {
+    const found = having(entries, i, isSequenceType);
+    if (found) {
       const method = getMethod(V, Symbol.iterator);
       if (method !== undefined) {
-        return { entries: sequence, method };
+        return { entries: found, method };
       }
     }
+  }
 
-    const objectLike = matching((T) =>
-      includesAnyOf(T, [
-        CALLBACK_INTERFACE_TYPE_NAME,
-        DICTIONARY_TYPE_NAME,
-        RECORD_TYPE_NAME,
-        OBJECT_TYPE_NAME,
-      ]),
+  if (isObject(V)) {
+    const found = having(
+      entries,
+      i,
+      (T) =>
+        isCallbackInterfaceType(T) ||
+        isDictionaryType(T) ||
+        isRecordType(T) ||
+        isObjectType(T),
     );
-    if (objectLike) {
-      return { entries: objectLike, method: undefined };
+    if (found) {
+      return { entries: found, method: undefined };
     }
   }
 
   if (isBoolean(V)) {
-    const found = matching((T) => typeIncludes(T, BOOLEAN_TYPE_NAME));
+    const found = having(entries, i, isBooleanType);
     if (found) {
       return { entries: found, method: undefined };
     }
   }
 
   if (isNumber(V)) {
-    const found = matching((T) => typeIncludes(T, NUMERIC_TYPE_NAME));
+    const found = having(entries, i, isNumericType);
     if (found) {
       return { entries: found, method: undefined };
     }
   }
 
   if (isBigInt(V)) {
-    const found = matching((T) => typeIncludes(T, BIGINT_TYPE_NAME));
+    const found = having(entries, i, isBigIntType);
     if (found) {
       return { entries: found, method: undefined };
     }
   }
 
-  for (const name of [
-    STRING_TYPE_NAME,
-    NUMERIC_TYPE_NAME,
-    BOOLEAN_TYPE_NAME,
-    BIGINT_TYPE_NAME,
-    ANY_TYPE_NAME,
-  ]) {
-    const found = matching((T) => typeIncludes(T, name));
-    if (found) {
-      return { entries: found, method: undefined };
-    }
+  const string = having(entries, i, isStringType);
+  if (string) {
+    return { entries: string, method: undefined };
+  }
+
+  const numeric = having(entries, i, isNumericType);
+  if (numeric) {
+    return { entries: numeric, method: undefined };
+  }
+
+  const boolean = having(entries, i, isBooleanType);
+  if (boolean) {
+    return { entries: boolean, method: undefined };
+  }
+
+  const bigint = having(entries, i, isBigIntType);
+  if (bigint) {
+    return { entries: bigint, method: undefined };
+  }
+
+  // Unreachable: this step is only taken with more than one entry left,
+  // which means every pair of them is distinguishable at this index, and `any`
+  // is distinguishable from no type at all.
+  /* istanbul ignore next -- see above */
+  const any = having(entries, i, isAnyType);
+  /* istanbul ignore next -- see above */
+  if (any) {
+    return { entries: any, method: undefined };
   }
 
   throw TypeError(`No overload accepts the argument passed at index ${i}.`);
@@ -223,22 +291,7 @@ export function resolveOverloads(
   args: unknown[],
 ): [OperationEffectiveOverloadSetCallable, unknown[]];
 
-/**
- * The spec appends the special value "missing" for an omitted optional argument
- * that was not declared with a default value. The value list is applied to the
- * method steps as a JS argument list, where "not provided" already has a
- * faithful representation — being absent from that list — so a trailing run of
- * "missing" is dropped rather than materialised. That keeps the two cases
- * apart: an argument declared with the `undefined` default value occupies its
- * position, while one declared without a default does not.
- *
- * A "missing" with a value after it cannot be dropped without shifting that
- * value into its place, and there is no rule that an optional argument is
- * followed only by other optional arguments — `f(optional long a, long b)` is a
- * legal declaration. Those keep their position and are passed as undefined.
- *
- * @see https://webidl.spec.whatwg.org/#dfn-overload-resolution-algorithm
- */
+/** @see https://webidl.spec.whatwg.org/#dfn-overload-resolution-algorithm */
 export function resolveOverloads(
   S: ConstructorOperationEffectiveOverloadSet | OperationEffectiveOverloadSet,
   args: unknown[],
@@ -250,11 +303,9 @@ export function resolveOverloads(
   }
 
   const lengths = entries.map(([, typeList]) => typeList.length);
-
   const maxarg = Math.max(...lengths);
   const n = args.length;
   const argcount = Math.min(maxarg, n);
-
   let candidates = entries.filter(
     ([, typeList]) => typeList.length === argcount,
   );
@@ -270,8 +321,6 @@ export function resolveOverloads(
       );
     }
 
-    // The argument counts the entries accept need not be contiguous, so a count
-    // above the shortest allowable invocation can still match no entry.
     throw TypeError(`No overload takes ${n} arguments.`);
   }
 
@@ -287,8 +336,6 @@ export function resolveOverloads(
   const values: unknown[] = [];
   let i = 0;
 
-  // The entries agree on their types and optionality values before the
-  // distinguishing argument index, so any of them describes this prefix.
   while (i < d) {
     const V = args[i];
     const [callable, typeList, optionalityList] = candidates[0]!;
@@ -308,6 +355,12 @@ export function resolveOverloads(
 
   const [callable, typeList, optionalityList] = candidates[0]!;
 
+  // The spec asserts the type is a sequence type here, but the step that
+  // fetches a method for an async sequence type reaches this point too, and
+  // there is nothing to create for one: an async sequence value is the object
+  // itself, as the union conversion also leaves it. Only a sequence type is
+  // built here; anything else is converted by the loop below, like any other
+  // argument.
   if (i === d && method !== undefined) {
     const T = getInnermostType(typeList[i]!);
 
@@ -334,10 +387,9 @@ export function resolveOverloads(
     i += 1;
   }
 
-  // The arguments the callable declares beyond those the call supplied are all
-  // optional — an entry with a shorter type list only exists because every
-  // argument past its end can be omitted — so each contributes its default
-  // value.
+  // The arguments the callable declares beyond those the call supplied are
+  // all optional: an entry with a shorter type list only exists because every
+  // argument past its end can be omitted, so each contributes its default value.
   while (i < callable.arguments.length) {
     values.push(omittedArgumentValue(callable.arguments[i]!));
 

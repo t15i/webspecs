@@ -24,6 +24,7 @@ import {
 
 import { makeOperation } from "../../02-idl/05-idl-members/utils";
 import {
+  makeAnnotatedType,
   makeBooleanType,
   makeCallbackFunctionType,
   makeDOMStringType,
@@ -423,6 +424,40 @@ describe("resolveOverloads - choosing between overloads", () => {
     expect(resolveOverloads(S, [null])[0]).toBe(dictionaryOverload);
   });
 
+  test("looks through an annotation when null is passed", () => {
+    // "an annotated type whose inner type is one of the above types".
+    const annotatedOverload = op();
+    const stringOverload = op();
+    const S = overloads(
+      [
+        annotatedOverload,
+        [makeAnnotatedType(makeNullableType(makeLongType()), { clamp: true })],
+        ["required"],
+      ],
+      [stringOverload, [makeDOMStringType()], ["required"]],
+    );
+
+    expect(resolveOverloads(S, [null])[0]).toBe(annotatedOverload);
+  });
+
+  test("prefers a union carrying a dictionary type when null is passed", () => {
+    // The sub-step also names "a union type ... that has a dictionary type in
+    // its flattened members", which is not the same as the union itself being
+    // one of the types it names.
+    const unionOverload = op();
+    const stringOverload = op();
+    const S = overloads(
+      [
+        unionOverload,
+        [makeUnionType([makeDictionaryType(), makeLongType()])],
+        ["required"],
+      ],
+      [stringOverload, [makeDOMStringType()], ["required"]],
+    );
+
+    expect(resolveOverloads(S, [null])[0]).toBe(unionOverload);
+  });
+
   test("prefers object for a platform object", () => {
     const objectOverload = op();
     const longOverload = op();
@@ -604,8 +639,10 @@ describe("resolveOverloads - the remaining distinguishing branches", () => {
     const [callable, values] = resolveOverloads(S, [iterable]);
 
     expect(callable).toBe(asyncOverload);
-    // The spec converts the distinguishing argument separately only for a
-    // sequence type; an async sequence is converted like any other argument.
+    // Step 14 asserts the type is a sequence type, so the spec leaves open what
+    // becomes of the method this branch fetched for an async sequence type.
+    // Nothing has to: an async sequence value is the object itself, which is
+    // also what the union conversion returns for one.
     expect(values).toEqual([iterable]);
   });
 
@@ -740,6 +777,10 @@ describe("resolveOverloads - falling through a branch no entry answers", () => {
 
   test("a buffer source when no entry holds object", () => {
     expect(against(makeLongType(), new ArrayBuffer(1))).toBe(true);
+    expect(against(makeLongType(), new DataView(new ArrayBuffer(1)))).toBe(
+      true,
+    );
+    expect(against(makeLongType(), new Uint8Array(1))).toBe(true);
   });
 
   test("a callable when no entry holds a callback function or object", () => {
@@ -792,5 +833,77 @@ describe("resolveOverloads - a union at the distinguishing index", () => {
     expect(resolveOverloads(S, [5])[0]).toBe(unionOverload);
     expect(resolveOverloads(S, [true])[0]).toBe(unionOverload);
     expect(resolveOverloads(S, [new Node()])[0]).toBe(interfaceOverload);
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-overload-resolution-algorithm
+ *
+ * Steps 12.15 to 12.18: once the kind of the value has answered nothing, the
+ * algorithm stops asking about the value and takes the first entry whose type
+ * it can convert to, trying a string type, then a numeric type, then boolean,
+ * then bigint — in that order, whatever the value is.
+ *
+ * Step 12.19 asks for `any`, and is never reached: it is only taken with more
+ * than one entry left, which means every pair of them is distinguishable at
+ * this index, and `any` is distinguishable from no type at all.
+ */
+describe("resolveOverloads - the fallbacks that no longer ask about the value", () => {
+  const op = () => makeOperation({ identifier: "f" });
+
+  test("takes a string type first", () => {
+    const stringOverload = op();
+    const S = overloads(
+      [stringOverload, [makeDOMStringType()], ["required"]],
+      [op(), [makeLongType()], ["required"]],
+    );
+
+    // A string is not an Object, a Boolean, a Number or a BigInt, so every
+    // branch that asks about the value has passed it over by now.
+    const [callable, values] = resolveOverloads(S, ["text"]);
+
+    expect(callable).toBe(stringOverload);
+    expect(values).toEqual(["text"]);
+  });
+
+  test("takes a numeric type when no entry holds a string type", () => {
+    const numericOverload = op();
+    const S = overloads(
+      [numericOverload, [makeLongType()], ["required"]],
+      [op(), [makeBooleanType()], ["required"]],
+    );
+
+    // A string is not a Number, so the numeric branch of step 12.13 passed it
+    // over; the fallback takes it anyway.
+    const [callable, values] = resolveOverloads(S, ["5"]);
+
+    expect(callable).toBe(numericOverload);
+    expect(values).toEqual([5]);
+  });
+
+  test("takes boolean when no entry holds a string or numeric type", () => {
+    const booleanOverload = op();
+    const S = overloads(
+      [booleanOverload, [makeBooleanType()], ["required"]],
+      [op(), [makeBigIntType()], ["required"]],
+    );
+
+    const [callable, values] = resolveOverloads(S, ["x"]);
+
+    expect(callable).toBe(booleanOverload);
+    expect(values).toEqual([true]);
+  });
+
+  test("takes bigint last of the four", () => {
+    const bigintOverload = op();
+    const S = overloads(
+      [bigintOverload, [makeBigIntType()], ["required"]],
+      [op(), [makeInterfaceType(Node)], ["required"]],
+    );
+
+    const [callable, values] = resolveOverloads(S, ["5"]);
+
+    expect(callable).toBe(bigintOverload);
+    expect(values).toEqual([5n]);
   });
 });

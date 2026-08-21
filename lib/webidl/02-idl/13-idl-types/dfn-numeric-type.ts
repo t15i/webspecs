@@ -1,4 +1,4 @@
-import type { DoubleType, IntegerType } from "@webidl";
+import type { DoubleType, IntegerType, Type } from "@webidl";
 
 import { LONG_TYPE_NAME } from "./08-idl-long";
 import { UNSIGNED_LONG_TYPE_NAME } from "./09-idl-unsigned-long";
@@ -20,3 +20,8 @@ export type NumericType =
   // | UnrestrictedFloatType
   | DoubleType;
 // | UnrestrictedDoubleType;
+
+/** @see https://webidl.spec.whatwg.org/#dfn-numeric-type */
+export function isNumericType(T: Type): T is NumericType {
+  return NUMERIC_TYPE_NAMES.has(T.name);
+}
