@@ -243,6 +243,18 @@ describe("validateInterface - members", () => {
   });
 });
 
+describe("validateInterface - regular members must not carry the static keyword", () => {
+  test("throws for a member of the regular table declared static", () => {
+    const iface = makeInterface({
+      members: {
+        f: [makeOperation({ identifier: "f", keywords: ["static"] })],
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/"static" keyword/);
+  });
+});
+
 describe("validateInterface - static members require the static keyword", () => {
   test("throws for a static member declared without the static keyword", () => {
     const iface = makeInterface({

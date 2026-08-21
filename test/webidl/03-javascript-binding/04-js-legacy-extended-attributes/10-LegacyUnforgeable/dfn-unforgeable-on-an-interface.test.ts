@@ -12,13 +12,16 @@ import {
   Exposed,
   isUnforgeableOnInterface,
   LegacyUnforgeable,
+  validateAttribute,
   validateInterface,
+  validateOperation,
   type Interface,
   type Type,
 } from "lib/webidl";
 
 import {
   makeAttribute,
+  makeConstructor,
   makeOperation,
 } from "../../../02-idl/05-idl-members/utils";
 import {
@@ -29,13 +32,14 @@ import {
 function makeInterface(
   members: Interface["members"] = {},
   inherit: Interface | null = null,
+  staticMembers: Interface["staticMembers"] = {},
 ): Interface {
   return {
     identifier: "Unnamed",
     extendedAttributes: { [Exposed]: "*" },
     inherit,
     members,
-    staticMembers: {},
+    staticMembers,
     behaviors: {},
   };
 }
@@ -231,5 +235,136 @@ describe("validateInterface - [LegacyUnforgeable] against inherited interfaces",
     expect(() =>
       validateInterface(makeInterface({ attr: unforgeableAttribute() })),
     ).not.toThrow();
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#LegacyUnforgeable
+ *
+ * "The [LegacyUnforgeable] extended attribute must not appear on anything
+ * other than a regular attribute or a non-static operation."
+ *
+ * Most of that is settled before anything runs: the extended attribute is
+ * declared into the extended attributes of attributes and of operations only,
+ * so an interface, a constructor operation or a type cannot carry it at all.
+ * What is left to check is the word "regular" — a member is static by a keyword
+ * it carries, which no type can rule out.
+ *
+ * The rule is about one member rather than about how members relate, so it runs
+ * as an attribute and an operation rule, reached by whatever validates the
+ * member — an interface being only the usual way in.
+ */
+describe("where [LegacyUnforgeable] may appear", () => {
+  const unforgeable = { [LegacyUnforgeable]: undefined };
+
+  test("is rejected on a static attribute validated on its own", () => {
+    expect(() =>
+      validateAttribute(
+        makeAttribute({
+          type: makeDOMStringType(),
+          identifier: "attr",
+          keywords: ["static"],
+          extendedAttributes: unforgeable,
+        }),
+      ),
+    ).toThrow(/must not appear on/);
+  });
+
+  test("is rejected on a static operation validated on its own", () => {
+    expect(() =>
+      validateOperation(
+        makeOperation({
+          identifier: "f",
+          keywords: ["static"],
+          extendedAttributes: unforgeable,
+        }),
+      ),
+    ).toThrow(/must not appear on/);
+  });
+
+  test("does not throw for a regular attribute", () => {
+    const iface = makeInterface({
+      attr: makeAttribute({
+        type: makeDOMStringType(),
+        identifier: "attr",
+        extendedAttributes: unforgeable,
+      }),
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("does not throw for a non-static operation", () => {
+    const iface = makeInterface({
+      f: [makeOperation({ identifier: "f", extendedAttributes: unforgeable })],
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("throws for a static attribute", () => {
+    const iface = makeInterface({}, null, {
+      attr: makeAttribute({
+        type: makeDOMStringType(),
+        identifier: "attr",
+        keywords: ["static"],
+        extendedAttributes: unforgeable,
+      }),
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/must not appear on/);
+  });
+
+  test("throws for a static operation", () => {
+    const iface = makeInterface({}, null, {
+      f: [
+        makeOperation({
+          identifier: "f",
+          keywords: ["static"],
+          extendedAttributes: unforgeable,
+        }),
+      ],
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/must not appear on/);
+  });
+
+  test("throws for a static operation that declares it on one overload", () => {
+    // Every overload is walked, so it is caught wherever it is written.
+    const iface = makeInterface({}, null, {
+      f: [
+        makeOperation({
+          identifier: "f",
+          keywords: ["static"],
+          argumentTypes: [makeLongType()],
+        }),
+        makeOperation({
+          identifier: "f",
+          keywords: ["static"],
+          argumentTypes: [makeDOMStringType()],
+          extendedAttributes: unforgeable,
+        }),
+      ],
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/must not appear on/);
+  });
+
+  test("does not throw for a static member that does not declare it", () => {
+    const iface = makeInterface({}, null, {
+      attr: makeAttribute({
+        type: makeDOMStringType(),
+        identifier: "attr",
+        keywords: ["static"],
+      }),
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("passes over a constructor operation, which cannot declare it", () => {
+    const iface = makeInterface({ constructor: [makeConstructor({})] });
+
+    expect(() => validateInterface(iface)).not.toThrow();
   });
 });

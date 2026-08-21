@@ -14,6 +14,7 @@ import {
   iterateMemberSlots,
   iterateMembers,
   validateMemberSlot,
+  validateRegularMemberSlot,
   type MemberSlot,
 } from "lib/webidl";
 
@@ -128,6 +129,58 @@ describe("validateMemberSlot - overloads", () => {
           arguments: [{ type: makeLongType(), identifier: "1bad" }],
         }),
       ]),
+    ).toThrow(TypeError);
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-regular-attribute
+ * @see https://webidl.spec.whatwg.org/#dfn-regular-operation
+ *
+ * `validateRegularMemberSlot` is `validateMemberSlot` for the table that holds
+ * what is not static. A member is static by the keyword it carries, so a member
+ * carrying it is static wherever it is written — and would be one thing to the
+ * table it sits in and another to every rule that reads its keywords.
+ */
+describe("validateRegularMemberSlot", () => {
+  test("does not throw for an attribute without the keyword", () => {
+    expect(() =>
+      validateRegularMemberSlot(makeAttribute({ type: makeDOMStringType() })),
+    ).not.toThrow();
+  });
+
+  test("does not throw for operations without the keyword", () => {
+    expect(() =>
+      validateRegularMemberSlot([makeOperation({ identifier: "f" })]),
+    ).not.toThrow();
+  });
+
+  test("throws for an attribute declared with the keyword", () => {
+    expect(() =>
+      validateRegularMemberSlot(
+        makeAttribute({ type: makeDOMStringType(), keywords: ["static"] }),
+      ),
+    ).toThrow(/must not be declared with the "static" keyword/);
+  });
+
+  test("throws when any overload is declared with the keyword", () => {
+    expect(() =>
+      validateRegularMemberSlot([
+        makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+        makeOperation({ identifier: "f", keywords: ["static"] }),
+      ]),
+    ).toThrow(/must not be declared with the "static" keyword/);
+  });
+
+  test("does not throw for constructor operations", () => {
+    expect(() =>
+      validateRegularMemberSlot([makeConstructor({})]),
+    ).not.toThrow();
+  });
+
+  test("goes on to validate the slot itself", () => {
+    expect(() =>
+      validateRegularMemberSlot([makeOperation({ identifier: "1bad" })]),
     ).toThrow(TypeError);
   });
 });

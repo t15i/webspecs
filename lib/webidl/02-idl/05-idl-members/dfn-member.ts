@@ -73,6 +73,22 @@ function validateOverloadsOfOneKind(
   }
 }
 
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-regular-attribute
+ * @see https://webidl.spec.whatwg.org/#dfn-regular-operation
+ */
+export function validateRegularMemberSlot(slot: MemberSlot): void {
+  for (const member of Array.isArray(slot) ? slot : [slot]) {
+    if (member.keywords.has("static")) {
+      throw TypeError(
+        `A regular member of an interface must not be declared with the "static" keyword.`,
+      );
+    }
+  }
+
+  validateMemberSlot(slot);
+}
+
 /** @see https://webidl.spec.whatwg.org/#dfn-member */
 export function validateMemberSlot(slot: MemberSlot): void {
   if (Array.isArray(slot) && slot.length === 0) {

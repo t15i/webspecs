@@ -39,6 +39,22 @@ export function isUnforgeable(member: Attribute | Operation): boolean {
   return isAnnotatedWithExtAttribute(member, LegacyUnforgeable);
 }
 
+/**
+ * § 3.4.10: "The [LegacyUnforgeable] extended attribute must not appear on
+ * anything other than a regular attribute or a non-static operation."
+ *
+ * @see https://webidl.spec.whatwg.org/#LegacyUnforgeable
+ */
+export function validateUnforgeablePlacement(
+  member: Attribute | Operation,
+): void {
+  if (member.keywords.has("static") && isUnforgeable(member)) {
+    throw TypeError(
+      `The [LegacyUnforgeable] extended attribute must not appear on anything other than a regular attribute or a non-static operation, but "${String(member.identifier)}" declares it and is static.`,
+    );
+  }
+}
+
 /** @see https://webidl.spec.whatwg.org/#LegacyUnforgeable */
 export function validateUnforgeableOverloads(a: Interface): void {
   for (const [identifier, slot] of iterateMemberSlots(a.members)) {

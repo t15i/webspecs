@@ -8,6 +8,8 @@ import {
 } from "@webidl";
 import type { Identifier, MemberSlot, Type } from "@webidl";
 
+import { operationExtraValidationRules } from "./operation-extra-validation-rules";
+
 /** @see https://webidl.spec.whatwg.org/#prod-Argument */
 export interface Argument<T extends Type = Type> {
   type: T;
@@ -93,4 +95,10 @@ export function validateOperation(op: Operation): void {
   } else if (isStaticOperation(op)) {
     validateStaticOperation(op);
   }
+
+  for (const rule of operationExtraValidationRules) {
+    rule(op);
+  }
 }
+
+export { operationExtraValidationRules };

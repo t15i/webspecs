@@ -18,6 +18,8 @@ import {
 } from "@webidl";
 import type { Identifier, MemberSlot, Type } from "@webidl";
 
+import { attributeExtraValidationRules } from "./attribute-extra-validation-rules";
+
 /**
  * The single merge target for extended attributes applicable to attributes
  * of any kind.
@@ -85,4 +87,10 @@ export function validateAttribute(attr: Attribute): void {
   } else if (attr.setterSteps === undefined) {
     throw TypeError(`A read-write attribute must define setter steps.`);
   }
+
+  for (const rule of attributeExtraValidationRules) {
+    rule(attr);
+  }
 }
+
+export { attributeExtraValidationRules };

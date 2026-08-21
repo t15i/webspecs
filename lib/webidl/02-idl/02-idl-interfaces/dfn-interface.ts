@@ -2,8 +2,8 @@ import {
   isIdentifier,
   iterateMemberSlots,
   iterateSpecialOperations,
-  validateMemberSlot,
   validateOperation,
+  validateRegularMemberSlot,
   validateStaticMemberSlot,
 } from "@webidl";
 import type { MemberSlot, Identifier } from "@webidl";
@@ -49,7 +49,7 @@ export function validateInterface(iface: Interface): void {
   }
 
   for (const [, slot] of iterateMemberSlots(iface.members)) {
-    validateMemberSlot(slot);
+    validateRegularMemberSlot(slot);
   }
 
   for (const [, slot] of iterateMemberSlots(iface.staticMembers)) {
