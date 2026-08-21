@@ -35,7 +35,14 @@ export default {
       include: [
         "lib/html/02-infrastructure/06-common-dom-interfaces/01-reflecting-content-attributes-in-idl-attributes",
         "lib/webidl/02-idl/02-idl-interfaces/**/*.ts",
+        "lib/webidl/02-idl/05-idl-members/*.ts",
+        "lib/webidl/02-idl/05-idl-members/04-idl-constructors/**/*.ts",
+        "lib/webidl/02-idl/05-idl-members/08-idl-overloading/**/*.ts",
+        "lib/webidl/02-idl/07-idl-static-attributes-and-operations/**/*.ts",
         "lib/webidl/03-javascript-binding/02-js-type-mapping/**/*.ts",
+        "lib/webidl/03-javascript-binding/03-js-extended-attributes/**/*.ts",
+        "lib/webidl/03-javascript-binding/04-js-legacy-extended-attributes/**/*.ts",
+        "lib/webidl/03-javascript-binding/06-dfn-overload-resolution-algorithm/**/*.ts",
       ],
       thresholds: {
         100: true,
