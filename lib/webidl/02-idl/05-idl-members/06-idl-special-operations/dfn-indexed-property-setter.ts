@@ -1,21 +1,10 @@
-import {
-  ExistingIndexedPropertySetter,
-  IndexedPropertyGetter,
-  NewIndexedPropertySetter,
-  isUnsignedLongType,
-  type Interface,
-  type Operation,
-} from "@webidl";
+import { isUnsignedLongType, type Interface, type Operation } from "@webidl";
 import type { IndexedPropertySetterOperation } from "./01-idl-indexed-properties";
 
-/** @see https://webidl.spec.whatwg.org/#dfn-indexed-property-setter */
-export const IndexedPropertySetter: unique symbol = Symbol(
-  "IndexedPropertySetter",
-);
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [IndexedPropertySetter]?: IndexedPropertySetterOperation;
+  interface Interface {
+    /** @see https://webidl.spec.whatwg.org/#dfn-indexed-property-setter */
+    indexedPropertySetter?: IndexedPropertySetterOperation;
   }
 }
 
@@ -47,20 +36,20 @@ export function validateIndexedPropertySetterConstraints(
   iface: Interface,
 ): void {
   if (
-    IndexedPropertySetter in iface.members &&
-    !(IndexedPropertyGetter in iface.members)
+    iface.indexedPropertySetter !== undefined &&
+    !(iface.indexedPropertyGetter !== undefined)
   ) {
     throw TypeError(
       "An interface with an indexed property setter must also have an indexed property getter.",
     );
   }
 
-  const setter = iface.members[IndexedPropertySetter];
+  const setter = iface.indexedPropertySetter;
   if (
     setter !== undefined &&
     setter.identifier === undefined &&
-    (!(NewIndexedPropertySetter in iface.members) ||
-      !(ExistingIndexedPropertySetter in iface.members))
+    (iface.behaviors.newIndexedPropertySetter === undefined ||
+      iface.behaviors.existingIndexedPropertySetter === undefined)
   ) {
     throw TypeError(
       "An interface with an unnamed indexed property setter must define the steps to set the value of both new and existing indexed properties.",

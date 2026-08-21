@@ -1,17 +1,10 @@
-import {
-  NamedPropertyDeterminator,
-  isDOMStringType,
-  type Interface,
-  type Operation,
-} from "@webidl";
+import { isDOMStringType, type Interface, type Operation } from "@webidl";
 import type { NamedPropertyGetterOperation } from "./02-idl-named-properties";
 
-/** @see https://webidl.spec.whatwg.org/#dfn-named-property-getter */
-export const NamedPropertyGetter: unique symbol = Symbol("NamedPropertyGetter");
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [NamedPropertyGetter]?: NamedPropertyGetterOperation;
+  interface Interface {
+    /** @see https://webidl.spec.whatwg.org/#dfn-named-property-getter */
+    namedPropertyGetter?: NamedPropertyGetterOperation;
   }
 }
 
@@ -40,12 +33,12 @@ export function validateNamedPropertyGetter(op: Operation): void {
 export function validateNamedPropertyGetterDeterminator(
   iface: Interface,
 ): void {
-  const getter = iface.members[NamedPropertyGetter];
+  const getter = iface.namedPropertyGetter;
 
   if (
     getter !== undefined &&
     getter.identifier === undefined &&
-    !(NamedPropertyDeterminator in iface.members)
+    iface.behaviors.namedPropertyDeterminator === undefined
   ) {
     throw TypeError(
       "An interface with an unnamed named property getter must define the steps to determine the value of a named property.",

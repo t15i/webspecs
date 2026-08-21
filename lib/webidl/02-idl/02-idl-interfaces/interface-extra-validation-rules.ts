@@ -15,6 +15,7 @@ import {
   validateNamedPropertyDeleterConstraints,
   validateNamedPropertyGetterDeterminator,
   validateNamedPropertySetterConstraints,
+  validateNamedSpecialOperationsAreMembers,
   validateSupportedPropertyIndicesDefined,
   validateSupportedPropertyNamesDefined,
 } from "../05-idl-members/06-idl-special-operations";
@@ -32,6 +33,7 @@ import {
 //   - § 2.5.11 maplike declaration: at most one map/set/iterable declaration, reserved member names (maplike not modelled).
 //   - § 2.5.12 setlike declaration: analogous constraints (setlike not modelled).
 export const interfaceExtraValidationRules: ((iface: Interface) => void)[] = [
+  validateNamedSpecialOperationsAreMembers,
   validateAtMostOneSpecialOperationPerVariety,
   validateIndexedPropertiesLengthAttribute,
   validateSupportedPropertyIndicesDefined,

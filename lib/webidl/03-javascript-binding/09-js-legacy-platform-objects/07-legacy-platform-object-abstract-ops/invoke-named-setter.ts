@@ -2,7 +2,6 @@ import type { PropertyName } from "@ecma";
 
 import {
   PlatformObject,
-  NamedPropertySetter,
   isSupportedPropertyName,
   setValueOfExistingNamedProperty,
   setValueOfNewNamedProperty,
@@ -14,9 +13,9 @@ export function invokeNamedPropertySetter(
   p: PropertyName,
   v: unknown,
 ): void {
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
   const creating = !isSupportedPropertyName(o, p);
-  const operation =
-    PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertySetter]!;
+  const operation = iface.namedPropertySetter!;
   const T = operation.arguments[1].type;
   const value = T(v);
 

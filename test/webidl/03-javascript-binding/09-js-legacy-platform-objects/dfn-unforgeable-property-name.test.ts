@@ -27,6 +27,7 @@ function makeInterface(overrides: Partial<Interface> = {}): Interface {
     inherit: null,
     members: {},
     staticMembers: {},
+    behaviors: {},
     ...overrides,
   };
 }

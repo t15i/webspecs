@@ -36,6 +36,7 @@ import {
   makeDOMStringType,
   makeLongType,
   makePromiseType,
+  makeUnsignedLongType,
 } from "../../02-idl/13-idl-types/utils";
 
 const store = new WeakMap<object, number>();
@@ -560,6 +561,53 @@ describe("unforgeable members", () => {
       configurable: false,
       enumerable: true,
     });
+    expect(Object.getOwnPropertyNames(prototypeOf(iface))).toEqual([]);
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#idl-special-operations
+ *
+ * § 2.5.6: declaring a special operation with an identifier "is equivalent to
+ * separating the special operation out into its own declaration without an
+ * identifier". The operation that equivalence names is an ordinary member, so
+ * it gets its property on the prototype like any other — the special behaviour
+ * is what the interface's own field adds on top, not a replacement for it.
+ */
+describe("a special operation declared with an identifier", () => {
+  const makeNamedGetter = () =>
+    makeOperation({
+      identifier: "item",
+      keywords: ["getter"],
+      argumentTypes: [makeUnsignedLongType()],
+      returnType: makeDOMStringType(),
+      methodSteps: (index: unknown) => `at ${String(index)}`,
+    });
+
+  test("gets its property on the prototype and can be invoked", () => {
+    const getter = makeNamedGetter();
+    const iface = makeInterface({
+      identifier: "Collection",
+      members: { item: [getter] },
+      indexedPropertyGetter: getter as never,
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+
+    expect(Object.getOwnPropertyNames(proto)).toEqual(["item"]);
+    expect(methodOf(proto, "item").call(instance, "2")).toBe("at 2");
+  });
+
+  test("is left off the prototype when it is declared without an identifier", () => {
+    const iface = makeInterface({
+      identifier: "Collection",
+      indexedPropertyGetter: makeOperation({
+        identifier: undefined,
+        keywords: ["getter"],
+        argumentTypes: [makeUnsignedLongType()],
+      }) as never,
+    });
+
     expect(Object.getOwnPropertyNames(prototypeOf(iface))).toEqual([]);
   });
 });

@@ -2,7 +2,6 @@ import { toUint32 } from "@ecma";
 
 import {
   PlatformObject,
-  IndexedPropertySetter,
   isSupportedPropertyIndex,
   setValueOfExistingIndexedProperty,
   setValueOfNewIndexedProperty,
@@ -14,10 +13,10 @@ export function invokeIndexedPropertySetter(
   p: PropertyKey,
   v: unknown,
 ): void {
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
   const index = toUint32(p);
   const creating = !isSupportedPropertyIndex(o, index);
-  const operation =
-    PlatformObject.getPrimaryInterfaceOf(o).members[IndexedPropertySetter]!;
+  const operation = iface.indexedPropertySetter!;
   const T = operation.arguments[1].type;
   const value = T(v);
 

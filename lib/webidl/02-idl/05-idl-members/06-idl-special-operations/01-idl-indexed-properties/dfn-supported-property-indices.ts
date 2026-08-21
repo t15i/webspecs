@@ -1,17 +1,13 @@
 import { PlatformObject } from "@webidl";
 
-/** @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices */
-export const SupportedPropertyIndices: unique symbol = Symbol(
-  "SupportedPropertyIndices",
-);
-
 export interface SupportedPropertyIndices extends Iterable<number> {
   has(index: number): boolean;
 }
 
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [SupportedPropertyIndices]?(): SupportedPropertyIndices;
+  interface InterfaceBehaviors {
+    /** @see https://webidl.spec.whatwg.org/#dfn-supported-property-indices */
+    supportedPropertyIndices?(): SupportedPropertyIndices;
   }
 }
 
@@ -19,7 +15,7 @@ export function isSupportedPropertyIndex(
   o: PlatformObject,
   index: number,
 ): boolean {
-  return PlatformObject.getPrimaryInterfaceOf(o)
-    .members[SupportedPropertyIndices]!.call(o)
-    .has(index);
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
+  return iface.behaviors.supportedPropertyIndices!.call(o).has(index);
 }

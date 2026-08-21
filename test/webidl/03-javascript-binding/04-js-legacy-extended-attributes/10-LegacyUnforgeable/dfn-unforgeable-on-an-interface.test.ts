@@ -36,6 +36,7 @@ function makeInterface(
     inherit,
     members,
     staticMembers: {},
+    behaviors: {},
   };
 }
 

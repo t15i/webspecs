@@ -25,14 +25,12 @@ export type MemberSlot = Attribute | Operation[] | ConstructorOperation[];
 export function* iterateMemberSlots(
   members: InterfaceMembers | InterfaceStaticMembers,
 ): Generator<[Identifier, MemberSlot]> {
-  // `Object.keys` leaves out the symbol-keyed slots, which carry the machinery
-  // of special operations rather than members.
+  // Every key of the member table is an identifier naming a member: the special
+  // operations an interface defines are held in fields of their own, and the
+  // algorithms it supplies in prose in `behaviors`. Nothing here is skipped, so
+  // anything that is not a well-formed member is reported as one.
   for (const identifier of Object.keys(members)) {
-    const slot = Reflect.get(members, identifier) as MemberSlot;
-
-    if (Array.isArray(slot) || isAttribute(slot)) {
-      yield [identifier, slot];
-    }
+    yield [identifier, Reflect.get(members, identifier) as MemberSlot];
   }
 }
 

@@ -15,28 +15,18 @@
  */
 import { describe, expect, test } from "vitest";
 import {
-  ExistingIndexedPropertySetter,
-  ExistingNamedPropertyDeleter,
-  ExistingNamedPropertySetter,
   Exposed,
-  IndexedPropertyDeterminator,
-  IndexedPropertyGetter,
-  IndexedPropertySetter,
-  NamedPropertyDeterminator,
-  NamedPropertyDeleter,
-  NamedPropertyGetter,
-  NamedPropertySetter,
-  NewIndexedPropertySetter,
-  NewNamedPropertySetter,
-  SupportedPropertyIndices,
-  SupportedPropertyNames,
+  iterateSpecialOperations,
   validateInterface,
   type IndexedPropertyGetterOperation,
   type IndexedPropertySetterOperation,
   type Interface,
+  type InterfaceMembers,
   type NamedPropertyDeleterOperation,
   type NamedPropertyGetterOperation,
   type NamedPropertySetterOperation,
+  type SupportedPropertyIndices,
+  type SupportedPropertyNames,
 } from "lib/webidl";
 
 import {
@@ -50,19 +40,39 @@ import {
   makeUnsignedLongType,
 } from "../13-idl-types/utils";
 
+/**
+ * § 2.5.6: declaring a special operation with an identifier "is equivalent to
+ * separating the special operation out into its own declaration without an
+ * identifier", so an interface that names one declares it twice — in the field
+ * of its variety and as a member under that identifier. The second declaration
+ * is made here, so that a test naming a special operation gets a well-formed
+ * interface without restating it.
+ */
 function makeInterface(overrides: Partial<Interface> = {}): Interface {
-  return {
+  const iface: Interface = {
     identifier: "Example",
     extendedAttributes: { [Exposed]: "*" },
     inherit: null,
     staticMembers: {},
+    behaviors: {},
     members: {},
     ...overrides,
   };
+
+  const members: InterfaceMembers = { ...iface.members };
+
+  for (const operation of iterateSpecialOperations(iface)) {
+    if (operation.identifier !== undefined) {
+      members[operation.identifier] = [operation];
+    }
+  }
+
+  return { ...iface, members };
 }
 
 function makeNamedGetter(): NamedPropertyGetterOperation {
   return makeOperation({
+    identifier: "namedItem",
     keywords: ["getter"],
     argumentTypes: [makeDOMStringType()],
   }) as NamedPropertyGetterOperation;
@@ -70,6 +80,7 @@ function makeNamedGetter(): NamedPropertyGetterOperation {
 
 function makeNamedSetter(): NamedPropertySetterOperation {
   return makeOperation({
+    identifier: "setNamedItem",
     keywords: ["setter"],
     argumentTypes: [makeDOMStringType(), makeLongType()],
   }) as NamedPropertySetterOperation;
@@ -77,6 +88,7 @@ function makeNamedSetter(): NamedPropertySetterOperation {
 
 function makeNamedDeleter(): NamedPropertyDeleterOperation {
   return makeOperation({
+    identifier: "removeNamedItem",
     keywords: ["deleter"],
     argumentTypes: [makeDOMStringType()],
   }) as NamedPropertyDeleterOperation;
@@ -84,6 +96,7 @@ function makeNamedDeleter(): NamedPropertyDeleterOperation {
 
 function makeIndexedGetter(): IndexedPropertyGetterOperation {
   return makeOperation({
+    identifier: "item",
     keywords: ["getter"],
     argumentTypes: [makeUnsignedLongType()],
   }) as IndexedPropertyGetterOperation;
@@ -91,6 +104,7 @@ function makeIndexedGetter(): IndexedPropertyGetterOperation {
 
 function makeIndexedSetter(): IndexedPropertySetterOperation {
   return makeOperation({
+    identifier: "setItem",
     keywords: ["setter"],
     argumentTypes: [makeUnsignedLongType(), makeLongType()],
   }) as IndexedPropertySetterOperation;
@@ -204,13 +218,11 @@ describe("validateInterface - members", () => {
 
   test("propagates special operation validation - combined keywords throw", () => {
     const iface = makeInterface({
-      members: {
-        // Getter and setter keywords are mutually exclusive.
-        [NamedPropertyGetter]: makeOperation({
-          keywords: ["getter", "setter"],
-          argumentTypes: [makeDOMStringType()],
-        }) as NamedPropertyGetterOperation,
-      },
+      // Getter and setter keywords are mutually exclusive.
+      namedPropertyGetter: makeOperation({
+        keywords: ["getter", "setter"],
+        argumentTypes: [makeDOMStringType()],
+      }) as NamedPropertyGetterOperation,
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -337,7 +349,7 @@ describe("validateInterface - constructor operations", () => {
 describe("validateInterface - special operation getter requirements", () => {
   test("throws for a named property deleter without a named property getter", () => {
     const iface = makeInterface({
-      members: { [NamedPropertyDeleter]: makeNamedDeleter() },
+      namedPropertyDeleter: makeNamedDeleter(),
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -345,10 +357,10 @@ describe("validateInterface - special operation getter requirements", () => {
 
   test("does not throw for a named property deleter with a named property getter", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [NamedPropertyDeleter]: makeNamedDeleter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertyDeleter: makeNamedDeleter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -357,7 +369,7 @@ describe("validateInterface - special operation getter requirements", () => {
 
   test("throws for a named property setter without a named property getter", () => {
     const iface = makeInterface({
-      members: { [NamedPropertySetter]: makeNamedSetter() },
+      namedPropertySetter: makeNamedSetter(),
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -365,10 +377,10 @@ describe("validateInterface - special operation getter requirements", () => {
 
   test("does not throw for a named property setter with a named property getter", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [NamedPropertySetter]: makeNamedSetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertySetter: makeNamedSetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -377,7 +389,7 @@ describe("validateInterface - special operation getter requirements", () => {
 
   test("throws for an indexed property setter without an indexed property getter", () => {
     const iface = makeInterface({
-      members: { [IndexedPropertySetter]: makeIndexedSetter() },
+      indexedPropertySetter: makeIndexedSetter(),
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -387,9 +399,11 @@ describe("validateInterface - special operation getter requirements", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [IndexedPropertySetter]: makeIndexedSetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      indexedPropertySetter: makeIndexedSetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -398,9 +412,9 @@ describe("validateInterface - special operation getter requirements", () => {
 
   test("does not throw for a named property getter alone", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      namedPropertyGetter: makeNamedGetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -408,19 +422,238 @@ describe("validateInterface - special operation getter requirements", () => {
   });
 });
 
-describe("validateInterface - at most one special operation of each variety", () => {
-  test("throws when a stray indexed property getter shadows the registered one", () => {
-    const iface = makeInterface({
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-special-operation
+ *
+ * An interface defines a special operation in the field of its variety rather
+ * than under a key of the member table, because the canonical declaration of
+ * one carries no identifier to be keyed by. It is a member all the same, held
+ * to the invariants of § 2.5.6 and to the ones every operation must uphold.
+ */
+describe("validateInterface - the special operations an interface defines", () => {
+  function makeIndexedInterface(
+    getter: IndexedPropertyGetterOperation,
+  ): Interface {
+    return makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
-        // A second indexed getter declared as an ordinary named member.
-        item: [makeIndexedGetter()],
+      },
+      indexedPropertyGetter: getter,
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
+        indexedPropertyDeterminator: () => undefined,
+      },
+    });
+  }
+
+  test("does not throw for a well-formed one", () => {
+    expect(() =>
+      validateInterface(makeIndexedInterface(makeUnnamedIndexedGetter())),
+    ).not.toThrow();
+  });
+
+  test("rejects one that combines the keywords of two varieties", () => {
+    // § 2.5.6 gives each declaration one variety; "getter setter" matches none.
+    const getter = makeOperation({
+      identifier: undefined,
+      keywords: ["getter", "setter"],
+      argumentTypes: [makeUnsignedLongType()],
+    }) as IndexedPropertyGetterOperation;
+
+    expect(() => validateInterface(makeIndexedInterface(getter))).toThrow(
+      /must not combine/i,
+    );
+  });
+
+  test("rejects one declared static", () => {
+    const getter = makeOperation({
+      identifier: undefined,
+      keywords: ["getter", "static"],
+      argumentTypes: [makeUnsignedLongType()],
+    }) as IndexedPropertyGetterOperation;
+
+    expect(() => validateInterface(makeIndexedInterface(getter))).toThrow(
+      /must not be static/i,
+    );
+  });
+
+  test("rejects an argument list that declares an identifier twice", () => {
+    const getter = makeOperation({
+      identifier: undefined,
+      keywords: ["getter"],
+      arguments: [
+        { type: makeUnsignedLongType(), identifier: "index" },
+        { type: makeUnsignedLongType(), identifier: "index" },
+      ],
+    }) as IndexedPropertyGetterOperation;
+
+    expect(() => validateInterface(makeIndexedInterface(getter))).toThrow(
+      /declared twice/i,
+    );
+  });
+
+  test("rejects an argument declared with a default value but not optional", () => {
+    const getter = makeOperation({
+      identifier: undefined,
+      keywords: ["getter"],
+      arguments: [
+        { type: makeUnsignedLongType(), identifier: "index", defaultValue: 0 },
+      ],
+    }) as IndexedPropertyGetterOperation;
+
+    expect(() => validateInterface(makeIndexedInterface(getter))).toThrow(
+      /can be declared with a default value/i,
+    );
+  });
+
+  test("rejects a named property getter that does not take a DOMString", () => {
+    const iface = makeInterface({
+      namedPropertyGetter: makeOperation({
+        identifier: undefined,
+        keywords: ["getter"],
+        argumentTypes: [makeLongType()],
+      }) as NamedPropertyGetterOperation,
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
+        namedPropertyDeterminator: () => undefined,
       },
     });
 
-    expect(() => validateInterface(iface)).toThrow(TypeError);
+    expect(() => validateInterface(iface)).toThrow(/single "DOMString"/);
+  });
+});
+
+/**
+ * @see https://webidl.spec.whatwg.org/#idl-special-operations
+ *
+ * § 2.5.6: declaring a special operation with an identifier "is equivalent to
+ * separating the special operation out into its own declaration without an
+ * identifier". Both halves of that equivalence are kept, so an interface that
+ * names a special operation must also declare it as a member under that name —
+ * which is what gives it a property of its own. These interfaces are built by
+ * hand, because the `makeInterface` helper supplies the second declaration.
+ */
+describe("validateInterface - a named special operation is a member too", () => {
+  function makeRawInterface(overrides: Partial<Interface>): Interface {
+    return {
+      identifier: "Example",
+      extendedAttributes: { [Exposed]: "*" },
+      inherit: null,
+      staticMembers: {},
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
+      },
+      members: {},
+      ...overrides,
+    };
+  }
+
+  test("does not throw when it is declared under its identifier", () => {
+    const getter = makeNamedGetter();
+
+    expect(() =>
+      validateInterface(
+        makeRawInterface({
+          members: { namedItem: [getter] },
+          namedPropertyGetter: getter,
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  test("throws when it is not declared as a member at all", () => {
+    expect(() =>
+      validateInterface(
+        makeRawInterface({ namedPropertyGetter: makeNamedGetter() }),
+      ),
+    ).toThrow(/must also be a member under it/);
+  });
+
+  test("throws when the member under that identifier is a different operation", () => {
+    expect(() =>
+      validateInterface(
+        makeRawInterface({
+          members: { namedItem: [makeOperation({ identifier: "namedItem" })] },
+          namedPropertyGetter: makeNamedGetter(),
+        }),
+      ),
+    ).toThrow(/must also be a member under it/);
+  });
+
+  test("throws when the member under that identifier is an attribute", () => {
+    expect(() =>
+      validateInterface(
+        makeRawInterface({
+          members: {
+            namedItem: makeAttribute({
+              type: makeDOMStringType(),
+              identifier: "namedItem",
+            }),
+          },
+          namedPropertyGetter: makeNamedGetter(),
+        }),
+      ),
+    ).toThrow(/must also be a member under it/);
+  });
+
+  test("does not throw when it is declared among overloads under that identifier", () => {
+    const getter = makeNamedGetter();
+
+    expect(() =>
+      validateInterface(
+        makeRawInterface({
+          members: {
+            namedItem: [
+              getter,
+              makeOperation({
+                identifier: "namedItem",
+                argumentTypes: [makeLongType()],
+              }),
+            ],
+          },
+          namedPropertyGetter: getter,
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  test("says nothing about one declared without an identifier", () => {
+    expect(() =>
+      validateInterface(
+        makeRawInterface({
+          namedPropertyGetter: makeUnnamedNamedGetter(),
+          behaviors: {
+            supportedPropertyNames: makeSupportedPropertyNames(),
+            namedPropertyDeterminator: () => undefined,
+          },
+        }),
+      ),
+    ).not.toThrow();
+  });
+});
+
+describe("validateInterface - at most one special operation of each variety", () => {
+  const makeStrayIndexedGetter = () =>
+    makeOperation({
+      identifier: "at",
+      keywords: ["getter"],
+      argumentTypes: [makeUnsignedLongType()],
+    });
+
+  test("throws when a stray indexed property getter shadows the defined one", () => {
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        // A second indexed getter declared as an ordinary named member.
+        at: [makeStrayIndexedGetter()],
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/not the one the interface/);
   });
 
   test("finds a stray special operation hidden among overloads", () => {
@@ -429,26 +662,36 @@ describe("validateInterface - at most one special operation of each variety", ()
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
-        item: [makeOperation({ identifier: "item" }), makeIndexedGetter()],
+        at: [makeOperation({ identifier: "at" }), makeStrayIndexedGetter()],
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
-    expect(() => validateInterface(iface)).toThrow(TypeError);
+    expect(() => validateInterface(iface)).toThrow(/not the one the interface/);
   });
 
-  test("throws when a stray named property deleter shadows the registered one", () => {
+  test("throws when a stray named property deleter shadows the defined one", () => {
     const iface = makeInterface({
       members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
-        [NamedPropertyDeleter]: makeNamedDeleter(),
-        remove: [makeNamedDeleter()],
+        remove: [
+          makeOperation({
+            identifier: "remove",
+            keywords: ["deleter"],
+            argumentTypes: [makeDOMStringType()],
+          }),
+        ],
+      },
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertyDeleter: makeNamedDeleter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
-    expect(() => validateInterface(iface)).toThrow(TypeError);
+    expect(() => validateInterface(iface)).toThrow(/not the one the interface/);
   });
 });
 
@@ -457,8 +700,8 @@ describe("validateInterface - supported property behaviors", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
       },
+      indexedPropertyGetter: makeIndexedGetter(),
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -468,8 +711,10 @@ describe("validateInterface - supported property behaviors", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -478,7 +723,7 @@ describe("validateInterface - supported property behaviors", () => {
 
   test("throws for a named property getter without supported property names", () => {
     const iface = makeInterface({
-      members: { [NamedPropertyGetter]: makeNamedGetter() },
+      namedPropertyGetter: makeNamedGetter(),
     });
 
     expect(() => validateInterface(iface)).toThrow(TypeError);
@@ -486,9 +731,9 @@ describe("validateInterface - supported property behaviors", () => {
 
   test("does not throw for a named property getter with supported property names", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      namedPropertyGetter: makeNamedGetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -499,9 +744,9 @@ describe("validateInterface - supported property behaviors", () => {
 describe("validateInterface - indexed properties length attribute", () => {
   test("throws for an indexed property getter without a length attribute", () => {
     const iface = makeInterface({
-      members: {
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -515,8 +760,10 @@ describe("validateInterface - indexed properties length attribute", () => {
           type: makeDOMStringType(),
           identifier: "length",
         }),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -527,8 +774,10 @@ describe("validateInterface - indexed properties length attribute", () => {
     const iface = makeInterface({
       members: {
         length: [makeOperation({ identifier: "length" })],
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -537,9 +786,9 @@ describe("validateInterface - indexed properties length attribute", () => {
 
   test("does not require a length attribute without indexed properties", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      namedPropertyGetter: makeNamedGetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -552,8 +801,10 @@ describe("validateInterface - unnamed indexed property getter", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeUnnamedIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+      indexedPropertyGetter: makeUnnamedIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -564,9 +815,11 @@ describe("validateInterface - unnamed indexed property getter", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeUnnamedIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
-        [IndexedPropertyDeterminator]: () => undefined,
+      },
+      indexedPropertyGetter: makeUnnamedIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
+        indexedPropertyDeterminator: () => undefined,
       },
     });
 
@@ -577,8 +830,10 @@ describe("validateInterface - unnamed indexed property getter", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -591,9 +846,11 @@ describe("validateInterface - unnamed indexed property setter", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
-        [IndexedPropertySetter]: makeUnnamedIndexedSetter(),
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      indexedPropertySetter: makeUnnamedIndexedSetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
       },
     });
 
@@ -604,10 +861,12 @@ describe("validateInterface - unnamed indexed property setter", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
-        [IndexedPropertySetter]: makeUnnamedIndexedSetter(),
-        [NewIndexedPropertySetter]: () => undefined,
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      indexedPropertySetter: makeUnnamedIndexedSetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
+        newIndexedPropertySetter: () => undefined,
       },
     });
 
@@ -618,11 +877,13 @@ describe("validateInterface - unnamed indexed property setter", () => {
     const iface = makeInterface({
       members: {
         length: makeLengthAttribute(),
-        [IndexedPropertyGetter]: makeIndexedGetter(),
-        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
-        [IndexedPropertySetter]: makeUnnamedIndexedSetter(),
-        [NewIndexedPropertySetter]: () => undefined,
-        [ExistingIndexedPropertySetter]: () => undefined,
+      },
+      indexedPropertyGetter: makeIndexedGetter(),
+      indexedPropertySetter: makeUnnamedIndexedSetter(),
+      behaviors: {
+        supportedPropertyIndices: makeSupportedPropertyIndices(),
+        newIndexedPropertySetter: () => undefined,
+        existingIndexedPropertySetter: () => undefined,
       },
     });
 
@@ -633,9 +894,9 @@ describe("validateInterface - unnamed indexed property setter", () => {
 describe("validateInterface - unnamed named property getter", () => {
   test("throws without steps to determine the value of a named property", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeUnnamedNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
+      namedPropertyGetter: makeUnnamedNamedGetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -644,10 +905,10 @@ describe("validateInterface - unnamed named property getter", () => {
 
   test("does not throw once those steps are provided", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeUnnamedNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
-        [NamedPropertyDeterminator]: () => undefined,
+      namedPropertyGetter: makeUnnamedNamedGetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
+        namedPropertyDeterminator: () => undefined,
       },
     });
 
@@ -658,10 +919,10 @@ describe("validateInterface - unnamed named property getter", () => {
 describe("validateInterface - unnamed named property setter", () => {
   test("throws without steps to set new and existing named properties", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
-        [NamedPropertySetter]: makeUnnamedNamedSetter(),
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertySetter: makeUnnamedNamedSetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -670,12 +931,12 @@ describe("validateInterface - unnamed named property setter", () => {
 
   test("does not throw once both new and existing steps are provided", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
-        [NamedPropertySetter]: makeUnnamedNamedSetter(),
-        [NewNamedPropertySetter]: () => undefined,
-        [ExistingNamedPropertySetter]: () => undefined,
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertySetter: makeUnnamedNamedSetter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
+        newNamedPropertySetter: () => undefined,
+        existingNamedPropertySetter: () => undefined,
       },
     });
 
@@ -686,10 +947,10 @@ describe("validateInterface - unnamed named property setter", () => {
 describe("validateInterface - unnamed named property deleter", () => {
   test("throws without steps to delete an existing named property", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
-        [NamedPropertyDeleter]: makeUnnamedNamedDeleter(),
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertyDeleter: makeUnnamedNamedDeleter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
       },
     });
 
@@ -698,11 +959,11 @@ describe("validateInterface - unnamed named property deleter", () => {
 
   test("does not throw once those steps are provided", () => {
     const iface = makeInterface({
-      members: {
-        [NamedPropertyGetter]: makeNamedGetter(),
-        [SupportedPropertyNames]: makeSupportedPropertyNames(),
-        [NamedPropertyDeleter]: makeUnnamedNamedDeleter(),
-        [ExistingNamedPropertyDeleter]: () => undefined,
+      namedPropertyGetter: makeNamedGetter(),
+      namedPropertyDeleter: makeUnnamedNamedDeleter(),
+      behaviors: {
+        supportedPropertyNames: makeSupportedPropertyNames(),
+        existingNamedPropertyDeleter: () => undefined,
       },
     });
 

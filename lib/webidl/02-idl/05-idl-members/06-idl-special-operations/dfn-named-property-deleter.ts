@@ -1,20 +1,10 @@
-import {
-  ExistingNamedPropertyDeleter,
-  NamedPropertyGetter,
-  isDOMStringType,
-  type Interface,
-  type Operation,
-} from "@webidl";
+import { isDOMStringType, type Interface, type Operation } from "@webidl";
 import type { NamedPropertyDeleterOperation } from "./02-idl-named-properties";
 
-/** @see https://webidl.spec.whatwg.org/#dfn-named-property-deleter */
-export const NamedPropertyDeleter: unique symbol = Symbol(
-  "NamedPropertyDeleter",
-);
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [NamedPropertyDeleter]?: NamedPropertyDeleterOperation;
+  interface Interface {
+    /** @see https://webidl.spec.whatwg.org/#dfn-named-property-deleter */
+    namedPropertyDeleter?: NamedPropertyDeleterOperation;
   }
 }
 
@@ -39,8 +29,8 @@ export function validateNamedPropertyDeleterConstraints(
   // § 2.5.6: "If it has a named property deleter, then it must also have a named
   // property getter."
   if (
-    NamedPropertyDeleter in iface.members &&
-    !(NamedPropertyGetter in iface.members)
+    iface.namedPropertyDeleter !== undefined &&
+    !(iface.namedPropertyGetter !== undefined)
   ) {
     throw TypeError(
       "An interface with a named property deleter must also have a named property getter.",
@@ -51,11 +41,11 @@ export function validateNamedPropertyDeleterConstraints(
   // When the deleter is declared without an identifier the interface must instead
   // supply the anonymous steps to delete an existing named property; a named
   // deleter deletes through its own steps.
-  const deleter = iface.members[NamedPropertyDeleter];
+  const deleter = iface.namedPropertyDeleter;
   if (
     deleter !== undefined &&
     deleter.identifier === undefined &&
-    !(ExistingNamedPropertyDeleter in iface.members)
+    iface.behaviors.existingNamedPropertyDeleter === undefined
   ) {
     throw TypeError(
       "An interface with an unnamed named property deleter must define the steps to delete an existing named property.",

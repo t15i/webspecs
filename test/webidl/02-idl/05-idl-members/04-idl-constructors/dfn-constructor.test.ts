@@ -25,6 +25,7 @@ function makeInterface(members: Interface["members"] = {}): Interface {
     inherit: null,
     members,
     staticMembers: {},
+    behaviors: {},
   };
 }
 

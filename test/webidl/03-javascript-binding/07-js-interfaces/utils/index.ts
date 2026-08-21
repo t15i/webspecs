@@ -7,6 +7,7 @@ export function makeInterface(overrides: Partial<Interface> = {}): Interface {
     extendedAttributes: { [Exposed]: "*" },
     inherit: null,
     staticMembers: {},
+    behaviors: {},
     members: {},
     ...overrides,
   };

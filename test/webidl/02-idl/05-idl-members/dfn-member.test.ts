@@ -135,11 +135,13 @@ describe("validateMemberSlot - overloads", () => {
 /**
  * @see https://webidl.spec.whatwg.org/#dfn-member
  *
- * The member table also carries the machinery of special operations under
- * symbol keys, and those are not members; both walks pass over them. A slot
- * holds every operation overloaded under one identifier, so `iterateMembers`
- * reports the identifier once per overload while `iterateMemberSlots` reports
- * it once with all of them.
+ * Every key of the member table is an identifier naming a member: the special
+ * operations an interface defines are held in fields of their own, and the
+ * algorithms it supplies in prose in `behaviors`. So the walk covers every key
+ * and skips nothing — anything that is not a well-formed member reaches
+ * `validateMemberSlot`, which reports it. A slot holds every operation
+ * overloaded under one identifier, so `iterateMembers` reports the identifier
+ * once per overload while `iterateMemberSlots` reports it once with all of them.
  */
 describe("iterateMemberSlots", () => {
   test("yields each slot with the identifier it is declared under", () => {
@@ -160,25 +162,13 @@ describe("iterateMemberSlots", () => {
     );
   });
 
-  test("passes over a symbol-keyed slot", () => {
-    const marker = Symbol("marker");
-    const attribute = makeAttribute({
-      type: makeDOMStringType(),
-      identifier: "label",
-    });
+  test("yields a value that is not a well-formed member, rather than skipping it", () => {
+    // Skipping it here would let `validateInterface` accept it silently.
+    const determinator = (() => true) as never;
 
-    expect([
-      ...iterateMemberSlots({
-        [marker]: (() => undefined) as never,
-        label: attribute,
-      }),
-    ]).toEqual([["label", attribute]]);
-  });
-
-  test("passes over a value that is not a member", () => {
-    expect([
-      ...iterateMemberSlots({ determinator: (() => true) as never }),
-    ]).toEqual([]);
+    expect([...iterateMemberSlots({ determinator })]).toEqual([
+      ["determinator", determinator],
+    ]);
   });
 
   test("yields an empty slot, which is not a well-formed member", () => {

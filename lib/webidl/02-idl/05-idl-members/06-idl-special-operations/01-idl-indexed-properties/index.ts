@@ -1,6 +1,4 @@
 import {
-  IndexedPropertyGetter,
-  SupportedPropertyIndices,
   isAttribute,
   isIntegerType,
   type Interface,
@@ -35,7 +33,7 @@ export type IndexedPropertySetterOperation<
 export function validateIndexedPropertiesLengthAttribute(
   iface: Interface,
 ): void {
-  if (!(IndexedPropertyGetter in iface.members)) {
+  if (!(iface.indexedPropertyGetter !== undefined)) {
     return;
   }
 
@@ -62,8 +60,8 @@ export function validateSupportedPropertyIndicesDefined(
   iface: Interface,
 ): void {
   if (
-    IndexedPropertyGetter in iface.members &&
-    !(SupportedPropertyIndices in iface.members)
+    iface.indexedPropertyGetter !== undefined &&
+    iface.behaviors.supportedPropertyIndices === undefined
   ) {
     throw TypeError(
       "An interface that supports indexed properties must define its supported property indices.",

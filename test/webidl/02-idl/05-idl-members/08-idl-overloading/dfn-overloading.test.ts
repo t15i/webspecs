@@ -9,7 +9,12 @@
  * bigint argument must not sit opposite a numeric one at that index.
  */
 import { describe, expect, test } from "vitest";
-import { Exposed, validateInterface, type Interface } from "lib/webidl";
+import {
+  Exposed,
+  validateInterface,
+  type IndexedPropertyGetterOperation,
+  type Interface,
+} from "lib/webidl";
 
 import { makeAttribute, makeConstructor, makeOperation } from "../utils";
 import {
@@ -20,6 +25,7 @@ import {
   makeLongType,
   makeNullableType,
   makePromiseType,
+  makeUnsignedLongType,
   makeUSVStringType,
 } from "../../13-idl-types/utils";
 
@@ -29,6 +35,7 @@ function makeInterface(overrides: Partial<Interface> = {}): Interface {
     extendedAttributes: { [Exposed]: "*" },
     inherit: null,
     staticMembers: {},
+    behaviors: {},
     members: {},
     ...overrides,
   };
@@ -312,20 +319,35 @@ describe("validateInterface - promise-returning overloads", () => {
 /**
  * @see https://webidl.spec.whatwg.org/#idl-overloading
  *
- * The rules are about operations overloaded under an identifier, so the slots
- * that hold anything else are passed over: the symbol-keyed slots that carry
- * the machinery of special operations, and the members of another kind.
+ * The rules are about operations overloaded under an identifier, so what an
+ * identifier does not name is passed over: the special operations the interface
+ * defines in a field of their own, and the members of another kind.
  */
-describe("validateInterface - slots that are not overloaded operations", () => {
-  test("passes over a symbol-keyed slot", () => {
-    const marker = Symbol("marker");
+describe("validateInterface - members that are not overloaded operations", () => {
+  test("passes over a special operation the interface defines", () => {
     const iface = makeInterface({
       members: {
-        [marker]: () => undefined,
+        length: makeAttribute({
+          type: makeUnsignedLongType(),
+          identifier: "length",
+          keywords: ["readonly"],
+        }),
         f: [
           makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
           makeOperation({ identifier: "f", argumentTypes: [] }),
         ],
+      },
+      indexedPropertyGetter: makeOperation({
+        identifier: undefined,
+        keywords: ["getter"],
+        argumentTypes: [makeUnsignedLongType()],
+      }) as IndexedPropertyGetterOperation,
+      behaviors: {
+        supportedPropertyIndices: () => ({
+          has: () => false,
+          *[Symbol.iterator]() {},
+        }),
+        indexedPropertyDeterminator: () => undefined,
       },
     });
 

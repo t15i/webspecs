@@ -424,6 +424,7 @@ export function makePlatformObject(id: string = "Unnamed"): PlatformObject {
     inherit: null,
     members: {},
     staticMembers: {},
+    behaviors: {},
   });
 
   return obj as PlatformObject;

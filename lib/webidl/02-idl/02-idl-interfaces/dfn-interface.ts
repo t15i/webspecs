@@ -1,7 +1,9 @@
 import {
   isIdentifier,
   iterateMemberSlots,
+  iterateSpecialOperations,
   validateMemberSlot,
+  validateOperation,
   validateStaticMemberSlot,
 } from "@webidl";
 import type { MemberSlot, Identifier } from "@webidl";
@@ -24,6 +26,9 @@ export interface InterfaceMembers {
   [key: Identifier]: MemberSlot;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface InterfaceBehaviors {}
+
 /** @see https://webidl.spec.whatwg.org/#dfn-interface */
 export interface Interface {
   inherit: Interface | null;
@@ -31,6 +36,7 @@ export interface Interface {
   identifier: Identifier;
   staticMembers: InterfaceStaticMembers;
   members: InterfaceMembers;
+  behaviors: InterfaceBehaviors;
 }
 
 export { interfaceExtraValidationRules };
@@ -48,6 +54,10 @@ export function validateInterface(iface: Interface): void {
 
   for (const [, slot] of iterateMemberSlots(iface.staticMembers)) {
     validateStaticMemberSlot(slot);
+  }
+
+  for (const operation of iterateSpecialOperations(iface)) {
+    validateOperation(operation);
   }
 
   for (const rule of interfaceExtraValidationRules) {
