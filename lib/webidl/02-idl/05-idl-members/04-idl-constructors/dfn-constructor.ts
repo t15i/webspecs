@@ -1,4 +1,5 @@
 import {
+  asMemberList,
   validateArgumentList,
   type ArgumentList,
   type Interface,
@@ -26,8 +27,9 @@ export interface ConstructorOperation<Args extends Type[] = Type[]> {
 /** @see https://webidl.spec.whatwg.org/#idl-constructors */
 export function isConstructorOperation(
   member: Member,
-): member is ConstructorOperation {
-  return member.kind === "constructor";
+): member is ConstructorOperation | ConstructorOperation[] {
+  const first = Array.isArray(member) ? member[0] : member;
+  return first?.kind === "constructor";
 }
 
 /** @see https://webidl.spec.whatwg.org/#idl-constructors */
@@ -36,10 +38,16 @@ export function validateConstructorOperation(ctor: ConstructorOperation): void {
 }
 
 /** @see https://webidl.spec.whatwg.org/#idl-constructors */
-export function getOwnConstructorOperation(
+export function getOwnConstructorOperations(
   iface: Interface,
-): ConstructorOperation | undefined {
-  return Object.hasOwn(iface.members, "constructor")
-    ? (iface.members["constructor"] as unknown as ConstructorOperation)
-    : undefined;
+): ConstructorOperation[] {
+  if (!Object.hasOwn(iface.members, "constructor")) {
+    return [];
+  }
+
+  return asMemberList(
+    iface.members["constructor"] as unknown as
+      | ConstructorOperation
+      | ConstructorOperation[],
+  );
 }

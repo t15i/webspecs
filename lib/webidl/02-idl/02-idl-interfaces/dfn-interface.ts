@@ -1,4 +1,5 @@
 import {
+  asMemberList,
   isAttribute,
   isConstructorOperation,
   isIdentifier,
@@ -47,6 +48,7 @@ export function validateInterface(iface: Interface): void {
     const member = Reflect.get(iface.members, key) as Member;
 
     if (
+      Array.isArray(member) ||
       isAttribute(member) ||
       isOperation(member) ||
       isConstructorOperation(member)
@@ -58,10 +60,12 @@ export function validateInterface(iface: Interface): void {
   for (const key of Reflect.ownKeys(iface.staticMembers)) {
     const staticMember = Reflect.get(iface.staticMembers, key) as Member;
 
-    if (!staticMember.keywords.has("static")) {
-      throw TypeError(
-        `A static member of an interface must be declared with the "static" keyword.`,
-      );
+    for (const member of asMemberList(staticMember)) {
+      if (!member.keywords.has("static")) {
+        throw TypeError(
+          `A static member of an interface must be declared with the "static" keyword.`,
+        );
+      }
     }
     validateMember(staticMember);
   }

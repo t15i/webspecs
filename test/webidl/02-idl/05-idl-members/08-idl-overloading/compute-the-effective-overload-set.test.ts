@@ -12,8 +12,8 @@
  * declares one stands for several allowable invocations: the set holds one tuple
  * per argument count the operation can be called with.
  *
- * (Overloading itself is not yet modelled — the algorithm only ever contributes
- * the signatures of the operation's own declaration.)
+ * When an identifier is overloaded its slot holds every operation declared under
+ * it, and each of them contributes its own signatures to the same set.
  */
 import { describe, expect, test } from "vitest";
 import {
@@ -265,5 +265,89 @@ describe("computeEffectiveOverloadSet - optional arguments", () => {
 
     expect([...S].map(([, typeList]) => typeList.length)).toEqual([2, 1]);
     expect([...S].every(([callable]) => callable === ctor)).toBe(true);
+  });
+});
+
+describe("computeEffectiveOverloadSet - overloaded operations", () => {
+  test("contributes the signatures of every overload under the identifier", () => {
+    const longType = makeLongType();
+    const stringType = makeDOMStringType();
+    const f1 = makeOperation({
+      identifier: "f",
+      argumentTypes: [stringType],
+    });
+    const f2 = makeOperation({
+      identifier: "f",
+      argumentTypes: [longType, stringType],
+    });
+    const f3 = makeOperation({ identifier: "f", argumentTypes: [] });
+    const iface = makeInterface({ members: { f: [f1, f2, f3] } });
+
+    const S = computeEffectiveOverloadSet("regular", "f", 2, iface);
+
+    expect([...S]).toEqual([
+      [f1, [stringType], ["required"]],
+      [f2, [longType, stringType], ["required", "required"]],
+      [f3, [], []],
+    ]);
+  });
+
+  test("expands the optional arguments of each overload separately", () => {
+    const longType = makeLongType();
+    const stringType = makeDOMStringType();
+    const f1 = makeOperation({
+      identifier: "f",
+      arguments: [
+        { type: stringType, identifier: "a" },
+        { type: stringType, identifier: "b", keywords: ["optional"] },
+      ],
+    });
+    const f2 = makeOperation({
+      identifier: "f",
+      arguments: [{ type: longType, identifier: "n" }],
+    });
+    const iface = makeInterface({ members: { f: [f1, f2] } });
+
+    const S = computeEffectiveOverloadSet("regular", "f", 2, iface);
+
+    expect([...S].map(([callable, typeList]) => [callable, typeList])).toEqual([
+      [f1, [stringType, stringType]],
+      [f1, [stringType]],
+      [f2, [longType]],
+    ]);
+  });
+
+  test("reads overloaded static operations from the static members", () => {
+    const one = makeOperation({
+      identifier: "make",
+      keywords: ["static"],
+      argumentTypes: [makeLongType()],
+    });
+    const two = makeOperation({
+      identifier: "make",
+      keywords: ["static"],
+      argumentTypes: [],
+    });
+    const iface = makeInterface({ staticMembers: { make: [one, two] } });
+
+    const S = computeEffectiveOverloadSet("static", "make", 1, iface);
+
+    expect([...S].map(([callable]) => callable)).toEqual([one, two]);
+  });
+
+  test("contributes every overload of a constructor operation", () => {
+    const one = makeConstructor({ argumentTypes: [makeLongType()] });
+    const two = makeConstructor({ argumentTypes: [] });
+    const iface = makeInterface({ members: { constructor: [one, two] } });
+
+    const S = computeEffectiveOverloadSet("constructor", "Example", 1, iface);
+
+    expect([...S].map(([callable]) => callable)).toEqual([one, two]);
+  });
+
+  test("is empty for a slot holding no operations at all", () => {
+    const iface = makeInterface({ members: { f: [] } });
+
+    expect(computeEffectiveOverloadSet("regular", "f", 0, iface).size).toBe(0);
   });
 });

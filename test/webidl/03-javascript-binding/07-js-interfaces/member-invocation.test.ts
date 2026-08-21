@@ -16,10 +16,12 @@
  */
 import { describe, expect, test } from "vitest";
 import {
+  LegacyUnforgeable,
   defineRegularAttributes,
   defineRegularOperations,
   type Interface,
   type Operation,
+  type Type,
 } from "lib/webidl";
 
 import { makeInterface } from "./utils";
@@ -357,5 +359,120 @@ describe("optional arguments of an operation", () => {
     const draw = (instance as { draw: (...a: unknown[]) => unknown }).draw;
 
     expect(() => draw.call(instance)).toThrow(/at least 1 argument/i);
+  });
+});
+
+describe("overloaded operations on the prototype", () => {
+  test("an overloaded identifier gets a single property", () => {
+    const iface = makeInterface({
+      members: {
+        f: [
+          makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+          makeOperation({ identifier: "f", argumentTypes: [] }),
+        ],
+      },
+    });
+
+    const proto = prototypeOf(iface);
+
+    expect(Object.getOwnPropertyNames(proto)).toEqual(["f"]);
+    expect(typeof methodOf(proto, "f")).toBe("function");
+  });
+
+  test("dispatches to the overload the argument selects", () => {
+    const calls: string[] = [];
+    const iface = makeInterface({
+      identifier: "Painter",
+      members: {
+        f: [
+          makeOperation({
+            identifier: "f",
+            arguments: [{ type: makeDOMStringType(), identifier: "label" }],
+            methodSteps(...args: unknown[]) {
+              calls.push(`string:${String(args[0])}`);
+              return undefined;
+            },
+          }),
+          makeOperation({
+            identifier: "f",
+            arguments: [{ type: makeLongType(), identifier: "n" }],
+            methodSteps(...args: unknown[]) {
+              calls.push(`long:${String(args[0])}`);
+              return undefined;
+            },
+          }),
+        ],
+      },
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+    const f = (instance as { f: (...a: unknown[]) => unknown }).f;
+
+    f.call(instance, "text");
+    f.call(instance, 12);
+
+    expect(calls).toEqual(["string:text", "long:12"]);
+  });
+
+  test("converts the result through the selected overload's return type", () => {
+    const iface = makeInterface({
+      identifier: "Painter",
+      members: {
+        f: [
+          makeOperation({
+            identifier: "f",
+            arguments: [{ type: makeDOMStringType(), identifier: "label" }],
+            returnType: makeDOMStringType(),
+            methodSteps: () => 12 as never,
+          }),
+          makeOperation({
+            identifier: "f",
+            arguments: [{ type: makeLongType(), identifier: "n" }],
+            returnType: makeLongType(),
+            methodSteps: () => "7" as never,
+          }),
+        ],
+      },
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+    const f = (instance as { f: (...a: unknown[]) => unknown }).f;
+
+    expect(f.call(instance, "text")).toBe("12");
+    expect(f.call(instance, 5)).toBe(7);
+  });
+
+  test("the function's length is the shortest overload's argument count", () => {
+    const iface = makeInterface({
+      members: {
+        f: [
+          makeOperation({
+            identifier: "f",
+            argumentTypes: [makeDOMStringType(), makeDOMStringType()],
+          }),
+          makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+        ],
+      },
+    });
+
+    expect(methodOf(prototypeOf(iface), "f").length).toBe(1);
+  });
+
+  test("the property is skipped when every overload is unforgeable", () => {
+    // Per [LegacyUnforgeable] the attribute must appear on all operations with
+    // the same identifier, so the whole slot moves to the unforgeable pass.
+    const unforgeable = (type: Type) =>
+      makeOperation({
+        identifier: "f",
+        argumentTypes: [type],
+        extendedAttributes: { [LegacyUnforgeable]: undefined },
+      });
+    const iface = makeInterface({
+      members: {
+        f: [unforgeable(makeLongType()), unforgeable(makeDOMStringType())],
+      },
+    });
+
+    expect(Object.getOwnPropertyNames(prototypeOf(iface))).toEqual([]);
   });
 });

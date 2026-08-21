@@ -6,3 +6,4 @@ export * from "./type-list";
 export * from "./optionality-list";
 export * from "./compute-the-effective-overload-set";
 export * from "./dfn-distinguishing-argument-index";
+export * from "./dfn-overloading";

@@ -1,4 +1,10 @@
+import {
+  validateExposedOverloads,
+  validateUnforgeableOverloads,
+} from "@webidl";
 import type { Interface } from "@webidl";
+
+import { validateOverloads } from "../05-idl-members/08-idl-overloading";
 
 import {
   validateAtMostOneSpecialOperationPerVariety,
@@ -34,4 +40,7 @@ export const interfaceExtraValidationRules: ((iface: Interface) => void)[] = [
   validateNamedPropertyGetterDeterminator,
   validateNamedPropertySetterConstraints,
   validateNamedPropertyDeleterConstraints,
+  validateOverloads,
+  validateExposedOverloads,
+  validateUnforgeableOverloads,
 ];

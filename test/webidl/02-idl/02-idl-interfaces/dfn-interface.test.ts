@@ -417,6 +417,21 @@ describe("validateInterface - at most one special operation of each variety", ()
     expect(() => validateInterface(iface)).toThrow(TypeError);
   });
 
+  test("finds a stray special operation hidden among overloads", () => {
+    // A slot holding overloads must be searched through: a special operation
+    // declared as one of them is just as stray as a lone one.
+    const iface = makeInterface({
+      members: {
+        length: makeLengthAttribute(),
+        [IndexedPropertyGetter]: makeIndexedGetter(),
+        [SupportedPropertyIndices]: makeSupportedPropertyIndices(),
+        item: [makeOperation({ identifier: "item" }), makeIndexedGetter()],
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
+  });
+
   test("throws when a stray named property deleter shadows the registered one", () => {
     const iface = makeInterface({
       members: {
@@ -686,5 +701,58 @@ describe("validateInterface - unnamed named property deleter", () => {
     });
 
     expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
+describe("validateInterface - overloaded members", () => {
+  test("does not throw for a valid set of overloads", () => {
+    const iface = makeInterface({
+      members: {
+        f: [
+          makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+          makeOperation({ identifier: "f", argumentTypes: [] }),
+        ],
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("validates every overload, not just the first", () => {
+    const iface = makeInterface({
+      members: {
+        f: [
+          makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+          makeOperation({
+            identifier: "f",
+            arguments: [
+              { type: makeLongType(), identifier: "x" },
+              { type: makeLongType(), identifier: "x" },
+            ],
+          }),
+        ],
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/declared twice/i);
+  });
+
+  test("requires the static keyword on every overload of a static member", () => {
+    const iface = makeInterface({
+      staticMembers: {
+        make: [
+          makeOperation({ identifier: "make", keywords: ["static"] }),
+          makeOperation({ identifier: "make" }),
+        ],
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/"static" keyword/);
+  });
+
+  test("throws for a slot holding no members at all", () => {
+    const iface = makeInterface({ members: { f: [] } });
+
+    expect(() => validateInterface(iface)).toThrow(TypeError);
   });
 });

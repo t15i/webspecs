@@ -39,7 +39,7 @@ export interface Attribute<T extends Type = Type> {
 }
 
 export function isAttribute(member: Member): member is Attribute {
-  return member.kind === "attribute";
+  return !Array.isArray(member) && member.kind === "attribute";
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-attribute */

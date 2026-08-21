@@ -2,6 +2,7 @@ import {
   isIdentifier,
   isSpecialOperation,
   isStaticOperation,
+  validateArgumentDefaultValue,
   validateSpecialOperation,
   validateStaticOperation,
 } from "@webidl";
@@ -16,25 +17,12 @@ export interface Argument<T extends Type = Type> {
 
   /** @see https://webidl.spec.whatwg.org/#dfn-optional-argument */
   keywords: Set<string>;
-
-  /** @see https://webidl.spec.whatwg.org/#dfn-optional-argument-default-value */
-  defaultValue?: ReturnType<T> | undefined;
 }
 
 /** @see https://webidl.spec.whatwg.org/#prod-ArgumentList */
 export type ArgumentList<Args extends readonly Type[]> = {
   [K in keyof Args]: Argument<Args[K]>;
 };
-
-/** @see https://webidl.spec.whatwg.org/#dfn-optional-argument */
-export function isOptionalArgument(argument: Argument): boolean {
-  return argument.keywords.has("optional");
-}
-
-/** @see https://webidl.spec.whatwg.org/#dfn-optional-argument-default-value */
-export function isDeclaredWithDefaultValue(argument: Argument): boolean {
-  return Object.hasOwn(argument, "defaultValue");
-}
 
 /** @see https://webidl.spec.whatwg.org/#prod-ArgumentList */
 export function validateArgumentList(args: readonly Argument[]): void {
@@ -54,11 +42,7 @@ export function validateArgumentList(args: readonly Argument[]): void {
     }
     identifiers.add(argument.identifier);
 
-    if (isDeclaredWithDefaultValue(argument) && !isOptionalArgument(argument)) {
-      throw TypeError(
-        `Only an optional argument can be declared with a default value, but "${argument.identifier}" is not optional.`,
-      );
-    }
+    validateArgumentDefaultValue(argument);
   }
 }
 
@@ -90,8 +74,9 @@ export interface Operation<
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */
-export function isOperation(member: Member): member is Operation {
-  return member.kind === "operation";
+export function isOperation(member: Member): member is Operation | Operation[] {
+  const first = Array.isArray(member) ? member[0] : member;
+  return first?.kind === "operation";
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-operation */

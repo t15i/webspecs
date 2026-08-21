@@ -56,7 +56,7 @@ export function createOperationFunction(
         // extended attribute..."
         R = Reflect.apply(operation.methodSteps, idlObject, values);
 
-        return op.returnType(R);
+        return operation.returnType(R);
       } catch (e) {
         if (e instanceof TypeError) {
           e.message = `Failed to execute '${id}' on '${target.identifier}': ${e.message}`;

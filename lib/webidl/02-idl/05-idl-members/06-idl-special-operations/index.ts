@@ -1,4 +1,5 @@
 import {
+  asMemberList,
   IndexedPropertyGetter,
   IndexedPropertySetter,
   NamedPropertyDeleter,
@@ -49,11 +50,15 @@ export function validateAtMostOneSpecialOperationPerVariety(
   for (const key of Reflect.ownKeys(iface.members)) {
     const member = Reflect.get(iface.members, key) as Member;
 
-    if (
-      isOperation(member) &&
-      isSpecialOperation(member) &&
-      !specialOperations.has(member)
-    ) {
+    if (!isOperation(member)) {
+      continue;
+    }
+
+    for (const op of asMemberList(member)) {
+      if (!isSpecialOperation(op) || specialOperations.has(op)) {
+        continue;
+      }
+
       throw TypeError(
         `On a given interface, there must exist at most one named property deleter, and at most one of each variety of getter and setter. The member "${String(key)}" is a special operation but is not registered under a special-operation slot.`,
       );

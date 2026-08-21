@@ -4,6 +4,10 @@
  * `validateMember` dispatches to the validator for the member's kind — attribute,
  * operation, or constructor operation — and rejects any other kind. Errors raised
  * by the per-kind validators propagate unchanged.
+ *
+ * A member slot may hold several operations overloaded under one identifier, in
+ * which case every one of them is validated, and the group itself must be a
+ * well-formed one: non-empty, of a single kind, and declaring one identifier.
  */
 import { describe, expect, test } from "vitest";
 import { validateMember, type Member } from "lib/webidl";
@@ -56,5 +60,67 @@ describe("validateMember", () => {
     const bogus = { kind: "mystery", keywords: new Set<string>() };
 
     expect(() => validateMember(bogus as unknown as Member)).toThrow(TypeError);
+  });
+});
+
+describe("validateMember - overloads", () => {
+  test("does not throw for a well-formed group of overloads", () => {
+    expect(() =>
+      validateMember([
+        makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+        makeOperation({ identifier: "f" }),
+      ]),
+    ).not.toThrow();
+  });
+
+  test("validates every overload of the group", () => {
+    expect(() =>
+      validateMember([
+        makeOperation({ identifier: "f" }),
+        makeOperation({ identifier: "1bad" }),
+      ]),
+    ).toThrow(TypeError);
+  });
+
+  test("throws for an empty group", () => {
+    expect(() => validateMember([])).toThrow(/at least one operation/i);
+  });
+
+  test("throws when the group mixes operations of different kinds", () => {
+    expect(() =>
+      validateMember([
+        makeOperation({ identifier: "f" }),
+        makeConstructor({}),
+      ] as unknown as Member),
+    ).toThrow(/same kind/i);
+  });
+
+  test("throws when the overloads declare different identifiers", () => {
+    expect(() =>
+      validateMember([
+        makeOperation({ identifier: "f" }),
+        makeOperation({ identifier: "g" }),
+      ]),
+    ).toThrow(/must all declare it/i);
+  });
+
+  test("does not throw for a group of constructor overloads", () => {
+    expect(() =>
+      validateMember([
+        makeConstructor({ argumentTypes: [makeLongType()] }),
+        makeConstructor({}),
+      ]),
+    ).not.toThrow();
+  });
+
+  test("validates every constructor overload of the group", () => {
+    expect(() =>
+      validateMember([
+        makeConstructor({}),
+        makeConstructor({
+          arguments: [{ type: makeLongType(), identifier: "1bad" }],
+        }),
+      ]),
+    ).toThrow(TypeError);
   });
 });
