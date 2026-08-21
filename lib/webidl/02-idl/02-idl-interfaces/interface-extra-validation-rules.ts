@@ -1,14 +1,6 @@
 import {
-  validateExposedOverloads,
-  validateUnforgeableInheritance,
-  validateUnforgeableOverloads,
-} from "@webidl";
-import type { Interface } from "@webidl";
-
-import { validateOverloads } from "../05-idl-members/08-idl-overloading";
-
-import {
   validateAtMostOneSpecialOperationPerVariety,
+  validateExposedOverloads,
   validateIndexedPropertiesLengthAttribute,
   validateIndexedPropertyGetterDeterminator,
   validateIndexedPropertySetterConstraints,
@@ -16,9 +8,13 @@ import {
   validateNamedPropertyGetterDeterminator,
   validateNamedPropertySetterConstraints,
   validateNamedSpecialOperationsAreMembers,
+  validateOverloads,
   validateSupportedPropertyIndicesDefined,
   validateSupportedPropertyNamesDefined,
-} from "../05-idl-members/06-idl-special-operations";
+  validateUnforgeableInheritance,
+  validateUnforgeableOverloads,
+} from "@webidl";
+import type { Interface } from "@webidl";
 
 // The registry of extra interface-level validation rules, assembled from the
 // rule functions exported alongside the constructs they constrain.

@@ -1,4 +1,6 @@
 import {
+  isAttribute,
+  isConstructorOperation,
   isIdentifier,
   iterateMemberSlots,
   iterateSpecialOperations,
@@ -41,6 +43,26 @@ export interface Interface {
 
 export { interfaceExtraValidationRules };
 
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-member
+ */
+function validateMemberIdentifier(
+  identifier: Identifier,
+  slot: MemberSlot,
+): void {
+  if (isConstructorOperation(slot)) {
+    return;
+  }
+
+  for (const member of isAttribute(slot) ? [slot] : slot) {
+    if (member.identifier !== identifier) {
+      throw TypeError(
+        `A member of an interface is held under the identifier it declares, but "${identifier}" holds "${String(member.identifier)}".`,
+      );
+    }
+  }
+}
+
 export function validateInterface(iface: Interface): void {
   if (!isIdentifier(iface.identifier)) {
     throw TypeError(
@@ -48,11 +70,13 @@ export function validateInterface(iface: Interface): void {
     );
   }
 
-  for (const [, slot] of iterateMemberSlots(iface.members)) {
+  for (const [identifier, slot] of iterateMemberSlots(iface.members)) {
+    validateMemberIdentifier(identifier, slot);
     validateRegularMemberSlot(slot);
   }
 
-  for (const [, slot] of iterateMemberSlots(iface.staticMembers)) {
+  for (const [identifier, slot] of iterateMemberSlots(iface.staticMembers)) {
+    validateMemberIdentifier(identifier, slot);
     validateStaticMemberSlot(slot);
   }
 

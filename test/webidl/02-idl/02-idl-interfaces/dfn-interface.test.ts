@@ -243,6 +243,75 @@ describe("validateInterface - members", () => {
   });
 });
 
+/**
+ * @see https://webidl.spec.whatwg.org/#dfn-member
+ *
+ * The member table is keyed by identifier, so a member is held under the one it
+ * declares. A constructor operation is the exception the key already names: it
+ * declares no identifier at all.
+ */
+describe("validateInterface - a member is held under the identifier it declares", () => {
+  test("does not throw when the two agree", () => {
+    const iface = makeInterface({
+      members: {
+        f: [makeOperation({ identifier: "f" })],
+        attr: makeAttribute({ type: makeLongType(), identifier: "attr" }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+
+  test("throws for an operation held under another identifier", () => {
+    const iface = makeInterface({
+      members: { f: [makeOperation({ identifier: "g" })] },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/"f" holds "g"/);
+  });
+
+  test("throws when only one overload declares another identifier", () => {
+    const iface = makeInterface({
+      members: {
+        f: [
+          makeOperation({ identifier: "f", argumentTypes: [makeLongType()] }),
+          makeOperation({ identifier: "g" }),
+        ],
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/"f" holds "g"/);
+  });
+
+  test("throws for an attribute held under another identifier", () => {
+    const iface = makeInterface({
+      members: {
+        a: makeAttribute({ type: makeLongType(), identifier: "b" }),
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/"a" holds "b"/);
+  });
+
+  test("applies to the static members too", () => {
+    const iface = makeInterface({
+      staticMembers: {
+        f: [makeOperation({ identifier: "g", keywords: ["static"] })],
+      },
+    });
+
+    expect(() => validateInterface(iface)).toThrow(/"f" holds "g"/);
+  });
+
+  test("passes over a constructor operation, which declares none", () => {
+    const iface = makeInterface({
+      members: { constructor: [makeConstructor({})] },
+    });
+
+    expect(() => validateInterface(iface)).not.toThrow();
+  });
+});
+
 describe("validateInterface - regular members must not carry the static keyword", () => {
   test("throws for a member of the regular table declared static", () => {
     const iface = makeInterface({
