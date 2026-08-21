@@ -99,11 +99,17 @@ describe("isDistinguishable - the distinguishability table", () => {
  * @see https://webidl.spec.whatwg.org/#dfn-distinguishable
  *
  * Requirement (a) below the table: two interface-like types are distinguishable
- * only when they are not the same and no single platform object implements
- * both, which inheritance in either direction would let it do. Sameness is
- * identity of the type: type objects are interned, so one IDL type is one
- * object. The types compared are the innermost ones the fourth step identifies,
- * which is why a nullable wrapper does not make a type differ from itself.
+ * only when "the two identified interface-like types are not the same, and no
+ * single platform object implements both". The two halves do separate work.
+ *
+ * Sameness is sameness of the interface, not of the object standing for its
+ * type: nothing interns those, so one interface can be named by two of them.
+ * The second half is inheritance in either direction, which is what lets one
+ * platform object implement both — and it cannot stand in for the first, since
+ * an interface does not inherit from itself.
+ *
+ * The types compared are the innermost ones the fourth step identifies, which
+ * is why a nullable wrapper does not make a type differ from itself.
  */
 describe("isDistinguishable - interface-like types", () => {
   const Interface1Type = makeInterfaceType(Interface1);
@@ -113,12 +119,50 @@ describe("isDistinguishable - interface-like types", () => {
     expect(isDistinguishable(Interface1Type, Interface1Type)).toBe(false);
   });
 
+  test("an interface named by two type objects is not distinguishable from itself", () => {
+    // Every platform object implementing it implements both, so they are the
+    // same interface however many objects stand for its type.
+    expect(
+      isDistinguishable(
+        makeInterfaceType(Interface1),
+        makeInterfaceType(Interface1),
+      ),
+    ).toBe(false);
+  });
+
   test("an interface type is not distinguishable from one it inherits from", () => {
     class Derived extends Interface1 {}
 
     expect(isDistinguishable(makeInterfaceType(Derived), Interface1Type)).toBe(
       false,
     );
+  });
+
+  test("is decided the same way round either way", () => {
+    class Derived extends Interface1 {}
+
+    expect(isDistinguishable(Interface1Type, makeInterfaceType(Derived))).toBe(
+      false,
+    );
+  });
+
+  test("an interface type is not distinguishable from one further up its chain", () => {
+    class Middle extends Interface1 {}
+    class Leaf extends Middle {}
+
+    expect(isDistinguishable(makeInterfaceType(Leaf), Interface1Type)).toBe(
+      false,
+    );
+  });
+
+  test("two interface types with a common ancestor are distinguishable", () => {
+    // Neither inherits the other, so no one platform object implements both.
+    class One extends Interface1 {}
+    class Other extends Interface1 {}
+
+    expect(
+      isDistinguishable(makeInterfaceType(One), makeInterfaceType(Other)),
+    ).toBe(true);
   });
 
   test("a nullable interface type is not distinguishable from the same interface type", () => {

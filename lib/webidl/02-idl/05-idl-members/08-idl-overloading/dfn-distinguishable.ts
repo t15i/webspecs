@@ -90,11 +90,14 @@ export const DISTINCTION_TABLE: Map<
     new Map<string, boolean | DistinctionRequirement>([
       [
         INTERFACELIKE_DISTINCTION_CATEGORIES,
+        // TODO (buffer source types): the interface-like category also covers
+        // them, and they carry no interface to compare, so they will need a
+        // branch of their own here once they are modelled.
         function (first, second) {
           const one = first as InterfaceType;
           const other = second as InterfaceType;
           return (
-            one !== other &&
+            one.T !== other.T &&
             !(
               one.T.prototype instanceof other.T ||
               other.T.prototype instanceof one.T
