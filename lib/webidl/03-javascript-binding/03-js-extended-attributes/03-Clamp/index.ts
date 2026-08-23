@@ -1,5 +1,5 @@
 /** @see https://webidl.spec.whatwg.org/#Clamp */
-export const Clamp: unique symbol = Symbol("Clamp");
+export const Clamp = "clamp";
 
 declare module "@webidl" {
   interface TypeExtendedAttributes {

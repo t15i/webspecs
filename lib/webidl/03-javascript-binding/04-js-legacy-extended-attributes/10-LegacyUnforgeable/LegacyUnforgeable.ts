@@ -1,11 +1,11 @@
 /** @see https://webidl.spec.whatwg.org/#LegacyUnforgeable */
-export const LegacyUnforgeable: unique symbol = Symbol("LegacyUnforgeable");
+export const LegacyUnforgeable = "legacyUnforgeable";
 
 declare module "@webidl" {
   interface AttributeExtendedAttributes {
-    [LegacyUnforgeable]?: void;
+    [LegacyUnforgeable]?: null;
   }
   interface OperationExtendedAttributes {
-    [LegacyUnforgeable]?: void;
+    [LegacyUnforgeable]?: null;
   }
 }

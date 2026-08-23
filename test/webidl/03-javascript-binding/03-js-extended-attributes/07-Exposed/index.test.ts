@@ -11,7 +11,12 @@
  * `validateInterface`.
  */
 import { describe, expect, test } from "vitest";
-import { Exposed, validateInterface, type Interface } from "lib/webidl";
+import {
+  Exposed,
+  validateInterface,
+  type Interface,
+  type OperationExtendedAttributes,
+} from "lib/webidl";
 
 import {
   makeAttribute,
@@ -35,8 +40,8 @@ function makeInterface(overrides: Partial<Interface> = {}): Interface {
 }
 
 function makeOverloads(
-  first: Record<symbol, string> = {},
-  second: Record<symbol, string> = {},
+  first: OperationExtendedAttributes = {},
+  second: OperationExtendedAttributes = {},
 ) {
   return [
     makeOperation({

@@ -37,7 +37,7 @@ function makeUnforgeableAttribute() {
     type: makeDOMStringType(),
     identifier: "id",
     keywords: ["readonly"],
-    extendedAttributes: { [LegacyUnforgeable]: undefined },
+    extendedAttributes: { [LegacyUnforgeable]: null },
   });
 }
 

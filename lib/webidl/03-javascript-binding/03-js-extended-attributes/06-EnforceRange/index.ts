@@ -1,5 +1,5 @@
 /** @see https://webidl.spec.whatwg.org/#EnforceRange */
-export const EnforceRange: unique symbol = Symbol("EnforceRange");
+export const EnforceRange = "enforceRange";
 
 declare module "@webidl" {
   interface TypeExtendedAttributes {

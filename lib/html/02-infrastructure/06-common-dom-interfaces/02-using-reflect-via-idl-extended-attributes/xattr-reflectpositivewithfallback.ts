@@ -1,7 +1,5 @@
 /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#xattr-reflectpositivewithfallback */
-export const ReflectPositiveWithFallback: unique symbol = Symbol(
-  "ReflectPositiveWithFallback",
-);
+export const ReflectPositiveWithFallback = "reflectPositiveWithFallback";
 
 declare module "@webidl" {
   interface AttributeExtendedAttributes {

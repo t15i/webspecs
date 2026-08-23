@@ -1,4 +1,5 @@
 import { validateAttributeLocalName } from "@dom";
+import { isAnnotatedWithExtAttribute } from "@webidl";
 import type { RegularAttribute } from "@webidl";
 
 import { Reflect } from "./xattr-reflect";
@@ -53,7 +54,7 @@ export function validateReflectionExtendedAttributes(
 ): void {
   let hasTrigger = false;
   for (const trigger of reflectionTriggers) {
-    if (!(trigger in attr.extendedAttributes)) continue;
+    if (!isAnnotatedWithExtAttribute(attr, trigger)) continue;
 
     // Only one of the reflection triggers can be used at a time.
     if (hasTrigger) {
@@ -76,14 +77,17 @@ export function validateReflectionExtendedAttributes(
   // metadata implies is enforced by that metadata's own validation rule (see
   // the § "reflecting content attributes" concepts), so it is not repeated
   // here.
-  if (ReflectURL in attr.extendedAttributes && !("treatedAsURL" in attr)) {
+  if (
+    isAnnotatedWithExtAttribute(attr, ReflectURL) &&
+    !("treatedAsURL" in attr)
+  ) {
     throw TypeError(
       `[ReflectURL] requires the reflected IDL attribute to be treated as a URL.`,
     );
   }
 
   if (
-    ReflectNonNegative in attr.extendedAttributes &&
+    isAnnotatedWithExtAttribute(attr, ReflectNonNegative) &&
     !("limitedToOnlyNonNegativeNumbers" in attr)
   ) {
     throw TypeError(
@@ -92,7 +96,7 @@ export function validateReflectionExtendedAttributes(
   }
 
   if (
-    ReflectPositive in attr.extendedAttributes &&
+    isAnnotatedWithExtAttribute(attr, ReflectPositive) &&
     !("limitedToOnlyPositiveNumbers" in attr)
   ) {
     throw TypeError(
@@ -101,7 +105,7 @@ export function validateReflectionExtendedAttributes(
   }
 
   if (
-    ReflectPositiveWithFallback in attr.extendedAttributes &&
+    isAnnotatedWithExtAttribute(attr, ReflectPositiveWithFallback) &&
     !("limitedToOnlyPositiveNumbersWithFallback" in attr)
   ) {
     throw TypeError(
@@ -109,15 +113,15 @@ export function validateReflectionExtendedAttributes(
     );
   }
 
-  if (ReflectDefault in attr.extendedAttributes) {
+  if (isAnnotatedWithExtAttribute(attr, ReflectDefault)) {
     // [ReflectDefault] must appear alongside one of the reflection triggers
     // that map to a plain value (i.e. not [ReflectSetter] or [ReflectURL]).
     if (
       !(
-        Reflect in attr.extendedAttributes ||
-        ReflectNonNegative in attr.extendedAttributes ||
-        ReflectPositive in attr.extendedAttributes ||
-        ReflectPositiveWithFallback in attr.extendedAttributes
+        isAnnotatedWithExtAttribute(attr, Reflect) ||
+        isAnnotatedWithExtAttribute(attr, ReflectNonNegative) ||
+        isAnnotatedWithExtAttribute(attr, ReflectPositive) ||
+        isAnnotatedWithExtAttribute(attr, ReflectPositiveWithFallback)
       )
     ) {
       throw TypeError(
@@ -132,9 +136,9 @@ export function validateReflectionExtendedAttributes(
     }
   }
 
-  if (ReflectRange in attr.extendedAttributes) {
+  if (isAnnotatedWithExtAttribute(attr, ReflectRange)) {
     // [ReflectRange] must appear alongside [Reflect].
-    if (!(Reflect in attr.extendedAttributes)) {
+    if (!isAnnotatedWithExtAttribute(attr, Reflect)) {
       throw TypeError(`[ReflectRange] must only appear alongside [Reflect].`);
     }
 
