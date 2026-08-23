@@ -2,7 +2,7 @@ import { isOperation, iterateMemberSlots } from "@webidl";
 import type { Interface } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#Exposed */
-export const Exposed: unique symbol = Symbol("Exposed");
+export const Exposed = "exposed";
 
 declare module "@webidl" {
   interface InterfaceExtendedAttributes {

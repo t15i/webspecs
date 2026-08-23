@@ -26,7 +26,7 @@ export type AnnotatedWithExtendedAttribute<
   K extends keyof ExtendedAttributesOf<V>,
 > = V & {
   extendedAttributes: {
-    [P in K]-?: NonNullable<ExtendedAttributesOf<V>[P]>;
+    [P in K]-?: Exclude<ExtendedAttributesOf<V>[P], undefined>;
   };
 };
 
@@ -46,10 +46,10 @@ export function isAnnotatedWithExtAttribute<
 
 export function isAnnotatedWithExtAttribute(
   value: Interface | Member | Type,
-  xattr: symbol,
+  xattr: string,
 ): boolean {
   if (typeof value === "function") {
-    return xattr in getExtAttributesAssociatedWith(value);
+    return Object.hasOwn(getExtAttributesAssociatedWith(value), xattr);
   }
-  return xattr in value.extendedAttributes;
+  return Object.hasOwn(value.extendedAttributes, xattr);
 }

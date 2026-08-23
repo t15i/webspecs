@@ -1,5 +1,5 @@
 /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#xattr-reflectsetter */
-export const ReflectSetter: unique symbol = Symbol("ReflectSetter");
+export const ReflectSetter = "reflectSetter";
 
 declare module "@webidl" {
   interface AttributeExtendedAttributes {

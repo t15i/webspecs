@@ -49,7 +49,7 @@ describe("isUnforgeableOnInterface", () => {
     const iface = makeInterface({
       attr: makeAttribute({
         type: makeDOMStringType(),
-        extendedAttributes: { [LegacyUnforgeable]: undefined },
+        extendedAttributes: { [LegacyUnforgeable]: null },
       }),
     });
     expect(isUnforgeableOnInterface(iface, "attr")).toBe(true);
@@ -59,7 +59,7 @@ describe("isUnforgeableOnInterface", () => {
     const iface = makeInterface({
       operate: [
         makeOperation({
-          extendedAttributes: { [LegacyUnforgeable]: undefined },
+          extendedAttributes: { [LegacyUnforgeable]: null },
         }),
       ],
     });
@@ -82,7 +82,7 @@ describe("isUnforgeableOnInterface - overloaded operations", () => {
   const unforgeable = () =>
     makeOperation({
       identifier: "f",
-      extendedAttributes: { [LegacyUnforgeable]: undefined },
+      extendedAttributes: { [LegacyUnforgeable]: null },
     });
 
   test("returns true when every overload is declared with the attribute", () => {
@@ -119,7 +119,7 @@ describe("validateInterface - [LegacyUnforgeable] across overloads", () => {
     makeOperation({
       identifier: "f",
       argumentTypes: [type],
-      extendedAttributes: { [LegacyUnforgeable]: undefined },
+      extendedAttributes: { [LegacyUnforgeable]: null },
     });
 
   test("does not throw when every overload declares it", () => {
@@ -163,13 +163,13 @@ describe("validateInterface - [LegacyUnforgeable] against inherited interfaces",
     makeAttribute({
       type: makeDOMStringType(),
       identifier: "attr",
-      extendedAttributes: { [LegacyUnforgeable]: undefined },
+      extendedAttributes: { [LegacyUnforgeable]: null },
     });
 
   const unforgeableOperation = () =>
     makeOperation({
       identifier: "f",
-      extendedAttributes: { [LegacyUnforgeable]: undefined },
+      extendedAttributes: { [LegacyUnforgeable]: null },
     });
 
   test("throws when the interface redeclares an unforgeable attribute of its parent", () => {
@@ -255,7 +255,7 @@ describe("validateInterface - [LegacyUnforgeable] against inherited interfaces",
  * member — an interface being only the usual way in.
  */
 describe("where [LegacyUnforgeable] may appear", () => {
-  const unforgeable = { [LegacyUnforgeable]: undefined };
+  const unforgeable = { [LegacyUnforgeable]: null };
 
   test("is rejected on a static attribute validated on its own", () => {
     expect(() =>

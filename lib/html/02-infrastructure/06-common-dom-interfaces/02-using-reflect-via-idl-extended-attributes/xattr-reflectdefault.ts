@@ -1,5 +1,5 @@
 /** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#xattr-reflectdefault */
-export const ReflectDefault: unique symbol = Symbol("ReflectDefault");
+export const ReflectDefault = "reflectDefault";
 
 declare module "@webidl" {
   interface AttributeExtendedAttributes {

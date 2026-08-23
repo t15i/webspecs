@@ -480,7 +480,7 @@ describe("overloaded operations on the prototype", () => {
       makeOperation({
         identifier: "f",
         argumentTypes: [type],
-        extendedAttributes: { [LegacyUnforgeable]: undefined },
+        extendedAttributes: { [LegacyUnforgeable]: null },
       });
     const iface = makeInterface({
       members: {
@@ -513,7 +513,7 @@ describe("unforgeable members", () => {
     makeOperation({
       identifier: "f",
       argumentTypes: [type],
-      extendedAttributes: { [LegacyUnforgeable]: undefined },
+      extendedAttributes: { [LegacyUnforgeable]: null },
     });
 
   test("an overloaded unforgeable operation is defined as one property", () => {
@@ -549,7 +549,7 @@ describe("unforgeable members", () => {
           type: makeLongType(),
           identifier: "count",
           getterSteps: readCount,
-          extendedAttributes: { [LegacyUnforgeable]: undefined },
+          extendedAttributes: { [LegacyUnforgeable]: null },
         }),
       },
     });
