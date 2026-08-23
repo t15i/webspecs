@@ -1,9 +1,9 @@
-import { isUnforgeable, type Interface, type Member } from "@webidl";
+import { isUnforgeable, type Attribute, type Interface } from "@webidl";
 
 import { defineAttributes } from "./define-the-attributes";
 import { collectAttributes } from "./utils";
 
-const isNotUnforgeable = (member: Member) => !isUnforgeable(member);
+const isNotUnforgeable = (attribute: Attribute) => !isUnforgeable(attribute);
 
 /** @see https://webidl.spec.whatwg.org/#define-the-regular-attributes */
 export function defineRegularAttributes(

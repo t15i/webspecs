@@ -1,13 +1,10 @@
 import { type PropertyName } from "@ecma";
 import { PlatformObject } from "@webidl";
 
-export const ExistingNamedPropertyDeleter: unique symbol = Symbol(
-  "ExistingNamedPropertyDeleter",
-);
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [ExistingNamedPropertyDeleter]?(index: PropertyName): void;
+  interface InterfaceBehaviors {
+    /** @see https://webidl.spec.whatwg.org/#dfn-delete-an-existing-named-property */
+    existingNamedPropertyDeleter?(index: PropertyName): void;
   }
 }
 
@@ -16,7 +13,7 @@ export function deleteExistingNamedProperty(
   o: PlatformObject,
   property: PropertyName,
 ): void {
-  return PlatformObject.getPrimaryInterfaceOf(o).members[
-    ExistingNamedPropertyDeleter
-  ]!.call(o, property);
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
+  return iface.behaviors.existingNamedPropertyDeleter!.call(o, property);
 }

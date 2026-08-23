@@ -9,7 +9,6 @@
 import { describe, expect, test } from "vitest";
 import {
   Exposed,
-  IndexedPropertyGetter,
   isInterfaceSupportIndexedProperties,
   type IndexedPropertyGetterOperation,
   type Interface,
@@ -24,6 +23,7 @@ function makeInterface(overrides: Partial<Interface> = {}): Interface {
     extendedAttributes: { [Exposed]: "*" },
     inherit: null,
     staticMembers: {},
+    behaviors: {},
     members: {},
     ...overrides,
   };
@@ -39,7 +39,7 @@ function makeIndexedGetter(): IndexedPropertyGetterOperation {
 describe("isInterfaceSupportIndexedProperties", () => {
   test("is true for an interface declaring an indexed property getter", () => {
     const iface = makeInterface({
-      members: { [IndexedPropertyGetter]: makeIndexedGetter() },
+      indexedPropertyGetter: makeIndexedGetter(),
     });
 
     expect(isInterfaceSupportIndexedProperties(iface)).toBe(true);
@@ -47,7 +47,7 @@ describe("isInterfaceSupportIndexedProperties", () => {
 
   test("is false for an interface without an indexed property getter", () => {
     const iface = makeInterface({
-      members: { foo: makeOperation({ identifier: "foo" }) },
+      members: { foo: [makeOperation({ identifier: "foo" })] },
     });
 
     expect(isInterfaceSupportIndexedProperties(iface)).toBe(false);

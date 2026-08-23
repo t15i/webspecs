@@ -10,7 +10,7 @@
 import { describe, expect, test } from "vitest";
 import {
   Exposed,
-  getOwnConstructorOperation,
+  getOwnConstructorOperations,
   isConstructorOperation,
   type Interface,
 } from "lib/webidl";
@@ -25,41 +25,49 @@ function makeInterface(members: Interface["members"] = {}): Interface {
     inherit: null,
     members,
     staticMembers: {},
+    behaviors: {},
   };
 }
 
 describe("isConstructorOperation", () => {
-  test("returns true for a constructor member", () => {
-    expect(isConstructorOperation(makeConstructor({}))).toBe(true);
+  test("returns true for a slot of constructor operations", () => {
+    expect(isConstructorOperation([makeConstructor({})])).toBe(true);
   });
 
-  test("returns false for an operation member", () => {
-    expect(isConstructorOperation(makeOperation({}))).toBe(false);
+  test("returns false for a slot of operations", () => {
+    expect(isConstructorOperation([makeOperation({})])).toBe(false);
   });
 
-  test("returns false for an attribute member", () => {
+  test("returns false for an attribute", () => {
     expect(
       isConstructorOperation(makeAttribute({ type: makeDOMStringType() })),
     ).toBe(false);
   });
 });
 
-describe("getOwnConstructorOperation", () => {
+describe("getOwnConstructorOperations", () => {
   test("returns the constructor when the interface declares one", () => {
     const constructor = makeConstructor({ argumentTypes: [makeLongType()] });
-    const iface = makeInterface({ constructor });
-    expect(getOwnConstructorOperation(iface)).toBe(constructor);
+    const iface = makeInterface({ constructor: [constructor] });
+    expect(getOwnConstructorOperations(iface)).toEqual([constructor]);
   });
 
-  test("returns undefined when the interface declares no constructor", () => {
-    const iface = makeInterface({ operate: makeOperation({}) });
-    expect(getOwnConstructorOperation(iface)).toBeUndefined();
+  test("returns every overload when the constructor is overloaded", () => {
+    const one = makeConstructor({ argumentTypes: [makeLongType()] });
+    const two = makeConstructor({ argumentTypes: [makeDOMStringType()] });
+    const iface = makeInterface({ constructor: [one, two] });
+    expect(getOwnConstructorOperations(iface)).toEqual([one, two]);
   });
 
-  test("returns undefined for an interface with no members at all", () => {
+  test("returns an empty list when the interface declares no constructor", () => {
+    const iface = makeInterface({ operate: [makeOperation({})] });
+    expect(getOwnConstructorOperations(iface)).toEqual([]);
+  });
+
+  test("returns an empty list for an interface with no members at all", () => {
     // The lookup must not resolve up the prototype chain to the inherited
     // `Object.prototype.constructor`; an interface with no own constructor key
     // reports no constructor.
-    expect(getOwnConstructorOperation(makeInterface())).toBeUndefined();
+    expect(getOwnConstructorOperations(makeInterface())).toEqual([]);
   });
 });

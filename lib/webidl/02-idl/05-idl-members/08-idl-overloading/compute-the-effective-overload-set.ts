@@ -1,12 +1,14 @@
 import {
-  getOwnConstructorOperation,
+  getOwnConstructorOperations,
   isConstructorOperation,
   isOperation,
   isOptionalArgument,
   type Argument,
+  type ConstructorOperation,
   type Identifier,
   type Interface,
-  type Member,
+  type MemberSlot,
+  type Operation,
   type Type,
 } from "@webidl";
 
@@ -40,37 +42,38 @@ export function computeEffectiveOverloadSet(
 ): EffectiveOverloadSet {
   const S = new Set();
 
-  let op: Member | undefined;
+  let slot: MemberSlot | undefined;
   switch (kind) {
     case "regular":
-      op = iface.members[id];
+      slot = iface.members[id];
       break;
     case "static":
-      op = iface.staticMembers[id];
+      slot = iface.staticMembers[id];
       break;
     case "constructor":
-      op = getOwnConstructorOperation(iface);
+      slot = getOwnConstructorOperations(iface);
       break;
   }
 
-  if (op && (isOperation(op) || isConstructorOperation(op))) {
-    const args: readonly Argument[] = op.arguments;
+  const F: (Operation | ConstructorOperation)[] =
+    slot !== undefined && (isOperation(slot) || isConstructorOperation(slot))
+      ? slot
+      : [];
+
+  for (const X of F) {
+    const args: readonly Argument[] = X.arguments;
 
     const types: Type[] = args.map((argument) => argument.type);
     const optionalityValues: EffectiveOverloadSetOptionalityValue[] = args.map(
       (argument) => (isOptionalArgument(argument) ? "optional" : "required"),
     );
 
-    S.add([op, types, optionalityValues]);
+    S.add([X, types, optionalityValues]);
 
     for (let i = args.length - 1; i >= 0 && isOptionalArgument(args[i]!); --i) {
-      S.add([op, types.slice(0, i), optionalityValues.slice(0, i)]);
+      S.add([X, types.slice(0, i), optionalityValues.slice(0, i)]);
     }
   }
-
-  // TODO (overloading): F is built from every operation on the interface with
-  // identifier A. An interface holds at most one member per identifier, so F is
-  // a singleton and only that member contributes to S.
 
   return S as EffectiveOverloadSet;
 }

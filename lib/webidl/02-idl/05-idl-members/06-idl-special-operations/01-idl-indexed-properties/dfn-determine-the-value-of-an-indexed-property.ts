@@ -1,12 +1,9 @@
 import { PlatformObject } from "@webidl";
 
-export const IndexedPropertyDeterminator: unique symbol = Symbol(
-  "IndexedPropertyDeterminator",
-);
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [IndexedPropertyDeterminator]?(index: number): unknown;
+  interface InterfaceBehaviors {
+    /** @see https://webidl.spec.whatwg.org/#dfn-determine-the-value-of-an-indexed-property */
+    indexedPropertyDeterminator?(index: number): unknown;
   }
 }
 
@@ -15,7 +12,7 @@ export function determineValueOfIndexedProperty(
   o: PlatformObject,
   index: number,
 ): unknown {
-  return PlatformObject.getPrimaryInterfaceOf(o).members[
-    IndexedPropertyDeterminator
-  ]!.call(o, index);
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
+  return iface.behaviors.indexedPropertyDeterminator!.call(o, index);
 }

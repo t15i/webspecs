@@ -6,14 +6,11 @@ import {
 } from "@ecma";
 
 import {
-  type PlatformObject,
+  PlatformObject,
   LegacyOverrideBuiltIns,
-  IndexedPropertySetter,
-  NamedPropertySetter,
   isSupportedPropertyName,
   supportsIndexedProperties,
   supportsNamedProperties,
-  implementsInterfaceWith,
   implementsInterfaceWithExtAttribute,
   isUnforgeablePropertyName,
   invokeIndexedPropertySetter,
@@ -27,12 +24,14 @@ export function defineOwnProperty(
   p: PropertyKey,
   desc: PropertyDescriptor,
 ): boolean {
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
   if (supportsIndexedProperties(o) && isArrayIndex(p)) {
     if (isDataDescriptor(desc) === false) {
       return false;
     }
 
-    if (!implementsInterfaceWith(o, IndexedPropertySetter)) {
+    if (iface.indexedPropertySetter === undefined) {
       return false;
     }
 
@@ -53,14 +52,11 @@ export function defineOwnProperty(
       implementsInterfaceWithExtAttribute(o, LegacyOverrideBuiltIns) ||
       Object.hasOwn(o, p)
     ) {
-      if (
-        creating === false &&
-        !implementsInterfaceWith(o, NamedPropertySetter)
-      ) {
+      if (creating === false && iface.namedPropertySetter === undefined) {
         return false;
       }
 
-      if (implementsInterfaceWith(o, NamedPropertySetter)) {
+      if (iface.namedPropertySetter !== undefined) {
         if (isDataDescriptor(desc) === false) {
           return false;
         }

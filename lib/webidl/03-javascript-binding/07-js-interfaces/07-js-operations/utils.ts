@@ -1,22 +1,29 @@
-import { isOperation, type Member, type Operation } from "@webidl";
+import {
+  isOperation,
+  iterateMemberSlots,
+  type InterfaceMembers,
+  type InterfaceStaticMembers,
+  type Operation,
+} from "@webidl";
 
+/** @see https://webidl.spec.whatwg.org/#es-operations */
 export function collectOperations(
-  members: object,
-  predicate?: (op: Operation) => boolean,
+  members: InterfaceMembers | InterfaceStaticMembers,
+  predicate?: (overloads: Operation[]) => boolean,
 ): Operation[] {
   const result: Operation[] = [];
-  for (const key of Reflect.ownKeys(members)) {
-    const member = Reflect.get(members, key) as Member;
-    // Only operations with an identifier are regular/static operations that get
-    // defined as named properties. An identifier-less operation is a pure special
-    // operation and is handled by the legacy platform object machinery instead.
-    if (
-      isOperation(member) &&
-      member.identifier !== undefined &&
-      (predicate?.(member) ?? true)
-    ) {
-      result.push(member);
+
+  for (const [, slot] of iterateMemberSlots(members)) {
+    if (!isOperation(slot) || !(predicate?.(slot) ?? true)) {
+      continue;
+    }
+
+    const op = slot[0]!;
+
+    if (op.identifier !== undefined) {
+      result.push(op);
     }
   }
+
   return result;
 }

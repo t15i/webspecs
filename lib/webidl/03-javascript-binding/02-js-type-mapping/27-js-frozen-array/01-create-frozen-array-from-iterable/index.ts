@@ -8,8 +8,9 @@ import {
 /** @see https://webidl.spec.whatwg.org/#create-frozen-array-from-iterable */
 export function createFrozenArrayFromIterable<T extends Type>(
   T: T,
-  iterable: Iterable<unknown>,
+  iterable: unknown,
+  method: CallableFunction,
 ): readonly NativeType<T>[] {
-  const values = createSequenceFromIterable(T, iterable);
+  const values = createSequenceFromIterable(T, iterable, method);
   return createFrozenArray(values);
 }

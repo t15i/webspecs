@@ -5,10 +5,7 @@ import {
 } from "@ecma";
 
 import {
-  type PlatformObject,
-  IndexedPropertySetter,
-  NamedPropertySetter,
-  implementsInterfaceWith,
+  PlatformObject,
   invokeIndexedPropertySetter,
   invokeNamedPropertySetter,
   isArrayIndex,
@@ -22,13 +19,15 @@ export function set<T>(
   v: T,
   receiver: object,
 ): boolean {
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
   if (Object.is(o, receiver)) {
-    if (implementsInterfaceWith(o, IndexedPropertySetter) && isArrayIndex(p)) {
+    if (iface.indexedPropertySetter !== undefined && isArrayIndex(p)) {
       invokeIndexedPropertySetter(o, p, v);
       return true;
     }
 
-    if (implementsInterfaceWith(o, NamedPropertySetter) && isString(p)) {
+    if (iface.namedPropertySetter !== undefined && isString(p)) {
       invokeNamedPropertySetter(o, p, v);
       return true;
     }

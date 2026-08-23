@@ -1,16 +1,20 @@
-import type { Interface } from "@webidl";
-
 import {
   validateAtMostOneSpecialOperationPerVariety,
+  validateExposedOverloads,
   validateIndexedPropertiesLengthAttribute,
   validateIndexedPropertyGetterDeterminator,
   validateIndexedPropertySetterConstraints,
   validateNamedPropertyDeleterConstraints,
   validateNamedPropertyGetterDeterminator,
   validateNamedPropertySetterConstraints,
+  validateNamedSpecialOperationsAreMembers,
+  validateOverloads,
   validateSupportedPropertyIndicesDefined,
   validateSupportedPropertyNamesDefined,
-} from "../05-idl-members/06-idl-special-operations";
+  validateUnforgeableInheritance,
+  validateUnforgeableOverloads,
+} from "@webidl";
+import type { Interface } from "@webidl";
 
 // The registry of extra interface-level validation rules, assembled from the
 // rule functions exported alongside the constructs they constrain.
@@ -25,6 +29,7 @@ import {
 //   - § 2.5.11 maplike declaration: at most one map/set/iterable declaration, reserved member names (maplike not modelled).
 //   - § 2.5.12 setlike declaration: analogous constraints (setlike not modelled).
 export const interfaceExtraValidationRules: ((iface: Interface) => void)[] = [
+  validateNamedSpecialOperationsAreMembers,
   validateAtMostOneSpecialOperationPerVariety,
   validateIndexedPropertiesLengthAttribute,
   validateSupportedPropertyIndicesDefined,
@@ -34,4 +39,8 @@ export const interfaceExtraValidationRules: ((iface: Interface) => void)[] = [
   validateNamedPropertyGetterDeterminator,
   validateNamedPropertySetterConstraints,
   validateNamedPropertyDeleterConstraints,
+  validateOverloads,
+  validateExposedOverloads,
+  validateUnforgeableOverloads,
+  validateUnforgeableInheritance,
 ];

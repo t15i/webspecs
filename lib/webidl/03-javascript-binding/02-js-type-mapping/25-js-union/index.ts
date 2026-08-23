@@ -86,11 +86,11 @@ function isPlatformObjectAndTypesIncludesObjectOrInterfaceTypeImplementedBy(
 }
 
 /** @see https://webidl.spec.whatwg.org/#js-union */
-export function asUnion<UnionMembersType extends Type>(
-  this: UnionType<UnionMembersType>,
+export function asUnion<UnionMemberTypes extends Type[]>(
+  this: UnionType<UnionMemberTypes>,
   v: unknown,
-): NativeType<UnionMembersType> {
-  type T = NativeType<UnionMembersType>;
+): NativeType<UnionMemberTypes[number]> {
+  type T = NativeType<UnionMemberTypes[number]>;
 
   const types = this.flattenedMemberTypes;
 
@@ -162,10 +162,10 @@ export function asUnion<UnionMembersType extends Type>(
     if (types.has(SEQUENCE_TYPE_NAME)) {
       const method = getMethod(v, Symbol.iterator);
       if (method !== undefined) {
-        const iterable = v as Iterable<unknown>;
         return createSequenceFromIterable(
           types.get(SEQUENCE_TYPE_NAME).T,
-          iterable,
+          v,
+          method,
         ) as T;
       }
     }
@@ -173,10 +173,10 @@ export function asUnion<UnionMembersType extends Type>(
     if (types.has(FROZEN_ARRAY_TYPE_NAME)) {
       const method = getMethod(v, Symbol.iterator);
       if (method !== undefined) {
-        const iterable = v as Iterable<unknown>;
         return createFrozenArrayFromIterable(
           types.get(FROZEN_ARRAY_TYPE_NAME).T,
-          iterable,
+          v,
+          method,
         ) as T;
       }
     }

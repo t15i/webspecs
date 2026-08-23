@@ -1,4 +1,3 @@
-import { NamedPropertyGetter, SupportedPropertyNames } from "@webidl";
 import type { Interface, Type, SpecialOperation, DOMStringType } from "@webidl";
 
 export * from "./dfn-delete-an-existing-named-property";
@@ -31,8 +30,8 @@ export type NamedPropertySetterOperation<
  */
 export function validateSupportedPropertyNamesDefined(iface: Interface): void {
   if (
-    NamedPropertyGetter in iface.members &&
-    !(SupportedPropertyNames in iface.members)
+    iface.namedPropertyGetter !== undefined &&
+    iface.behaviors.supportedPropertyNames === undefined
   ) {
     throw TypeError(
       "An interface that supports named properties must define its supported property names.",

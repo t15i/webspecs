@@ -10,7 +10,6 @@ import { describe, expect, test } from "vitest";
 import {
   Exposed,
   isInterfaceSupportNamedProperties,
-  NamedPropertyGetter,
   type Interface,
   type NamedPropertyGetterOperation,
 } from "lib/webidl";
@@ -24,6 +23,7 @@ function makeInterface(overrides: Partial<Interface> = {}): Interface {
     extendedAttributes: { [Exposed]: "*" },
     inherit: null,
     staticMembers: {},
+    behaviors: {},
     members: {},
     ...overrides,
   };
@@ -39,7 +39,7 @@ function makeNamedGetter(): NamedPropertyGetterOperation {
 describe("isInterfaceSupportNamedProperties", () => {
   test("is true for an interface declaring a named property getter", () => {
     const iface = makeInterface({
-      members: { [NamedPropertyGetter]: makeNamedGetter() },
+      namedPropertyGetter: makeNamedGetter(),
     });
 
     expect(isInterfaceSupportNamedProperties(iface)).toBe(true);
@@ -47,7 +47,7 @@ describe("isInterfaceSupportNamedProperties", () => {
 
   test("is false for an interface without a named property getter", () => {
     const iface = makeInterface({
-      members: { foo: makeOperation({ identifier: "foo" }) },
+      members: { foo: [makeOperation({ identifier: "foo" })] },
     });
 
     expect(isInterfaceSupportNamedProperties(iface)).toBe(false);

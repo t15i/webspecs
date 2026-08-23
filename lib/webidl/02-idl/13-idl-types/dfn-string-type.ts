@@ -1,3 +1,5 @@
+import type { Type } from "@webidl";
+
 import { DOM_STRING_TYPE_NAME, type DOMStringType } from "./17-idl-DOMString";
 import {
   BYTE_STRING_TYPE_NAME,
@@ -18,3 +20,8 @@ export const STRING_TYPE_NAMES: Set<string> = new Set([
 export type StringType =
   // | EnumType
   DOMStringType | USVStringType | ByteStringType;
+
+/** @see https://webidl.spec.whatwg.org/#dfn-string-type */
+export function isStringType(T: Type): T is StringType {
+  return STRING_TYPE_NAMES.has(T.name);
+}

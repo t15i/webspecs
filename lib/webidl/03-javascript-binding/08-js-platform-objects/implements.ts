@@ -4,18 +4,7 @@ import {
   PlatformObject,
   type Interface,
   type InterfaceExtendedAttributes,
-  type InterfaceMembers,
 } from "@webidl";
-
-import type { PropertyKey } from "@ecma";
-
-export function implementsInterfaceWith(
-  o: object,
-  key: PropertyKey,
-): key is keyof InterfaceMembers & PropertyKey {
-  const primaryInterface = PlatformObject.getPrimaryInterfaceOf(o);
-  return primaryInterface !== undefined && key in primaryInterface.members;
-}
 
 export function implementsInterfaceWithExtAttribute(
   o: object,

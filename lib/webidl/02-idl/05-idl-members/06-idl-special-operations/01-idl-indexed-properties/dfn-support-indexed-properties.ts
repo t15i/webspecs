@@ -1,16 +1,13 @@
-import {
-  type PlatformObject,
-  IndexedPropertyGetter,
-  implementsInterfaceWith,
-  type Interface,
-} from "@webidl";
+import { PlatformObject, type Interface } from "@webidl";
 
 /** @see https://webidl.spec.whatwg.org/#dfn-support-indexed-properties */
 export function supportsIndexedProperties(obj: PlatformObject): boolean {
-  return implementsInterfaceWith(obj, IndexedPropertyGetter);
+  const iface = PlatformObject.getPrimaryInterfaceOf(obj);
+
+  return iface.indexedPropertyGetter !== undefined;
 }
 
 /** @see https://webidl.spec.whatwg.org/#dfn-support-indexed-properties */
 export function isInterfaceSupportIndexedProperties(iface: Interface): boolean {
-  return IndexedPropertyGetter in iface.members;
+  return iface.indexedPropertyGetter !== undefined;
 }

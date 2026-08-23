@@ -1,19 +1,10 @@
-import {
-  ExistingNamedPropertySetter,
-  NamedPropertyGetter,
-  NewNamedPropertySetter,
-  isDOMStringType,
-  type Interface,
-  type Operation,
-} from "@webidl";
+import { isDOMStringType, type Interface, type Operation } from "@webidl";
 import type { NamedPropertySetterOperation } from "./02-idl-named-properties";
 
-/** @see https://webidl.spec.whatwg.org/#dfn-named-property-setter */
-export const NamedPropertySetter: unique symbol = Symbol("NamedPropertySetter");
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [NamedPropertySetter]?: NamedPropertySetterOperation;
+  interface Interface {
+    /** @see https://webidl.spec.whatwg.org/#dfn-named-property-setter */
+    namedPropertySetter?: NamedPropertySetterOperation;
   }
 }
 
@@ -40,8 +31,8 @@ export function validateNamedPropertySetterConstraints(iface: Interface): void {
   // § 2.5.6: "If an interface has a setter of a given variety, then it must also
   // have a getter of that variety."
   if (
-    NamedPropertySetter in iface.members &&
-    !(NamedPropertyGetter in iface.members)
+    iface.namedPropertySetter !== undefined &&
+    !(iface.namedPropertyGetter !== undefined)
   ) {
     throw TypeError(
       "An interface with a named property setter must also have a named property getter.",
@@ -52,12 +43,12 @@ export function validateNamedPropertySetterConstraints(iface: Interface): void {
   // the setter is declared without an identifier the interface must instead
   // supply the anonymous steps to set the value of both new and existing named
   // properties; a named setter sets the value through its own steps.
-  const setter = iface.members[NamedPropertySetter];
+  const setter = iface.namedPropertySetter;
   if (
     setter !== undefined &&
     setter.identifier === undefined &&
-    (!(NewNamedPropertySetter in iface.members) ||
-      !(ExistingNamedPropertySetter in iface.members))
+    (iface.behaviors.newNamedPropertySetter === undefined ||
+      iface.behaviors.existingNamedPropertySetter === undefined)
   ) {
     throw TypeError(
       "An interface with an unnamed named property setter must define the steps to set the value of both new and existing named properties.",

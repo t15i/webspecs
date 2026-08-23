@@ -20,5 +20,5 @@ export function asSequence<T extends Type>(
     throw TypeError("The provided value cannot be converted to a sequence");
   }
 
-  return createSequenceFromIterable(this.T, v as Iterable<unknown>);
+  return createSequenceFromIterable(this.T, v, method);
 }

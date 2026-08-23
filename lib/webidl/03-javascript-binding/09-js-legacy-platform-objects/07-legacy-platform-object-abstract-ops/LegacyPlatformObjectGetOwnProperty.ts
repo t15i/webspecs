@@ -2,17 +2,12 @@ import { ordinaryGetOwnProperty, toUint32, type PropertyName } from "@ecma";
 
 import {
   PlatformObject,
-  NamedPropertyGetter,
-  NamedPropertySetter,
-  IndexedPropertyGetter,
-  IndexedPropertySetter,
   LegacyUnenumerableNamedProperties,
   supportsIndexedProperties,
   supportsNamedProperties,
   isSupportedPropertyIndex,
   determineValueOfIndexedProperty,
   determineValueOfNamedProperty,
-  implementsInterfaceWith,
   implementsInterfaceWithExtAttribute,
 } from "@webidl";
 
@@ -24,12 +19,13 @@ export function legacyPlatformObjectGetOwnProperty(
   p: PropertyName,
   ignoreNamedProps: boolean,
 ): PropertyDescriptor | undefined {
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
   if (supportsIndexedProperties(o) && isArrayIndex(p)) {
     const index = toUint32(p);
 
     if (isSupportedPropertyIndex(o, index)) {
-      const operation =
-        PlatformObject.getPrimaryInterfaceOf(o).members[IndexedPropertyGetter]!;
+      const operation = iface.indexedPropertyGetter!;
 
       let value;
       if (operation.identifier === undefined) {
@@ -42,7 +38,7 @@ export function legacyPlatformObjectGetOwnProperty(
 
       desc.value = value;
 
-      if (implementsInterfaceWith(o, IndexedPropertySetter)) {
+      if (iface.indexedPropertySetter !== undefined) {
         desc.writable = true;
       } else {
         desc.writable = false;
@@ -59,8 +55,7 @@ export function legacyPlatformObjectGetOwnProperty(
 
   if (supportsNamedProperties(o) && ignoreNamedProps === false) {
     if (isNamedPropertyVisible(p, o)) {
-      const operation =
-        PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertyGetter]!;
+      const operation = iface.namedPropertyGetter!;
 
       let value;
       if (operation.identifier === undefined) {
@@ -73,7 +68,7 @@ export function legacyPlatformObjectGetOwnProperty(
 
       desc.value = value;
 
-      if (implementsInterfaceWith(o, NamedPropertySetter)) {
+      if (iface.namedPropertySetter !== undefined) {
         desc.writable = true;
       } else {
         desc.writable = false;

@@ -2,18 +2,18 @@ import { type PropertyName, toUint32 } from "@ecma";
 
 import {
   PlatformObject,
-  NamedPropertyDeleter,
   deleteExistingNamedProperty,
   isSupportedPropertyIndex,
   supportsIndexedProperties,
   supportsNamedProperties,
-  implementsInterfaceWith,
   isArrayIndex,
   isBooleanType,
   isNamedPropertyVisible,
 } from "@webidl";
 
 export function del(o: PlatformObject, p: PropertyName): boolean {
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
   if (supportsIndexedProperties(o) && isArrayIndex(p)) {
     const index = toUint32(p);
 
@@ -29,12 +29,11 @@ export function del(o: PlatformObject, p: PropertyName): boolean {
     // TODO (Global): O does not implement an interface with the [Global] extended attribute
     isNamedPropertyVisible(p, o)
   ) {
-    if (!implementsInterfaceWith(o, NamedPropertyDeleter)) {
+    if (iface.namedPropertyDeleter === undefined) {
       return false;
     }
 
-    const operation =
-      PlatformObject.getPrimaryInterfaceOf(o).members[NamedPropertyDeleter]!;
+    const operation = iface.namedPropertyDeleter!;
 
     if (operation.identifier === undefined) {
       const result = deleteExistingNamedProperty(o, p);

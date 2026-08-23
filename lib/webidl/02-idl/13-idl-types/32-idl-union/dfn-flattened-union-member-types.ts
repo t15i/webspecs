@@ -8,9 +8,9 @@ import {
 import { isUnionType, type UnionType } from "./dfn-union-type";
 
 declare module "@webidl" {
-  interface UnionType<T extends Type = Type> {
+  interface UnionType<Ts extends Type[] = Type[]> {
     /** @see https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types */
-    flattenedMemberTypes: FlattenedMemberTypes<T>;
+    flattenedMemberTypes: FlattenedMemberTypes<Ts[number]>;
   }
 }
 

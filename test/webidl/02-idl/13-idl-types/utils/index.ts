@@ -358,11 +358,13 @@ export function makeRecordType<K extends RecordKeyType, V extends Type>(
   return fn;
 }
 
-function buildFlattenedMemberTypes<T extends Type>(
-  union: UnionType<T>,
-): FlattenedMemberTypes<T> {
-  const flat = getFlattenedMemberTypes(union) as T[];
-  const nullableIncluded = includesNullableType(union);
+function buildFlattenedMemberTypes<Ts extends Type[]>(
+  union: UnionType<Ts>,
+): FlattenedMemberTypes<Ts[number]> {
+  type T = Ts[number];
+
+  const flat = getFlattenedMemberTypes(union as UnionType) as T[];
+  const nullableIncluded = includesNullableType(union as UnionType);
 
   const matchGroup = (groupName: string, name: string): boolean => {
     if (groupName === STRING_TYPE_NAME) {
@@ -394,13 +396,20 @@ function buildFlattenedMemberTypes<T extends Type>(
   }) as unknown as FlattenedMemberTypes<T>;
 }
 
-export function makeUnionType<T extends Type>(memberTypes: T[]): UnionType<T> {
-  const fn = function (this: UnionType<T>, v: unknown): ReturnType<T> {
-    return asUnion.call(fn as UnionType<T>, v) as ReturnType<T>;
-  } as UnionType<T>;
+export function makeUnionType<Ts extends Type[]>(
+  memberTypes: Ts,
+): UnionType<Ts> {
+  const fn = function (
+    this: UnionType<Ts>,
+    v: unknown,
+  ): ReturnType<Ts[number]> {
+    return asUnion.call(fn as UnionType<Ts>, v) as ReturnType<Ts[number]>;
+  } as UnionType<Ts>;
   defineName(fn, UNION_TYPE_NAME);
   fn.memberTypes = memberTypes;
-  fn.numberOfNullableMemberTypes = getNumberOfNullableMemberTypes(fn);
+  fn.numberOfNullableMemberTypes = getNumberOfNullableMemberTypes(
+    fn as UnionType,
+  );
   fn.flattenedMemberTypes = buildFlattenedMemberTypes(fn);
   return fn;
 }
@@ -424,6 +433,7 @@ export function makePlatformObject(id: string = "Unnamed"): PlatformObject {
     inherit: null,
     members: {},
     staticMembers: {},
+    behaviors: {},
   });
 
   return obj as PlatformObject;

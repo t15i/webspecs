@@ -16,41 +16,52 @@ import {
   BIGINT_TYPE_NAME,
   BOOLEAN_TYPE_NAME,
   CALLBACK_FUNCTION_TYPE_NAME,
+  CALLBACK_INTERFACE_TYPE_NAME,
   DICTIONARY_TYPE_NAME,
-  DOM_STRING_TYPE_NAME,
-  DOUBLE_TYPE_NAME,
   FROZEN_ARRAY_TYPE_NAME,
   includesNullableType,
   INTERFACE_TYPE_NAME,
-  LONG_TYPE_NAME,
   NUMERIC_TYPE_NAME,
+  NUMERIC_TYPE_NAMES,
   OBJECT_TYPE_NAME,
+  RECORD_TYPE_NAME,
   SEQUENCE_TYPE_NAME,
   STRING_TYPE_NAME,
+  STRING_TYPE_NAMES,
   UNDEFINED_TYPE_NAME,
-  UNSIGNED_LONG_TYPE_NAME,
-  USV_STRING_TYPE_NAME,
 } from "../../13-idl-types";
+
+/** @see https://webidl.spec.whatwg.org/#dfn-distinguishable */
+export type DistinctionRequirement = (
+  first: Type,
+  second: Type,
+  raw: { first: Type; second: Type },
+) => boolean;
 
 export const INTERFACELIKE_DISTINCTION_CATEGORIES = "interface-like";
 export const DICTIONARYLIKE_DISTINCTION_CATEGORIES = "dictionary-like";
 export const SEQUENCELIKE_DISTINCTION_CATEGORIES = "sequence-like";
 
 export const DISTINCTION_CATEGORY: Map<string, string> = new Map([
-  [LONG_TYPE_NAME, NUMERIC_TYPE_NAME],
-  [UNSIGNED_LONG_TYPE_NAME, NUMERIC_TYPE_NAME],
-  [DOUBLE_TYPE_NAME, NUMERIC_TYPE_NAME],
-  [DOM_STRING_TYPE_NAME, STRING_TYPE_NAME],
-  [USV_STRING_TYPE_NAME, STRING_TYPE_NAME],
+  ...[...NUMERIC_TYPE_NAMES].map((name): [string, string] => [
+    name,
+    NUMERIC_TYPE_NAME,
+  ]),
+  ...[...STRING_TYPE_NAMES].map((name): [string, string] => [
+    name,
+    STRING_TYPE_NAME,
+  ]),
   [INTERFACE_TYPE_NAME, INTERFACELIKE_DISTINCTION_CATEGORIES],
   [DICTIONARY_TYPE_NAME, DICTIONARYLIKE_DISTINCTION_CATEGORIES],
+  [RECORD_TYPE_NAME, DICTIONARYLIKE_DISTINCTION_CATEGORIES],
+  [CALLBACK_INTERFACE_TYPE_NAME, DICTIONARYLIKE_DISTINCTION_CATEGORIES],
   [SEQUENCE_TYPE_NAME, SEQUENCELIKE_DISTINCTION_CATEGORIES],
   [FROZEN_ARRAY_TYPE_NAME, SEQUENCELIKE_DISTINCTION_CATEGORIES],
 ]);
 
 export const DISTINCTION_TABLE: Map<
   string,
-  Map<string, boolean | typeof isDistinguishable>
+  Map<string, boolean | DistinctionRequirement>
 > = new Map([
   [
     UNDEFINED_TYPE_NAME,
@@ -76,15 +87,21 @@ export const DISTINCTION_TABLE: Map<
   ],
   [
     INTERFACELIKE_DISTINCTION_CATEGORIES,
-    new Map<string, boolean | typeof isDistinguishable>([
+    new Map<string, boolean | DistinctionRequirement>([
       [
         INTERFACELIKE_DISTINCTION_CATEGORIES,
+        // TODO (buffer source types): the interface-like category also covers
+        // them, and they carry no interface to compare, so they will need a
+        // branch of their own here once they are modelled.
         function (first, second) {
-          return !(
-            (first as InterfaceType).T.prototype instanceof
-              (second as InterfaceType).T ||
-            (second as InterfaceType).T.prototype instanceof
-              (first as InterfaceType).T
+          const one = first as InterfaceType;
+          const other = second as InterfaceType;
+          return (
+            one.T !== other.T &&
+            !(
+              one.T.prototype instanceof other.T ||
+              other.T.prototype instanceof one.T
+            )
           );
         },
       ],
@@ -92,12 +109,15 @@ export const DISTINCTION_TABLE: Map<
   ],
   [
     CALLBACK_FUNCTION_TYPE_NAME,
-    new Map<string, boolean | typeof isDistinguishable>([
+    new Map<string, boolean | DistinctionRequirement>([
       [CALLBACK_FUNCTION_TYPE_NAME, false],
       [
         DICTIONARYLIKE_DISTINCTION_CATEGORIES,
-        function (first) {
-          return isAnnotatedWithExtAttribute(first, LegacyTreatNonObjectAsNull);
+        function (_, __, raw) {
+          return !isAnnotatedWithExtAttribute(
+            raw.first,
+            LegacyTreatNonObjectAsNull,
+          );
         },
       ],
     ]),
@@ -119,28 +139,36 @@ export const DISTINCTION_TABLE: Map<
   ],
 ]);
 
+// The table states each pair of categories once, in one order, and every
+// category it names is a row of its own. Filling in the transposed cells is
+// what makes a lookup independent of the order the two types were given in.
+for (const [row, cells] of DISTINCTION_TABLE) {
+  for (const [column, entry] of [...cells]) {
+    if (row === column) {
+      continue;
+    }
+
+    DISTINCTION_TABLE.get(column)!.set(
+      row,
+      typeof entry === "function"
+        ? (first, second, raw) =>
+            entry(second, first, { first: raw.second, second: raw.first })
+        : entry,
+    );
+  }
+}
+
 export function getInnermostType(T: Type): Type {
   if (isAnnotatedType(T)) T = T.innerType;
   if (isNullableType(T)) T = T.innerType;
   return T;
 }
 
-function getDistinctionTableKey(T: Type) {
-  const innermostName = getInnermostType(T).name;
-
-  if (DISTINCTION_TABLE.has(innermostName)) {
-    return innermostName;
+function getDistinctionTableKey(innermostType: Type) {
+  if (DISTINCTION_TABLE.has(innermostType.name)) {
+    return innermostType.name;
   }
-
-  if (DISTINCTION_CATEGORY.has(innermostName)) {
-    const innermostCategoryName = DISTINCTION_CATEGORY.get(innermostName)!;
-
-    if (DISTINCTION_TABLE.has(innermostCategoryName)) {
-      return innermostCategoryName;
-    }
-  }
-
-  return undefined;
+  return DISTINCTION_CATEGORY.get(innermostType.name);
 }
 
 function isUnionOrNullableUnionType(
@@ -150,7 +178,7 @@ function isUnionOrNullableUnionType(
 }
 
 function isNotDistinguishableWithIncludingNullable(T: Type): boolean {
-  return !(
+  return (
     includesNullableType(T) ||
     (isUnionType(T) && T.flattenedMemberTypes.has(DICTIONARY_TYPE_NAME)) ||
     isDictionaryType(T)
@@ -205,21 +233,21 @@ export function isDistinguishable(first: Type, second: Type): boolean {
     return isDistinguishableUnionAndT(second, first);
   }
 
-  const firstKey = getDistinctionTableKey(first);
-  const secondKey = getDistinctionTableKey(second);
+  const innermostFirst = getInnermostType(first);
+  const innermostSecond = getInnermostType(second);
+
+  const firstKey = getDistinctionTableKey(innermostFirst);
+  const secondKey = getDistinctionTableKey(innermostSecond);
 
   if (firstKey !== undefined && secondKey !== undefined) {
-    if (!DISTINCTION_TABLE.get(firstKey)!.has(secondKey)) {
-      if (DISTINCTION_TABLE.get(secondKey)!.has(firstKey)) {
-        [first, second] = [second, first];
-      }
-    }
-
-    const distinguishable: boolean | typeof isDistinguishable =
+    const distinguishable: boolean | DistinctionRequirement =
       DISTINCTION_TABLE.get(firstKey)!.get(secondKey) ?? true;
 
     if (typeof distinguishable === "function") {
-      return distinguishable(first, second);
+      return distinguishable(innermostFirst, innermostSecond, {
+        first,
+        second,
+      });
     }
 
     return distinguishable;

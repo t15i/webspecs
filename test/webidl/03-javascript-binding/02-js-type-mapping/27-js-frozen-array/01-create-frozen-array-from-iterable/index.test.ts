@@ -12,13 +12,21 @@ import { makeLongType } from "../../../../02-idl/13-idl-types/utils";
 
 describe("createFrozenArrayFromIterable", () => {
   test("empty iterable -> empty frozen array", () => {
-    const out = createFrozenArrayFromIterable(makeLongType(), []);
+    const out = createFrozenArrayFromIterable(
+      makeLongType(),
+      [],
+      [][Symbol.iterator],
+    );
     expect(out).toEqual([]);
     expect(Object.isFrozen(out)).toBe(true);
   });
 
   test("converts each element via T and freezes the result", () => {
-    const out = createFrozenArrayFromIterable(makeLongType(), ["1", 2.7, true]);
+    const out = createFrozenArrayFromIterable(
+      makeLongType(),
+      ["1", 2.7, true],
+      [][Symbol.iterator],
+    );
     expect(out).toEqual([1, 2, 1]);
     expect(Object.isFrozen(out)).toBe(true);
   });
@@ -28,7 +36,11 @@ describe("createFrozenArrayFromIterable", () => {
       yield 5;
       yield "6";
     }
-    const out = createFrozenArrayFromIterable(makeLongType(), g());
+    const out = createFrozenArrayFromIterable(
+      makeLongType(),
+      g(),
+      g()[Symbol.iterator],
+    );
     expect(out).toEqual([5, 6]);
     expect(Object.isFrozen(out)).toBe(true);
   });

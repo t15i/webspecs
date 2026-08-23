@@ -1,12 +1,9 @@
 import { PlatformObject } from "@webidl";
 
-export const NewIndexedPropertySetter: unique symbol = Symbol(
-  "NewIndexedPropertySetter",
-);
-
 declare module "@webidl" {
-  interface InterfaceMembers {
-    [NewIndexedPropertySetter]?(index: number, value: unknown): void;
+  interface InterfaceBehaviors {
+    /** @see https://webidl.spec.whatwg.org/#dfn-set-the-value-of-a-new-indexed-property */
+    newIndexedPropertySetter?(index: number, value: unknown): void;
   }
 }
 
@@ -16,7 +13,7 @@ export function setValueOfNewIndexedProperty(
   index: number,
   value: unknown,
 ): void {
-  PlatformObject.getPrimaryInterfaceOf(o).members[
-    NewIndexedPropertySetter
-  ]!.call(o, index, value);
+  const iface = PlatformObject.getPrimaryInterfaceOf(o);
+
+  iface.behaviors.newIndexedPropertySetter!.call(o, index, value);
 }
