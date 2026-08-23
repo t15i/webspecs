@@ -3,8 +3,8 @@ import { type Type, type TypeBase } from "@webidl";
 export const UNION_TYPE_NAME = "Union";
 
 /** @see https://webidl.spec.whatwg.org/#idl-union */
-export interface UnionType<T extends Type = Type> extends TypeBase<
-  ReturnType<T>
+export interface UnionType<Ts extends Type[] = Type[]> extends TypeBase<
+  ReturnType<Ts[number]>
 > {
   name: typeof UNION_TYPE_NAME;
 }

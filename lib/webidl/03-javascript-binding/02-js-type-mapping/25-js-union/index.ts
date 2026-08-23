@@ -86,11 +86,11 @@ function isPlatformObjectAndTypesIncludesObjectOrInterfaceTypeImplementedBy(
 }
 
 /** @see https://webidl.spec.whatwg.org/#js-union */
-export function asUnion<UnionMembersType extends Type>(
-  this: UnionType<UnionMembersType>,
+export function asUnion<UnionMemberTypes extends Type[]>(
+  this: UnionType<UnionMemberTypes>,
   v: unknown,
-): NativeType<UnionMembersType> {
-  type T = NativeType<UnionMembersType>;
+): NativeType<UnionMemberTypes[number]> {
+  type T = NativeType<UnionMemberTypes[number]>;
 
   const types = this.flattenedMemberTypes;
 
