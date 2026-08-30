@@ -1,3 +1,6 @@
+import { getID } from "@dom";
+
+/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element */
 export function firstElementInTreeOrderThatMeetsCriteria<
   T extends Element,
 >(criteria: { root: Node; id: string; T: new () => T }): T | null {
@@ -22,7 +25,7 @@ export function firstElementInTreeOrderThatMeetsCriteria<
     criteria.root,
     NodeFilter.SHOW_ELEMENT,
     function (element) {
-      if (element instanceof criteria.T && element.id === criteria.id) {
+      if (element instanceof criteria.T && getID(element) === criteria.id) {
         return NodeFilter.FILTER_ACCEPT;
       }
 
@@ -31,4 +34,32 @@ export function firstElementInTreeOrderThatMeetsCriteria<
   );
 
   return walker.nextNode() as T | null;
+}
+
+/** @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element */
+export function isDescendantOfShadowIncludingAncestorOf(
+  attrElement: Element,
+  element: Element,
+): boolean {
+  const target = attrElement.getRootNode();
+
+  if (attrElement === target) {
+    return false;
+  }
+
+  let root = element.getRootNode();
+
+  if (element === root) {
+    return false;
+  }
+
+  while (root !== target) {
+    if (!(root instanceof ShadowRoot)) {
+      return false;
+    }
+
+    root = root.host.getRootNode();
+  }
+
+  return true;
 }

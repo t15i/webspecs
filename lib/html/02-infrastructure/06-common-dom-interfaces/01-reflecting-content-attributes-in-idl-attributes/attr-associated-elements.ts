@@ -4,7 +4,10 @@ import type {
   ReflectedIDLAttribute,
   ReflectedTargetAssociations,
 } from "./nullable-frozen-array";
-import { firstElementInTreeOrderThatMeetsCriteria } from "./utils";
+import {
+  firstElementInTreeOrderThatMeetsCriteria,
+  isDescendantOfShadowIncludingAncestorOf,
+} from "./utils";
 
 declare module "./nullable-frozen-array" {
   interface ReflectedTargetAssociations<E extends Element> {
@@ -25,10 +28,12 @@ export function getAssociatedElements<E extends Element>(
   const element = this.getElement();
 
   if (this.explicitlySetElements !== null) {
-    for (const attrElementRef of this.explicitlySetElements) {
-      const attrElement = attrElementRef.deref();
+    const explicitlySetElements = this.explicitlySetElements
+      .map((ref) => ref.deref())
+      .filter((el) => el !== undefined);
 
-      if (attrElement?.getRootNode() === element.getRootNode()) {
+    for (const attrElement of explicitlySetElements) {
+      if (isDescendantOfShadowIncludingAncestorOf(attrElement, element)) {
         elements.push(attrElement);
       }
     }

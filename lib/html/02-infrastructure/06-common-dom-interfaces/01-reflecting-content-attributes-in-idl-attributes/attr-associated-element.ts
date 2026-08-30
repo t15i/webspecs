@@ -2,7 +2,10 @@ import type {
   ReflectedIDLAttribute,
   ReflectedTargetAssociations,
 } from "./nullable-element";
-import { firstElementInTreeOrderThatMeetsCriteria } from "./utils";
+import {
+  firstElementInTreeOrderThatMeetsCriteria,
+  isDescendantOfShadowIncludingAncestorOf,
+} from "./utils";
 
 declare module "./nullable-element" {
   interface ReflectedTargetAssociations<E extends Element> {
@@ -24,11 +27,12 @@ export function getAssociatedElement<E extends Element>(
     reflectedContentAttributeName,
   );
 
-  if (this.explicitlySetElement !== null) {
-    const attrElement = this.explicitlySetElement.deref();
-
-    if (attrElement?.getRootNode() === element.getRootNode()) {
-      return attrElement;
+  const explicitlySetElement = this.explicitlySetElement?.deref() ?? null;
+  if (explicitlySetElement !== null) {
+    if (
+      isDescendantOfShadowIncludingAncestorOf(explicitlySetElement, element)
+    ) {
+      return explicitlySetElement;
     }
 
     return null;
