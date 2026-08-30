@@ -1,7 +1,7 @@
 {
   "name": "@t15i/webspecs",
   "type": "module",
-  "version": "0.15.0",
+  "version": "1.0.0",
   "sideEffects": false,
   "description": "TypeScript implementations of web platform specifications",
   "keywords": [
