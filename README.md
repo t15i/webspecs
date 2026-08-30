@@ -23,9 +23,13 @@ import { ... } from "@t15i/webspecs/dom";
 import { ... } from "@t15i/webspecs/ecma";
 import { ... } from "@t15i/webspecs/html";
 import { ... } from "@t15i/webspecs/infra";
+import { ... } from "@t15i/webspecs/share";
 import { ... } from "@t15i/webspecs/url";
 import { ... } from "@t15i/webspecs/webidl";
 ```
+
+The package is side-effect free and ships per-module ES output, so unused
+algorithms are tree-shaken away.
 
 ## What's implemented
 
@@ -36,7 +40,14 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
 
 - **§1 Infrastructure**
   - **§1.4 Namespaces**
-    - [x] `validAttributeLocalName`
+    - [x] `validAttributeLocalName` / `isValidAttributeLocalName` / `validateAttributeLocalName`
+  - ...
+- **§4 Nodes**
+  - **§4.9 Interface Element**
+    - [x] `Element` (`defineContentAttribute` / `getContentAttributeDescriptor`)
+    - [x] `ContentAttributeDescriptor`
+    - [x] `getID`
+    - ...
   - ...
 - ...
 
@@ -47,15 +58,25 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
 
 - **§5 Notational Conventions**
   - **§5.2.6 Mathematical Operations**
+    - [x] `R`
     - [x] `sign`
     - [x] `modulo`
+    - [x] `truncate`
     - ...
   - ...
 - **§6 ECMAScript Data Types and Values**
   - **§6.1 ECMAScript Language Types**
+    - **§6.1.3 The Boolean Type**
+      - [x] `isBoolean`
     - **§6.1.4 The String Type**
       - [x] `isString`
+    - **§6.1.6 Numeric Types**
+      - **§6.1.6.1 The Number Type**
+        - [x] `isNumber`
+      - **§6.1.6.2 The BigInt Type**
+        - [x] `isBigInt`
     - **§6.1.7 The Object Type**
+      - [x] `isObject`
       - [x] `PropertyKey`
       - [x] `PropertyName`
     - ...
@@ -69,6 +90,12 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - ...
 - **§7 Abstract Operations**
   - **§7.1 Type Conversion**
+    - **§7.1.1 ToPrimitive**
+      - [x] `toPrimitive`
+      - **§7.1.1.1 OrdinaryToPrimitive**
+        - [x] `ordinaryToPrimitive`
+    - **§7.1.3 ToNumeric**
+      - [x] `toNumeric`
     - **§7.1.4 ToNumber**
       - [x] `toNumber`
     - **§7.1.5 ToIntegerOrInfinity**
@@ -77,15 +104,36 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
       - [x] `toFixedSizeInteger`
     - **§7.1.8 ToUint32**
       - [x] `toUint32`
+    - **§7.1.14 ToBigInt**
+      - [x] `toBigInt`
     - **§7.1.18 ToString**
       - [x] `toString`
     - **§7.1.22 CanonicalNumericIndexString**
       - [x] `canonicalNumericIndexString`
     - ...
+  - **§7.2 Testing and Comparison Operations**
+    - **§7.2.3 IsCallable**
+      - [x] `isCallable`
+    - ...
   - **§7.3 Operations on Objects**
     - **§7.3.5 CreateDataProperty**
       - [x] `createDataProperty`
+    - **§7.3.6 CreateDataPropertyOrThrow**
+      - [x] `createDataPropertyOrThrow`
+    - **§7.3.8 DefinePropertyOrThrow**
+      - [x] `definePropertyOrThrow`
+    - **§7.3.10 GetMethod**
+      - [x] `getMethod`
     - ...
+  - **§7.4 Operations on Iterator Objects**
+    - **§7.4.1 Iterator Records**
+      - [x] `IteratorRecord`
+    - **§7.4.2 GetIteratorDirect**
+      - [x] `getIteratorDirect`
+    - **§7.4.3 GetIteratorFromMethod**
+      - [x] `getIteratorFromMethod`
+    - ...
+  - ...
 - **§10 Ordinary and Exotic Objects Behaviours**
   - **§10.1 Ordinary Object Internal Methods and Internal Slots**
     - **§10.1.5.1 OrdinaryGetOwnProperty**
@@ -94,7 +142,38 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
       - [x] `ordinaryDefineOwnProperty`
     - **§10.1.9.2 OrdinarySetWithOwnDescriptor**
       - [x] `ordinarySetWithOwnDescriptor`
+    - **§10.1.12 OrdinaryObjectCreate**
+      - [x] `ordinaryObjectCreate`
     - ...
+  - **§10.2 ECMAScript Function Objects**
+    - **§10.2.8 DefineMethodProperty**
+      - [x] `defineMethodProperty`
+    - **§10.2.9 SetFunctionName**
+      - [x] `setFunctionName`
+    - **§10.2.10 SetFunctionLength**
+      - [x] `setFunctionLength`
+    - ...
+  - **§10.3 Built-in Function Objects**
+    - **§10.3.4 CreateBuiltinFunction**
+      - [x] `createBuiltinFunction` / `CreateBuiltinFunctionOptions`
+    - ...
+  - **§10.4 Built-in Exotic Object Internal Methods and Slots**
+    - **§10.4.3 String Exotic Objects**
+      - [x] `hasStringDataInternalSlot`
+    - ...
+  - ...
+- **§23 Indexed Collections**
+  - **§23.2 TypedArray Objects**
+    - [x] `hasTypedArrayNameInternalSlot`
+    - ...
+  - ...
+- **§25 Structured Data**
+  - **§25.1 ArrayBuffer Objects**
+    - [x] `hasArrayBufferDataInternalSlot`
+  - **§25.2 SharedArrayBuffer Objects**
+    - [x] `isSharedArrayBuffer`
+  - **§25.3 DataView Objects**
+    - [x] `hasDataViewInternalSlot`
   - ...
 - ...
 
@@ -127,16 +206,44 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - ...
   - **§2.6 Common DOM interfaces**
     - **§2.6.1 Reflecting content attributes in IDL attributes**
-      - [x] `ReflectedBoolean`
-      - [x] `ReflectedDOMString`
-      - [x] `ReflectedDouble`
-      - [x] `ReflectedLong`
-      - [x] `ReflectedNullableDOMString`
-      - [x] `ReflectedNullableElement`
-      - [x] `ReflectedNullableFrozenArrayOfElements`
-      - [x] `ReflectedUnsignedLong`
-      - [x] `ReflectedUSVString`
-      - [x] `ReflectedContentAttribute` / `ReflectedIDLAttribute` / `ReflectedTarget`
+      - Per-type reflection modules, each exposing `ReflectedIDLAttribute`, `getter`
+        and `setter` (and `attributeChangeSteps` where the type needs them):
+        - [x] `ReflectedBoolean`
+        - [x] `ReflectedDOMString`
+        - [x] `ReflectedDouble`
+        - [x] `ReflectedLong`
+        - [x] `ReflectedNullableDOMString`
+        - [x] `ReflectedNullableElement`
+        - [x] `ReflectedNullableFrozenArrayOfElements`
+        - [x] `ReflectedUnsignedLong`
+        - [x] `ReflectedUSVString`
+      - [x] `ReflectedTarget` / `ReflectedTargetAssociations` / `ReflectedIDLAttributeOf`
+      - [x] `getContentAttributeOfElementReflectedTarget`
+      - [x] `setContentAttributeOfElementReflectedTarget`
+      - [x] `deleteContentAttributeOfElementReflectedTarget`
+      - [x] `getElementOfElementReflectedTarget`
+      - [x] `getAssociatedElement` / `getAssociatedElements`
+      - Reflection constraints:
+        - [x] `validateClampedToRange`
+        - [x] `validateDefaultValue`
+        - [x] `validateLimitedToOnlyKnownValues`
+        - [x] `validateLimitedToOnlyNonNegativeNumbers`
+        - [x] `validateLimitedToOnlyPositiveNumbers`
+        - [x] `validateLimitedToOnlyPositiveNumbersWithFallback`
+        - [x] `validateTreatedAsURL`
+      - ...
+    - **§2.6.2 Using reflect via IDL extended attributes**
+      - [x] `Reflect`
+      - [x] `ReflectDefault`
+      - [x] `ReflectNonNegative`
+      - [x] `ReflectPositive`
+      - [x] `ReflectPositiveWithFallback`
+      - [x] `ReflectRange`
+      - [x] `ReflectSetter`
+      - [x] `ReflectURL`
+      - [x] `ReflectionTrigger` / `reflectionTriggers`
+      - [x] `ReflectionSupplements` / `reflectionSupplements`
+      - [x] `validateReflectionExtendedAttributes`
     - ...
   - ...
 - ...
@@ -153,6 +260,7 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - [x] `trailingSurrogate` / `trailingSurrogates`
   - **§4.7 Strings**
     - [x] `convertStringIntoScalarValueString`
+    - [x] `splitOnASCIIWhitespace`
     - ...
   - ...
 - **§8 Namespaces**
@@ -163,6 +271,15 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
   - [x] `XMLNamespace`
   - [x] `XMLNSNamespace`
 - ...
+
+</details>
+
+<details>
+<summary><strong>Share</strong> (no spec — cross-spec primitives)</summary>
+
+Values that several specs share and that belong to none of them.
+
+- [x] `failure` — the sentinel returned by algorithms that "return failure"
 
 </details>
 
@@ -188,97 +305,186 @@ Expand a spec to see what is currently ported. `...` marks sections with un-port
     - [x] `isIdentifier`
   - **§2.2 Interfaces**
     - [x] `Interface` / `InterfaceMembers` / `InterfaceStaticMembers`
+    - [x] `InterfaceExtendedAttributes` / `InterfaceBehaviors`
+    - [x] `validateInterface` / `interfaceExtraValidationRules`
   - **§2.5 Members**
-    - [x] `Member`
+    - [x] `Member` / `MemberSlot`
+    - [x] `iterateMembers` / `iterateMemberSlots`
+    - [x] `validateMemberSlot` / `validateRegularMemberSlot`
     - **§2.5.2 Attributes**
-      - [x] `Attribute`
+      - [x] `Attribute` / `AttributeExtendedAttributes`
       - [x] `isAttribute`
-      - [x] `isRegularAttribute` / `isStaticAttribute`
-      - [x] `isReadonlyAttribute`
+      - [x] `validateAttribute` / `attributeExtraValidationRules`
+      - [x] `RegularAttribute` / `isRegularAttribute`
+      - [x] `validateRegularAttribute` / `regularAttributeExtraValidationRules`
+      - [x] `isReadonlyAttribute` / `validateReadonlyAttribute`
       - [x] `isDeclaredToInheritItsGetterAttribute`
     - **§2.5.3 Operations**
-      - [x] `Operation`
-      - [x] `Argument` / `ArgumentList`
+      - [x] `Operation` / `OperationExtendedAttributes`
       - [x] `isOperation`
+      - [x] `validateOperation` / `operationExtraValidationRules`
+      - [x] `RegularOperation` / `isRegularOperation`
+      - [x] `Argument` / `ArgumentList` / `validateArgumentList`
+      - [x] `isOptionalArgument`
+      - [x] `isDeclaredWithDefaultValue` / `validateArgumentDefaultValue`
+    - **§2.5.4 Constructors**
+      - [x] `ConstructorOperation` / `ConstructorOperationExtendedAttributes`
+      - [x] `isConstructorOperation` / `validateConstructorOperation`
+      - [x] `getOwnConstructorOperations`
     - **§2.5.6 Special operations**
-      - [x] `IndexedPropertyGetter`
-      - [x] `IndexedPropertySetter`
-      - [x] `NamedPropertyGetter`
-      - [x] `NamedPropertySetter`
-      - [x] `NamedPropertyDeleter`
+      - [x] `SpecialOperation` / `isSpecialOperation` / `validateSpecialOperation`
+      - [x] `iterateSpecialOperations`
+      - [x] `validateNamedSpecialOperationsAreMembers`
+      - [x] `validateAtMostOneSpecialOperationPerVariety`
+      - [x] `validateIndexedPropertyGetter` / `validateIndexedPropertyGetterDeterminator`
+      - [x] `validateIndexedPropertySetter` / `validateIndexedPropertySetterConstraints`
+      - [x] `validateNamedPropertyGetter` / `validateNamedPropertyGetterDeterminator`
+      - [x] `validateNamedPropertySetter` / `validateNamedPropertySetterConstraints`
+      - [x] `validateNamedPropertyDeleter` / `validateNamedPropertyDeleterConstraints`
+      - [x] `interfaceHasIndexedPropertyGetter`
       - **§2.5.6.1 Indexed properties**
-        - [x] `determineValueOfIndexedProperty` / `IndexedPropertyDeterminator`
-        - [x] `setValueOfNewIndexedProperty` / `NewIndexedPropertySetter`
-        - [x] `setValueOfExistingIndexedProperty` / `ExistingIndexedPropertySetter`
-        - [x] `supportsIndexedProperties` / `SupportIndexedProperties`
+        - [x] `IndexedPropertyGetterOperation` / `IndexedPropertySetterOperation`
+        - [x] `determineValueOfIndexedProperty`
+        - [x] `setValueOfNewIndexedProperty`
+        - [x] `setValueOfExistingIndexedProperty`
+        - [x] `supportsIndexedProperties` / `isInterfaceSupportIndexedProperties`
         - [x] `isSupportedPropertyIndex` / `SupportedPropertyIndices`
+        - [x] `validateIndexedPropertiesLengthAttribute`
+        - [x] `validateSupportedPropertyIndicesDefined`
       - **§2.5.6.2 Named properties**
-        - [x] `determineValueOfNamedProperty` / `NamedPropertyDeterminator`
-        - [x] `deleteExistingNamedProperty` / `ExistingNamedPropertyDeleter`
-        - [x] `setValueOfNewNamedProperty` / `NewNamedPropertySetter`
-        - [x] `setValueOfExistingNamedProperty` / `ExistingNamedPropertySetter`
-        - [x] `supportsNamedProperties` / `SupportNamedProperties`
+        - [x] `NamedPropertyGetterOperation` / `NamedPropertySetterOperation` / `NamedPropertyDeleterOperation`
+        - [x] `determineValueOfNamedProperty`
+        - [x] `setValueOfNewNamedProperty`
+        - [x] `setValueOfExistingNamedProperty`
+        - [x] `deleteExistingNamedProperty`
+        - [x] `supportsNamedProperties` / `isInterfaceSupportNamedProperties`
         - [x] `isSupportedPropertyName` / `SupportedPropertyNames`
+        - [x] `validateSupportedPropertyNamesDefined`
       - ...
+    - **§2.5.8 Overloading**
+      - [x] `validateOverloads`
+      - [x] `EffectiveOverloadSet` / `computeEffectiveOverloadSet`
+      - [x] `OperationEffectiveOverloadSet` / `ConstructorOperationEffectiveOverloadSet` / `LegacyFactoryFunctionEffectiveOverloadSet`
+      - [x] `OperationEffectiveOverload` / `ConstructorOperationEffectiveOverload` / `LegacyFactoryFunctionEffectiveOverload`
+      - [x] `EffectiveOverloadSetCallable` (and its operation / constructor / legacy-factory variants)
+      - [x] `EffectiveOverloadSetEffectiveTypeList` / `EffectiveOverloadSetOptionalityList` / `EffectiveOverloadSetOptionalityValue`
+      - [x] `validateEffectiveOverloadSet`
+      - [x] `getDistinguishingArgumentIndex`
+      - [x] `isDistinguishable` / `getInnermostType`
+      - [x] `DISTINCTION_TABLE` / `DISTINCTION_CATEGORY` / `DistinctionRequirement`
+      - [x] `INTERFACELIKE_DISTINCTION_CATEGORIES` / `DICTIONARYLIKE_DISTINCTION_CATEGORIES` / `SEQUENCELIKE_DISTINCTION_CATEGORIES`
     - ...
+  - **§2.7 Static attributes and operations**
+    - [x] `StaticAttribute` / `isStaticAttribute` / `validateStaticAttribute`
+    - [x] `StaticOperation` / `isStaticOperation` / `validateStaticOperation`
+    - [x] `validateStaticMemberSlot`
   - **§2.12 Objects implementing interfaces**
-    - [x] `PlatformObject`
-    - [x] `LegacyPlatformObject` / `LegacyPlatformObjectInterfaceBase`
+    - [x] `PlatformObject` (`getPrimaryInterfaceOf` / `setPrimaryInterfaceOf`)
     - [x] `isLegacyPlatformObject`
   - **§2.13 Types**
-    - [x] `Type`
+    - [x] `Type` / `TypeBase` / `TypeMap` / `NativeType`
+    - Each type ships its name constant, its type, and its predicate
+      (e.g. `LONG_TYPE_NAME`, `LongType`, `isLongType`):
+      - [x] `any`, `undefined`, `boolean`, `object`
+      - [x] `long` (with `LONG_MIN` / `LONG_MAX`), `unsigned long`, `double`, `bigint`
+      - [x] `DOMString`, `ByteString`, `USVString`
+      - [x] interface, callback interface, dictionary, callback function
+      - [x] nullable (with `validateNullableInnerType`), sequence, async sequence, record
+            (with `RecordKeyType` / `validateRecordKeyType`), promise, frozen array, observable array
+      - [x] union — `isUnionType`, `getFlattenedMemberTypes`, `includesNullableType`,
+            `includesUndefined`, `getNumberOfNullableMemberTypes`, and their validators
+      - [x] annotated types — `AnnotatedType`, `isAnnotatedType`, `TypeExtendedAttributes`,
+            `ApplicableToTypeExtendedAttribute`, `getExtAttributesAssociatedWith`,
+            `validateAnnotatedInnerType`
+      - [x] groupings — `IntegerType`, `NumericType`, `StringType` (with their name sets
+            and predicates)
+    - ...
+  - **§2.14 Extended attributes**
+    - [x] `ExtendedAttributesOf`
+    - [x] `AnnotatedWithExtendedAttribute`
+    - [x] `isAnnotatedWithExtAttribute`
   - ...
-- **§3 ECMAScript binding**
-  - **§3.2 ECMAScript type mapping**
+- **§3 JavaScript binding**
+  - **§3.2 JavaScript type mapping**
     - **§3.2.2 undefined**
-      - [x] `Undefined`
+      - [x] `asUndefined`
     - **§3.2.3 boolean**
-      - [x] `Boolean`
+      - [x] `asBoolean`
     - **§3.2.4 Integer types**
       - **§3.2.4.5 long**
-        - [x] `Long` / `LongConstructor`
+        - [x] `asLong`
       - **§3.2.4.6 unsigned long**
-        - [x] `UnsignedLong` / `UnsignedLongConstructor`
+        - [x] `asUnsignedLong`
       - **§3.2.4.9 Abstract operations**
         - [x] `integerPart`
         - [x] `convertToInt`
       - ...
     - **§3.2.7 double**
-      - [x] `Double`
+      - [x] `asDouble`
+    - **§3.2.9 bigint**
+      - [x] `asBigInt`
+      - [x] `asNumericOrBigint`
     - **§3.2.10 DOMString**
-      - [x] `DOMString`
+      - [x] `asDOMString`
     - **§3.2.12 USVString**
-      - [x] `USVString`
+      - [x] `asUSVString`
+    - **§3.2.15 Interface types**
+      - [x] `asInterfaceType`
     - **§3.2.20 Nullable types**
-      - [x] `Nullable`
+      - [x] `asNullable`
     - **§3.2.21 sequence**
-      - [x] `Sequence`
+      - [x] `asSequence`
       - [x] `createSequenceFromIterable`
+    - **§3.2.22 async sequence**
+      - [x] `AsyncSequence`
+    - **§3.2.23 record**
+      - [x] `asRecord`
+    - **§3.2.25 Union types**
+      - [x] `asUnion`
     - **§3.2.27 Frozen array types**
-      - [x] `FrozenArray`
+      - [x] `asFrozenArray` / `createFrozenArray`
+      - [x] `createFrozenArrayFromIterable`
     - ...
   - **§3.3 Extended attributes**
-    - **§3.3.8 [Global]**
-      - [x] `Global`
+    - [x] `AllowResizable`
+    - [x] `AllowShared`
+    - [x] `Clamp`
+    - [x] `EnforceRange`
+    - [x] `Exposed` / `validateExposedOverloads`
     - ...
   - **§3.4 Legacy extended attributes**
-    - **§3.4.7 [LegacyOverrideBuiltIns]**
-      - [x] `LegacyOverrideBuiltIns`
-    - **§3.4.9 [LegacyUnenumerableNamedProperties]**
-      - [x] `LegacyUnenumerableNamedProperties`
-    - **§3.4.10 [LegacyUnforgeable]**
-      - [x] `LegacyUnforgeable`
-      - [x] `isUnforgeableOnInterface`
+    - [x] `LegacyNullToEmptyString`
+    - [x] `LegacyOverrideBuiltIns`
+    - [x] `LegacyTreatNonObjectAsNull`
+    - [x] `LegacyUnenumerableNamedProperties`
+    - [x] `LegacyUnforgeable` — `isUnforgeableOnInterface`, `isUnforgeable`,
+          `validateUnforgeablePlacement`, `validateUnforgeableOverloads`,
+          `validateUnforgeableInheritance`
     - ...
+  - **§3.6 Overload resolution algorithm**
+    - [x] `resolveOverloads`
   - **§3.7 Interfaces**
-    - **§3.7.4 Named properties object**
-      - [x] `isNamedPropertyObject`
+    - **§3.7.1 Interface object**
+      - [x] `InterfaceObject` (`getInterfaceOf` / `setInterfaceOf`)
+    - **§3.7.3 Interface prototype object**
+      - [x] `InterfacePrototypeObject` (`getInterfaceOf` / `setInterfaceOf`)
+    - **§3.7.6 Attributes**
+      - [x] `defineAttributes`
+      - [x] `defineRegularAttributes` / `defineStaticAttributes`
+      - [x] `defineUnforgeableRegularAttributes`
+      - [x] `createAttributeGetter` / `createAttributeSetter`
+    - **§3.7.7 Operations**
+      - [x] `defineOperations`
+      - [x] `defineRegularOperations` / `defineStaticOperations`
+      - [x] `defineUnforgeableRegularOperations`
+      - [x] `createOperationFunction`
+    - **§3.7.9 Iterable declarations**
+      - [x] `defineTheIterationMethods`
     - ...
   - **§3.8 Platform objects**
     - [x] `isPlatformObject`
-    - [x] `PrimaryInterface`
-    - [x] `ImplementsInterfaceWith` / `ImplementsInterfaceWithout` / `implementsInterfaceWith`
-    - [x] `ImplementsInterfaceWithExtAttribute` / `ImplementsInterfaceWithoutExtAttribute` / `implementsInterfaceWithExtAttribute`
+    - [x] `implementsInterface`
+    - [x] `implementsInterfaceWithExtAttribute`
   - **§3.9 Legacy platform objects**
     - [x] `LegacyPlatformObjectInternalMethods`
     - [x] `isUnforgeablePropertyName`
