@@ -61,9 +61,30 @@ export class EnumeratedAttributeStates {
       }
     }
 
+    this.states_ = new Set(states);
     this.invalidValueDefault_ = invalidValueDefault ?? null;
     this.missingValueDefault_ = missingValueDefault ?? null;
     this.emptyValueDefault_ = emptyValueDefault ?? null;
+  }
+
+  /** The states the attribute can be in. */
+  public get states(): ReadonlySet<EnumeratedAttributeState> {
+    return this.states_;
+  }
+
+  /** @see https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#invalid-value-default */
+  public get invalidValueDefault(): EnumeratedAttributeState | null {
+    return this.invalidValueDefault_;
+  }
+
+  /** @see https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#missing-value-default */
+  public get missingValueDefault(): EnumeratedAttributeState | null {
+    return this.missingValueDefault_;
+  }
+
+  /** @see https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#empty-value-default */
+  public get emptyValueDefault(): EnumeratedAttributeState | null {
+    return this.emptyValueDefault_;
   }
 
   public get(
@@ -97,6 +118,8 @@ export class EnumeratedAttributeStates {
 
   protected keywordToStateMap_: Map<string, EnumeratedAttributeState> =
     new Map();
+
+  protected states_: ReadonlySet<EnumeratedAttributeState>;
 
   protected invalidValueDefault_: EnumeratedAttributeState | null;
 

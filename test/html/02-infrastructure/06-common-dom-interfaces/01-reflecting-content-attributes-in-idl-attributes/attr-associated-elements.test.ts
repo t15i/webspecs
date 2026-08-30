@@ -12,7 +12,7 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import {
   getAssociatedElements,
-  type ReflectedNullableFrozenArrayOfElements,
+  ReflectedNullableFrozenArrayOfElements,
 } from "lib/html";
 
 import {
@@ -130,5 +130,81 @@ describe("getAssociatedElements", () => {
     );
 
     expect(elements).toEqual([a, b]);
+  });
+
+  test("keeps the explicitly set elements a shadow root reaches out to", () => {
+    const [outside, sibling, host] = insert("ws-el-out", "ws-el-sibling");
+
+    const inner = document.createElement("div");
+    host!.attachShadow({ mode: "open" }).append(inner);
+
+    const inSibling = document.createElement("span");
+    sibling!.attachShadow({ mode: "open" }).append(inSibling);
+
+    const target = makeElementReflectedTarget(inner);
+    target.explicitlySetElements = [
+      new WeakRef(outside!),
+      new WeakRef(inSibling),
+    ];
+
+    const elements = getAssociatedElements.call(
+      target,
+      reflectedIDLAttribute,
+      "data-ws-refs",
+    );
+
+    // Out of the shadow root into the light tree, but not across into
+    // another one.
+    expect(elements).toEqual([outside]);
+  });
+});
+
+describe("the setter of an elements reflection and its own write", () => {
+  const container = document.createElement("div");
+
+  afterEach(() => {
+    container.remove();
+    container.replaceChildren();
+  });
+
+  test("writes the content attribute before it records the elements", () => {
+    const host = document.createElement("div");
+    const first = document.createElement("span");
+    const second = document.createElement("span");
+    container.append(host, first, second);
+    document.body.append(container);
+
+    const target = makeElementReflectedTarget(host);
+    const setContentAttribute = target.setContentAttribute.bind(target);
+    const recorded: Array<number | null> = [];
+
+    // The change steps stand where the DOM runs them - inside the write - and
+    // the setter records the elements only after them, as the spec orders it.
+    target.setContentAttribute = (name, value) => {
+      setContentAttribute(name, value);
+
+      ReflectedNullableFrozenArrayOfElements.attributeChangeSteps.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-refs",
+        host,
+        name,
+        null,
+        value,
+        null,
+      );
+
+      recorded.push(target.explicitlySetElements?.length ?? null);
+    };
+
+    ReflectedNullableFrozenArrayOfElements.setter.call(
+      target,
+      reflectedIDLAttribute,
+      "data-ws-refs",
+      [first, second],
+    );
+
+    expect(recorded).toEqual([null]);
+    expect(target.explicitlySetElements).toHaveLength(2);
   });
 });

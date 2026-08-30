@@ -8,11 +8,7 @@ import {
 } from "@webidl";
 import type { Interface, Operation } from "@webidl";
 
-/**
- * Creates the function that implements an operation.
- *
- * @see https://webidl.spec.whatwg.org/#dfn-create-operation-function
- */
+/** @see https://webidl.spec.whatwg.org/#dfn-create-operation-function */
 export function createOperationFunction(
   op: Operation,
   // TODO (namespace): a namespace or interface
@@ -47,25 +43,15 @@ export function createOperationFunction(
         target,
       );
 
-      try {
-        const [operation, values] = resolveOverloads(S, args);
+      const [operation, values] = resolveOverloads(S, args);
 
-        let R = null;
+      let R = null;
 
-        // TODO (Default): "If operation is declared with a [Default]
-        // extended attribute..."
-        R = Reflect.apply(operation.methodSteps, idlObject, values);
+      // TODO (Default): "If operation is declared with a [Default]
+      // extended attribute..."
+      R = Reflect.apply(operation.methodSteps, idlObject, values);
 
-        return operation.returnType(R);
-      } catch (e) {
-        if (e instanceof TypeError) {
-          e.message = `Failed to execute '${id}' on '${target.identifier}': ${e.message}`;
-          throw e;
-        }
-        throw TypeError(`Failed to execute '${id}' on '${target.identifier}'`, {
-          cause: e,
-        });
-      }
+      return operation.returnType(R);
     } catch (error) {
       // Per spec the check is on the operation's return type directly ("if op
       // has a return type that is a promise type"); a promise type is never

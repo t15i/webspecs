@@ -2,8 +2,8 @@ import type { Interface } from "../../../02-idl";
 
 /** @see https://webidl.spec.whatwg.org/#interface-prototype-object */
 export interface InterfacePrototypeObject {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor: new (...args: any[]) => any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- see above
+  constructor: Function;
 }
 
 class InterfacePrototypeObject_ {

@@ -186,8 +186,9 @@ describe("regular operations", () => {
   });
 
   test("throws when fewer arguments than required are passed", () => {
-    // Overload resolution requires at least the operation's argument count; a
-    // short call is reported as a TypeError naming the operation and interface.
+    // Overload resolution requires at least the operation's argument count,
+    // and a short call is a TypeError of its own - the one the resolution
+    // throws, reaching the caller as it was thrown.
     const iface = makeInterface({
       identifier: "Calculator",
       members: {
@@ -204,9 +205,7 @@ describe("regular operations", () => {
     const instance = associateInterface(Object.create(proto), iface);
     const add = (instance as { add: (...a: unknown[]) => unknown }).add;
 
-    expect(() => add.call(instance)).toThrow(
-      /Failed to execute 'add' on 'Calculator'/,
-    );
+    expect(() => add.call(instance)).toThrow(TypeError);
     expect(() => add.call(instance)).toThrow(/at least 1 argument/i);
   });
 
@@ -237,6 +236,61 @@ describe("regular operations", () => {
 });
 
 describe("promise-typed members reject rather than throw", () => {
+  test("lets an exception of the method steps through as it was thrown", () => {
+    const failure = new DOMException("nowhere to be found", "NotFoundError");
+    const iface = makeInterface({
+      identifier: "Calculator",
+      members: {
+        add: [
+          makeOperation({
+            identifier: "add",
+            methodSteps: () => {
+              throw failure;
+            },
+          }),
+        ],
+      },
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+    const add = methodOf(proto, "add");
+
+    // The algorithm says one thing about an exception and it is not to
+    // replace it: an operation that does not return a promise lets it
+    // propagate. Identity is the whole point - a DOMException the steps threw
+    // is the DOMException the caller catches, not a TypeError carrying it.
+    let caught: unknown = null;
+    try {
+      add.call(instance);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBe(failure);
+  });
+
+  test("a promise-typed operation rejects with the exception of its method steps", async () => {
+    const failure = new DOMException("nowhere to be found", "NotFoundError");
+    const iface = makeInterface({
+      members: {
+        load: [
+          makeOperation({
+            identifier: "load",
+            returnType: makePromiseType(makeLongType()),
+            methodSteps: () => {
+              throw failure;
+            },
+          }),
+        ],
+      },
+    });
+    const proto = prototypeOf(iface);
+    const instance = associateInterface(Object.create(proto), iface);
+    const load = methodOf(proto, "load");
+
+    await expect(load.call(instance) as Promise<unknown>).rejects.toBe(failure);
+  });
+
   test("a promise-typed operation returns a rejected promise on illegal invocation", async () => {
     const iface = makeInterface({
       members: {

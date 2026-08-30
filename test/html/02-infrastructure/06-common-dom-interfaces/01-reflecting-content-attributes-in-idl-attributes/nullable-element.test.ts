@@ -128,6 +128,39 @@ describe("ReflectedNullableElement.getter", () => {
     ).toBeNull();
   });
 
+  test("returns null when the content attribute is the empty string", () => {
+    const { host } = insert();
+    host.setAttribute("data-ws-ref", "");
+
+    // An element with no id attribute has no ID, and element.id cannot say
+    // so - it answers "" for it, which a comparison would take for a match.
+    // Measured in both engines: the platform resolves an empty IDREF to
+    // nothing.
+    expect(
+      ReflectedNullableElement.getter.call(
+        makeTarget(host),
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBeNull();
+  });
+
+  test("returns null when the only candidate carries an empty id", () => {
+    const { span, host } = insert();
+    span.setAttribute("id", "");
+    host.setAttribute("data-ws-ref", "");
+
+    // DOM unsets the ID for the empty string, so an element that carries one
+    // has no ID either, and nothing can match it.
+    expect(
+      ReflectedNullableElement.getter.call(
+        makeTarget(host),
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBeNull();
+  });
+
   test("prefers the explicitly set element over the content attribute", () => {
     const { host } = insert("ws-ref-ignored");
     host.setAttribute("data-ws-ref", "ws-ref-ignored");
@@ -156,6 +189,127 @@ describe("ReflectedNullableElement.getter", () => {
     const target = makeTarget(host);
     target.explicitlySetElement = new WeakRef(detached);
 
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBeNull();
+  });
+
+  test("resolves the explicitly set element out of a shadow root", () => {
+    const { span, host } = insert();
+    const inner = document.createElement("div");
+    host.attachShadow({ mode: "open" }).append(inner);
+
+    const target = makeTarget(inner);
+    target.explicitlySetElement = new WeakRef(span);
+
+    // The light tree is the root the shadow root hangs under through its
+    // host, which is where a reference is allowed to point. Measured in both
+    // engines: the platform resolves it.
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBe(span);
+  });
+
+  test("returns null when the explicitly set element is inside a shadow root", () => {
+    const { host } = insert();
+    const inner = document.createElement("span");
+    host.attachShadow({ mode: "open" }).append(inner);
+
+    const target = makeTarget(host);
+    target.explicitlySetElement = new WeakRef(inner);
+
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBeNull();
+  });
+
+  test("resolves an explicitly set element that is an ancestor of the element", () => {
+    const { host } = insert();
+    const inner = document.createElement("span");
+    host.append(inner);
+
+    const target = makeTarget(inner);
+    target.explicitlySetElement = new WeakRef(host);
+
+    // Nothing is a descendant of itself, so the host is not reached as its
+    // own ancestor - it is reached as a descendant of the next one up.
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBe(host);
+  });
+
+  test("returns null for an element that is the root of a detached tree", () => {
+    const root = document.createElement("div");
+    const inner = document.createElement("span");
+    root.append(inner);
+
+    const target = makeTarget(root);
+    target.explicitlySetElement = new WeakRef(inner);
+
+    // An element that is the root of its own tree has no ancestors, so
+    // nothing is reachable from it - not even what it holds itself.
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBeNull();
+  });
+
+  test("returns null when the explicitly set element is the root of a detached tree", () => {
+    const root = document.createElement("div");
+    const inner = document.createElement("span");
+    root.append(inner);
+
+    const target = makeTarget(inner);
+    target.explicitlySetElement = new WeakRef(root);
+
+    // The one shape where the steps and the engines part: the root is the
+    // only shadow-including ancestor there is, and nothing is a descendant of
+    // itself, so the steps answer null while both engines resolve. The steps
+    // are what is implemented - see the remarks on the check.
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBeNull();
+  });
+
+  test("returns null when the explicitly set element is in a sibling shadow root", () => {
+    const { host } = insert();
+    const sibling = document.createElement("div");
+    container.append(sibling);
+
+    const here = document.createElement("div");
+    host.attachShadow({ mode: "open" }).append(here);
+
+    const there = document.createElement("span");
+    sibling.attachShadow({ mode: "open" }).append(there);
+
+    const target = makeTarget(here);
+    target.explicitlySetElement = new WeakRef(there);
+
+    // Climbing out of one shadow root reaches the light tree, and the other
+    // shadow root is not in it.
     expect(
       ReflectedNullableElement.getter.call(
         target,
@@ -198,6 +352,68 @@ describe("ReflectedNullableElement.setter", () => {
 
     expect(host.hasAttribute("data-ws-ref")).toBe(false);
     expect(target.explicitlySetElement).toBeNull();
+  });
+});
+
+describe("ReflectedNullableElement.setter and the attribute change steps", () => {
+  /**
+   * The setter, with the attribute change steps standing where the DOM runs
+   * them: inside the write itself.
+   */
+  function setWithChangeSteps(
+    target: TargetAssociations,
+    host: HTMLElement,
+    value: HTMLSpanElement,
+  ): Array<string | null> {
+    const recorded: Array<string | null> = [];
+    const setContentAttribute = target.setContentAttribute.bind(target);
+
+    target.setContentAttribute = (name, attributeValue) => {
+      setContentAttribute(name, attributeValue);
+
+      ReflectedNullableElement.attributeChangeSteps.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+        host,
+        name,
+        null,
+        attributeValue,
+        null,
+      );
+
+      recorded.push(target.explicitlySetElement?.deref()?.localName ?? null);
+    };
+
+    ReflectedNullableElement.setter.call(
+      target,
+      reflectedIDLAttribute,
+      "data-ws-ref",
+      value,
+    );
+
+    return recorded;
+  }
+
+  test("writes the content attribute before it records the element", () => {
+    const { span, host } = insert();
+    const target = makeTarget(host);
+
+    // The steps run in the order the spec gives them: the write comes first,
+    // so the change steps it triggers have nothing recorded to unset, and the
+    // element is recorded after them. Anything reading in between - a custom
+    // element reaction, which the platform runs after the whole setter
+    // instead - sees no element.
+    expect(setWithChangeSteps(target, host, span)).toEqual([null]);
+
+    expect(target.explicitlySetElement?.deref()).toBe(span);
+    expect(
+      ReflectedNullableElement.getter.call(
+        target,
+        reflectedIDLAttribute,
+        "data-ws-ref",
+      ),
+    ).toBe(span);
   });
 });
 
