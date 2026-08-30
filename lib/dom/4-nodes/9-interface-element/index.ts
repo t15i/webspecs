@@ -1,3 +1,5 @@
+export * from "./concept-id";
+
 import { isValidAttributeLocalName } from "@dom";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
